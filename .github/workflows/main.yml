@@ -1,0 +1,41 @@
+
+name: Deployment
+
+on:
+  push:
+    branches: development
+jobs:
+  
+  Build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install
+        run: npm i -f
+
+      - name: Buid the application
+        run: npm run build
+
+  Deploy:
+    needs: Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to Development
+        if: github.ref == 'refs/heads/development'
+        env:
+          PRIVATE_KEY: ${{ secrets.ATL_PRIVATE_KEY }}
+          HOSTNAME: ${{ secrets.ATL_HOSTNAME }}
+        run: |
+          echo "$PRIVATE_KEY" > private_key && chmod 400 private_key
+          ssh -o StrictHostKeyChecking=no -i private_key ubuntu@${{secrets.ATL_HOSTNAME}} '
+            cd /home/ubuntu/aim_be &&
+            git checkout development &&
+            git pull origin development &&
+            npm i -f && NODE_OPTIONS="--max-old-space-size=1024" npm run build && npm run start:prod && pm2 save -f'
+
+      
+  
