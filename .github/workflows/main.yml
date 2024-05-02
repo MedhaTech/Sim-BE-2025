@@ -20,7 +20,7 @@ jobs:
         run: npm run build
 
   Deploy:
-   
+    needs: Build
     runs-on: ubuntu-latest
 
     steps:
@@ -31,11 +31,14 @@ jobs:
           HOSTNAME: ${{ secrets.ATL_HOSTNAME }}
         run: |
           echo "$PRIVATE_KEY" > private_key && chmod 400 private_key
-          ssh -o StrictHostKeyChecking=no -i private_key ubuntu@${{secrets.ATL_HOSTNAME}} '
-            cd /home/ubuntu/aim_be &&
-            git checkout development &&
-            git pull origin development &&
+          ssh -o StrictHostKeyChecking=no -i private_key ec2-user@${{secrets.ATL_HOSTNAME}} '
+            cd aim_be &&
+            sudo git fetch origin &&
+            sudo git checkout development &&
+            sudo git pull origin development &&
             npm i -f && NODE_OPTIONS="--max-old-space-size=1024" npm run build && npm run start:prod && pm2 save -f'
+
+            
 
       
   
