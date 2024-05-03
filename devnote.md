@@ -11,8 +11,3 @@
     "pluralize": "8.0.0 dev dependency added by aman on 22nd June 2022 while adding scaffolder",
     "mode-cmd": "5.0.0 dev dependency added by aman on 22nd June 2022 while adding scaffolder",
   },
-
-
-//postman_collection_link: {
-    "postman Prod":"https://api.postman.com/collections/19204290-0306f9df-5eb3-4fa7-a826-4f0b8dba1e8e?access_key=PMAT-01GJCAP208N1METK5PZKJCZ31J",
-  } 
