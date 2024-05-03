@@ -19,3 +19,4 @@ src/migrations/cli/*
 src/scaffolders/*
 prod-ec2-key.pem
 fe-unisolve.pem
+devnote.md
