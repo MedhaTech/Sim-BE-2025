@@ -33,7 +33,6 @@ jobs:
           echo "$PRIVATE_KEY" > private_key && chmod 400 private_key
           ssh -o StrictHostKeyChecking=no -i private_key ec2-user@${{secrets.ATL_HOSTNAME}} '
             cd /home/ec2-user/aim_be &&
-            sudo git checkout development &&
             sudo git pull origin development &&
             sudo npm i -f && NODE_OPTIONS="--max-old-space-size=1024" sudo npm run build && sudo npm run start:prod && sudo pm2 save -f'
 
