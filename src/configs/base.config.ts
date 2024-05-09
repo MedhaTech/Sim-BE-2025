@@ -44,7 +44,7 @@ export const baseConfig = {
 
   MENTOR_COURSE:"8",
 
-//no_of_evaluation for L2
+//NO_of_evaluation for L2
   EVAL_FOR_L2 : "2"
 
 };
