@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Deploy to Development
+      - name: Deploy to  Development
         if: github.ref == 'refs/heads/development'
         env:
           PRIVATE_KEY: ${{ secrets.ATL_PRIVATE_KEY }}
