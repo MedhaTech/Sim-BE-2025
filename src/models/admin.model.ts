@@ -9,11 +9,6 @@ export class admin extends Model<InferAttributes<admin>, InferCreationAttributes
     declare admin_id: CreationOptional<number>;
     declare user_id: string;
     declare full_name: string;
-    declare date_of_birth: Date;
-    declare city: string;
-    declare district: string;
-    declare state: string;
-    declare country: string;
     declare status: Enumerator;
     declare created_by: number;
     declare created_at: Date;
@@ -35,22 +30,6 @@ admin.init(
         full_name: {
             type: DataTypes.STRING,
             allowNull: false,
-        },
-        date_of_birth: {
-            type: DataTypes.DATE,
-            allowNull: true
-        },
-        city: {
-            type: DataTypes.STRING
-        },
-        district: {
-            type: DataTypes.STRING
-        },
-        state: {
-            type: DataTypes.STRING
-        },
-        country: {
-            type: DataTypes.STRING
         },
         status: {
             type: DataTypes.ENUM(...Object.values(constents.common_status_flags.list)),

@@ -38,10 +38,6 @@ export default class AdminController extends BaseController {
         return super.getData(req, res, next, [],
             [
                 "admin_id",
-                "date_of_birth",
-                "district",
-                "state",
-                "country",
                 "status"
             ], {
             attributes: [
