@@ -10,5 +10,14 @@ export const wildcardRoutes = [
     "/assets/reflectiveQuiz/*",
     "/script",
     "/otpScript",
-    "/api/v1/admins/login"
+    "/api/v1/admins/login",
+    "/api/v1/mentors/login",
+    "/api/v1/mentors/register",
+    "/api/v1/mentors/resetPassword",
+    "/api/v1/mentors/mobileOtp",
+    "/api/v1/organizations/checkOrg",
+    "/api/v1/organizations/createOrg",
+    "/api/v1/organizations/districts",
+    "/api/v1/organizations/states",
+    "/api/v1/mentors/triggerWelcomeEmail"
 ];
