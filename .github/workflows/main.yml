@@ -27,12 +27,12 @@ jobs:
       - name: Deploy to  Development
         if: github.ref == 'refs/heads/development'
         env:
-          PRIVATE_KEY: ${{ secrets.ATL_PRIVATE_KEY }}
-          HOSTNAME: ${{ secrets.ATL_HOSTNAME }}
+          PRIVATE_KEY: ${{ secrets.ATL2_PRIVATE_KEY }}
+          HOSTNAME: ${{ secrets.ATL2_HOSTNAME }}
         run: |
           echo "$PRIVATE_KEY" > private_key && chmod 400 private_key
-          ssh -o StrictHostKeyChecking=no -i private_key ec2-user@${{secrets.ATL_HOSTNAME}} '
-            cd /home/ec2-user/aim_be &&
+          ssh -o StrictHostKeyChecking=no -i private_key ubuntu@${{secrets.ATL2_HOSTNAME}} '
+            cd /home/ubuntu/aim_be &&
             sudo git pull origin development &&
             sudo npm i -f && NODE_OPTIONS="--max-old-space-size=1024" sudo npm run build && sudo npm run start:prod && sudo pm2 save -f'
 
