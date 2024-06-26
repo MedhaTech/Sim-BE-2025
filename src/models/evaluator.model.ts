@@ -1,36 +1,25 @@
-import { DataTypes, Model, InferAttributes, InferCreationAttributes, CreationOptional } from 'sequelize';
+import { DataTypes, Model, Attributes, InferAttributes, InferCreationAttributes, CreationOptional } from 'sequelize';
 import bcrypt from 'bcrypt';
 import { constents } from '../configs/constents.config';
 import db from '../utils/dbconnection.util';
 import { baseConfig } from '../configs/base.config';
 import { user } from './user.model';
 
-export class student extends Model<InferAttributes<student>, InferCreationAttributes<student>> {
-    declare student_id: CreationOptional<number>;
-    declare user_id: number;
-    declare team_id: string;
+export class evaluator extends Model<InferAttributes<evaluator>, InferCreationAttributes<evaluator>> {
+    declare evaluator_id: CreationOptional<number>;
+    declare user_id: string;
     declare full_name: string;
-    declare Age: number;
-    declare Grade: string;
-    declare Gender: string;
-    declare badges: string;
-    declare disability: string;
-    declare certificate: number;
+    declare mobile: string;
+    declare district: string;
     declare status: Enumerator;
     declare created_by: number;
     declare created_at: Date;
     declare updated_by: number;
     declare updated_at: Date;
-    /**
-     * Helper method for defining associations.
-     * This method is not a part of Sequelize lifecycle.
-     * The `models/index` file will call this method automatically.
-     */
-}
 
-student.init(
-    {
-        student_id: {
+    static modelTableName = 'evaluators';
+    static structure: any = {
+        evaluator_id: {
             type: DataTypes.INTEGER,
             autoIncrement: true,
             primaryKey: true,
@@ -39,49 +28,30 @@ student.init(
             type: DataTypes.INTEGER,
             allowNull: false
         },
-        team_id: {
-            type: DataTypes.STRING,
-        },
         full_name: {
             type: DataTypes.STRING,
             allowNull: false,
         },
-        Age: {
-            type: DataTypes.INTEGER,
-            allowNull: true
-        },
-        Grade: {
-            type: DataTypes.STRING,
-            allowNull: true
-        },
-        Gender: {
-            type: DataTypes.ENUM(...Object.values(constents.gender_flags.list)),
-            defaultValue: constents.gender_flags.default
-        },
-        disability: {
+        district: {
             type: DataTypes.STRING
         },
-        badges: {
-            type: DataTypes.TEXT('long')
+        mobile: {
+            type: DataTypes.STRING,
+            unique: true
         },
         status: {
             type: DataTypes.ENUM(...Object.values(constents.common_status_flags.list)),
             defaultValue: constents.common_status_flags.default
         },
-        certificate: {
-            type: DataTypes.DATE,
+        created_by: {
+            type: DataTypes.INTEGER,
             allowNull: true,
             defaultValue: null
         },
         created_at: {
             type: DataTypes.DATE,
-            allowNull: false,
-            defaultValue: DataTypes.NOW,
-        },
-        created_by: {
-            type: DataTypes.INTEGER,
             allowNull: true,
-            defaultValue: null
+            defaultValue: DataTypes.NOW,
         },
         updated_by: {
             type: DataTypes.INTEGER,
@@ -94,10 +64,14 @@ student.init(
             defaultValue: DataTypes.NOW,
             onUpdate: new Date().toLocaleString()
         }
-    },
+    };
+}
+
+evaluator.init(
+    evaluator.structure,
     {
         sequelize: db,
-        tableName: 'students',
+        tableName: evaluator.modelTableName,
         timestamps: true,
         updatedAt: 'updated_at',
         createdAt: 'created_at',
@@ -116,7 +90,5 @@ student.init(
     }
 );
 
-student.belongsTo(user, { foreignKey: 'user_id' });
-user.hasMany(student, { foreignKey: 'user_id' });
-student.belongsTo(user, { foreignKey: 'user_id' });
-user.hasMany(student, { foreignKey: 'user_id' });
+evaluator.belongsTo(user, { foreignKey: 'user_id', constraints: false });
+user.hasOne(evaluator, { foreignKey: 'user_id', constraints: false, scope: { role: 'EVALUATOR' } });
