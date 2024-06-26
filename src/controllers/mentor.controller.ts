@@ -17,8 +17,8 @@ import ValidationsHolder from '../validations/validationHolder';
 import { badRequest, forbidden, internal, notFound } from 'boom';
 import { mentor } from '../models/mentor.model';
 import { where } from 'sequelize/types';
-// import { team } from '../models/team.model';
-// import { student } from '../models/student.model';
+import { team } from '../models/team.model';
+import { student } from '../models/student.model';
 import { constents } from '../configs/constents.config';
 import { organization } from '../models/organization.model';
 import validationMiddleware from '../middlewares/validation.middleware';
@@ -41,7 +41,7 @@ export default class MentorController extends BaseController {
         this.router.post(`${this.path}/login`, this.login.bind(this));
         this.router.get(`${this.path}/logout`, this.logout.bind(this));
         this.router.put(`${this.path}/changePassword`, this.changePassword.bind(this));
-        //this.router.delete(`${this.path}/:mentor_user_id/deleteAllData`, this.deleteAllData.bind(this));
+        this.router.delete(`${this.path}/:mentor_user_id/deleteAllData`, this.deleteAllData.bind(this));
         this.router.put(`${this.path}/resetPassword`, this.resetPassword.bind(this));
         this.router.post(`${this.path}/mobileOtp`,this.mobileOpt.bind(this));
         this.router.get(`${this.path}/mentorpdfdata`,this.mentorpdfdata.bind(this));
@@ -347,108 +347,108 @@ export default class MentorController extends BaseController {
             return res.status(202).send(dispatcher(res, result.data, 'accepted', speeches.USER_PASSWORD_CHANGE, 202));
         }
     }
-    // private async deleteAllData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-    //     if(res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR'){
-    //         return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
-    //     } 
-    //     try {
-    //         const mentor_user_id : any = await this.authService.decryptGlobal(req.params.mentor_user_id);
-    //         // const { mobile } = req.body;
-    //         if (!mentor_user_id) {
-    //             throw badRequest(speeches.USER_USERID_REQUIRED);
-    //         }
+    private async deleteAllData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        } 
+        try {
+            const mentor_user_id : any = await this.authService.decryptGlobal(req.params.mentor_user_id);
+            // const { mobile } = req.body;
+            if (!mentor_user_id) {
+                throw badRequest(speeches.USER_USERID_REQUIRED);
+            }
 
-    //         //get mentor details
-    //         const mentorResult: any = await this.crudService.findOne(mentor, { where: { user_id: mentor_user_id } })
-    //         if (!mentorResult) {
-    //             throw internal(speeches.DATA_CORRUPTED)
-    //         }
-    //         if (mentorResult instanceof Error) {
-    //             throw mentorResult
-    //         }
-    //         const mentor_id = mentorResult.dataValues.mentor_id
-    //         if (!mentor_id) {
-    //             throw internal(speeches.DATA_CORRUPTED + ":" + speeches.MENTOR_NOT_EXISTS)
-    //         }
-    //         const deleteMentorResponseResult = await this.authService.bulkDeleteMentorResponse(mentor_user_id)
-    //         if (!deleteMentorResponseResult) {
-    //             throw internal("error while deleting mentor response")
-    //         }
-    //         if (deleteMentorResponseResult instanceof Error) {
-    //             throw deleteMentorResponseResult
-    //         }
+            //get mentor details
+            const mentorResult: any = await this.crudService.findOne(mentor, { where: { user_id: mentor_user_id } })
+            if (!mentorResult) {
+                throw internal(speeches.DATA_CORRUPTED)
+            }
+            if (mentorResult instanceof Error) {
+                throw mentorResult
+            }
+            const mentor_id = mentorResult.dataValues.mentor_id
+            if (!mentor_id) {
+                throw internal(speeches.DATA_CORRUPTED + ":" + speeches.MENTOR_NOT_EXISTS)
+            }
+            const deleteMentorResponseResult = await this.authService.bulkDeleteMentorResponse(mentor_user_id)
+            if (!deleteMentorResponseResult) {
+                throw internal("error while deleting mentor response")
+            }
+            if (deleteMentorResponseResult instanceof Error) {
+                throw deleteMentorResponseResult
+            }
 
-    //         //get team details
-    //         const teamResult: any = await team.findAll({
-    //             attributes: ["team_id"],
-    //             where: { mentor_id: mentor_id },
-    //             raw: true
-    //         })
-    //         if (!teamResult) {
-    //             throw internal(speeches.DATA_CORRUPTED)
-    //         }
-    //         if (teamResult instanceof Error) {
-    //             throw teamResult
-    //         }
+            //get team details
+            const teamResult: any = await team.findAll({
+                attributes: ["team_id"],
+                where: { mentor_id: mentor_id },
+                raw: true
+            })
+            if (!teamResult) {
+                throw internal(speeches.DATA_CORRUPTED)
+            }
+            if (teamResult instanceof Error) {
+                throw teamResult
+            }
 
-    //         const arrayOfteams = teamResult.map((teamSingleresult: any) => {
-    //             return teamSingleresult.team_id;
-    //         })
-    //         if (arrayOfteams && arrayOfteams.length > 0) {
-    //             const studentUserIds = await student.findAll({
-    //                 where: { team_id: arrayOfteams },
-    //                 raw: true,
-    //                 attributes: ["user_id"]
-    //             })
+            const arrayOfteams = teamResult.map((teamSingleresult: any) => {
+                return teamSingleresult.team_id;
+            })
+            if (arrayOfteams && arrayOfteams.length > 0) {
+                const studentUserIds = await student.findAll({
+                    where: { team_id: arrayOfteams },
+                    raw: true,
+                    attributes: ["user_id"]
+                })
 
-    //             if (studentUserIds && !(studentUserIds instanceof Error)) {
-    //                 const arrayOfStudentuserIds = studentUserIds.map((student) => student.user_id)
+                if (studentUserIds && !(studentUserIds instanceof Error)) {
+                    const arrayOfStudentuserIds = studentUserIds.map((student) => student.user_id)
 
-    //                 for (var i = 0; i < arrayOfStudentuserIds.length; i++) {
-    //                     const deletStudentResponseData = await this.authService.bulkDeleteUserResponse(arrayOfStudentuserIds[i])
-    //                     if (deletStudentResponseData instanceof Error) {
-    //                         throw deletStudentResponseData;
-    //                     }
-    //                 };
-    //                 const resultBulkDeleteStudents = await this.authService.bulkDeleteUserWithStudentDetails(arrayOfStudentuserIds)
-    //                 // console.log("resultBulkDeleteStudents",resultBulkDeleteStudents)
-    //                 // if(!resultBulkDeleteStudents){
-    //                 //     throw internal("error while deleteing students")
-    //                 // }
-    //                 if (resultBulkDeleteStudents instanceof Error) {
-    //                     throw resultBulkDeleteStudents
-    //                 }
-    //             }
+                    for (var i = 0; i < arrayOfStudentuserIds.length; i++) {
+                        const deletStudentResponseData = await this.authService.bulkDeleteUserResponse(arrayOfStudentuserIds[i])
+                        if (deletStudentResponseData instanceof Error) {
+                            throw deletStudentResponseData;
+                        }
+                    };
+                    const resultBulkDeleteStudents = await this.authService.bulkDeleteUserWithStudentDetails(arrayOfStudentuserIds)
+                    // console.log("resultBulkDeleteStudents",resultBulkDeleteStudents)
+                    // if(!resultBulkDeleteStudents){
+                    //     throw internal("error while deleteing students")
+                    // }
+                    if (resultBulkDeleteStudents instanceof Error) {
+                        throw resultBulkDeleteStudents
+                    }
+                }
 
-    //             const resultTeamDelete = await this.crudService.delete(team, { where: { team_id: arrayOfteams } })
-    //             // if(!resultTeamDelete){
-    //             //     throw internal("error while deleting team")
-    //             // }
-    //             if (resultTeamDelete instanceof Error) {
-    //                 throw resultTeamDelete
-    //             }
-    //         }
-    //         let resultmentorDelete: any = {};
-    //         resultmentorDelete = await this.authService.bulkDeleteUserWithMentorDetails([mentor_user_id])
-    //         // if(!resultmentorDelete){
-    //         //     throw internal("error while deleting mentor")
-    //         //}
-    //         if (resultmentorDelete instanceof Error) {
-    //             throw resultmentorDelete
-    //         }
+                const resultTeamDelete = await this.crudService.delete(team, { where: { team_id: arrayOfteams } })
+                // if(!resultTeamDelete){
+                //     throw internal("error while deleting team")
+                // }
+                if (resultTeamDelete instanceof Error) {
+                    throw resultTeamDelete
+                }
+            }
+            let resultmentorDelete: any = {};
+            resultmentorDelete = await this.authService.bulkDeleteUserWithMentorDetails([mentor_user_id])
+            // if(!resultmentorDelete){
+            //     throw internal("error while deleting mentor")
+            //}
+            if (resultmentorDelete instanceof Error) {
+                throw resultmentorDelete
+            }
 
-    //         // if (!resultmentorDelete) {
-    //         //     return res.status(404).send(dispatcher(res, null, 'error', speeches.USER_NOT_FOUND));
-    //         // } else 
-    //         if (resultmentorDelete.error) {
-    //             return res.status(404).send(dispatcher(res, resultmentorDelete.error, 'error', resultmentorDelete.error));
-    //         } else {
-    //             return res.status(202).send(dispatcher(res, resultmentorDelete.dataValues, 'success', speeches.USER_DELETED, 202));
-    //         }
-    //     } catch (error) {
-    //         next(error)
-    //     }
-    // }
+            // if (!resultmentorDelete) {
+            //     return res.status(404).send(dispatcher(res, null, 'error', speeches.USER_NOT_FOUND));
+            // } else 
+            if (resultmentorDelete.error) {
+                return res.status(404).send(dispatcher(res, resultmentorDelete.error, 'error', resultmentorDelete.error));
+            } else {
+                return res.status(202).send(dispatcher(res, resultmentorDelete.dataValues, 'success', speeches.USER_DELETED, 202));
+            }
+        } catch (error) {
+            next(error)
+        }
+    }
     private async mobileOpt(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try {
             const { username } = req.body;

@@ -15,6 +15,13 @@ import { user } from '../models/user.model';
 import { admin } from '../models/admin.model';
 import { organization } from '../models/organization.model';
 import { mentor } from '../models/mentor.model';
+import { state_coordinators } from '../models/state_coordinators.model';
+import { student } from '../models/student.model';
+import { quiz_response } from '../models/quiz_response.model';
+import { quiz_survey_response } from '../models/quiz_survey_response.model';
+import { user_topic_progress } from '../models/user_topic_progress.model';
+import { evaluator } from '../models/evaluator.model';
+import { mentor_topic_progress } from '../models/mentor_topic_progress.model';
 export default class authService {
     crudService: CRUDService = new CRUDService;
     private otp = '112233';
@@ -501,6 +508,468 @@ export default class authService {
         } catch (error) {
             result['error'] = error;
             return result;
+        }
+    }
+
+     /**
+ * delete the Mentor response (hard delete) for specific user
+ * @note Services includes ( Quiz_response, Quiz_survey_response, Reflective_quiz_response, Mentor_topic_progress)
+ * @param user_id String
+ * @returns Object
+ */
+     async bulkDeleteMentorResponse(user_id: any) {
+        try {
+            let result: any = {};
+            let models = [
+                quiz_response,
+                quiz_survey_response,
+                mentor_topic_progress
+            ];
+            for (let i = 0; i < models.length; i++) {
+                let deleted = await this.crudService.delete(models[i], { where: { user_id } });
+                let data = models[i].tableName;
+                result[`${data}`] = deleted
+            }
+            return result;
+        } catch (error) {
+            return error;
+        }
+    }
+
+    /**
+     * delete the user response (hard delete) for specific user
+     * @note Services includes ( Quiz_response, Quiz_survey_response, Reflective_quiz_response, User_topic_progress, Worksheet_response)
+     * @param user_id String
+     * @returns Object
+     */
+    async bulkDeleteUserResponse(user_id: any) {
+        try {
+            let result: any = {};
+            let models = [quiz_response, quiz_survey_response, user_topic_progress];
+            for (let i = 0; i < models.length; i++) {
+                let deleted = await this.crudService.delete(models[i], { where: { user_id } });
+                let data = models[i].tableName;
+                result[`${data}`] = deleted
+            }
+            return result;
+        } catch (error) {
+            return error;
+        }
+    }
+
+     /**
+     *  delete the bulkUser Student
+     * @param arrayOfUserIds Array
+     * @returns Object
+     */
+     async bulkDeleteUserWithStudentDetails(arrayOfUserIds: any) {
+        return await this.bulkDeleteUserWithDetails(student, arrayOfUserIds)
+    }
+    /**
+     *  delete the bulkUser Mentor
+     * @param arrayOfUserIds Array
+     * @returns Object
+     */
+    async bulkDeleteUserWithMentorDetails(arrayOfUserIds: any) {
+        return await this.bulkDeleteUserWithDetails(mentor, arrayOfUserIds)
+    }
+    /**
+     *  delete the bulkUser (hard delete) based on the role mentioned and user_id's
+     * @param user_id String
+     * @param user_role String
+     * @returns Object
+     */
+    async bulkDeleteUserWithDetails(argUserDetailsModel: any, arrayOfUserIds: any) {
+        try {
+            const UserDetailsModel = argUserDetailsModel
+            const resultUserDetailsDelete = await this.crudService.delete(UserDetailsModel, {
+                where: { user_id: arrayOfUserIds },
+                force: true
+            })
+            if (resultUserDetailsDelete instanceof Error) {
+                throw resultUserDetailsDelete;
+            }
+            const resultUserDelete = await this.crudService.delete(user, {
+                where: { user_id: arrayOfUserIds },
+                force: true
+            })
+            if (resultUserDelete instanceof Error) {
+                throw resultUserDetailsDelete;
+            }
+            return resultUserDelete;
+        } catch (error) {
+            return error;
+        }
+    }
+
+     /**
+     * login service the User (district)
+     * @param requestBody object 
+     * @returns object
+     */
+     async statelogin(requestBody: any) {
+        const GLOBAL_PASSWORD = 'uniSolve'
+        const GlobalCryptoEncryptedString = await this.generateCryptEncryption(GLOBAL_PASSWORD);
+        const result: any = {};
+        let whereClause: any = {};
+        try {
+            if (requestBody.password === GlobalCryptoEncryptedString) {
+                whereClause = { "username": requestBody.username}
+            } else {
+                whereClause = {
+                    "username": requestBody.username,
+                    "password": await bcrypt.hashSync(requestBody.password, process.env.SALT || baseConfig.SALT)
+                }
+            }
+            const user_res: any = await this.crudService.findOne(state_coordinators, {
+                where: whereClause
+            })
+            if (!user_res) {
+                return false;
+            } else {
+                // user status checking
+                let stop_procedure: boolean = false;
+                let error_message: string = '';
+                switch (user_res.status) {
+                    case 'DELETED':
+                        stop_procedure = true;
+                        error_message = speeches.USER_DELETED;
+                    case 'LOCKED':
+                        stop_procedure = true;
+                        error_message = speeches.USER_LOCKED;
+                    case 'INACTIVE':
+                        stop_procedure = true;
+                        error_message = speeches.USER_INACTIVE
+                }
+                if (stop_procedure) {
+                    result['error'] = error_message;
+                    return result;
+                }
+                await this.crudService.update(state_coordinators, {
+                    is_loggedin: "YES",
+                    last_login: new Date().toLocaleString()
+                }, { where: { state_coordinators_id: user_res.state_coordinators_id } });
+
+                user_res.is_loggedin = "YES";
+                const token = await jwtUtil.createToken(user_res.dataValues, `${process.env.PRIVATE_KEY}`);
+
+                result['data'] = {
+                    id: user_res.dataValues.state_coordinators_id,
+                    role:user_res.dataValues.role,
+                    username: user_res.dataValues.username,
+                    state_name: user_res.dataValues.state_name,
+                    status: user_res.dataValues.status,
+                    token,
+                    type: 'Bearer',
+                    expire: process.env.TOKEN_DEFAULT_TIMEOUT
+                }
+                return result
+            }
+        } catch (error) {
+            result['error'] = error;
+            return result;
+        }
+    }
+    /**
+     * logout service the User (district)
+     * @param requestBody object 
+     * @returns object
+     */
+    async statelogout(requestBody: any, responseBody: any) {
+        let result: any = {};
+        try {
+            const update_res = await this.crudService.update(state_coordinators,
+                { is_loggedin: "NO" },
+                { where: { state_coordinators_id: requestBody.id } }
+            );
+            result['data'] = update_res;
+            return result;
+        } catch (error) {
+            result['error'] = error;
+            return result;
+        }
+    }
+     /**
+     *find the State user and update the password field
+     * @param requestBody Objects
+     * @param responseBody Objects
+     * @returns Objects
+     */
+     async statechangePassword(requestBody: any, responseBody: any) {
+        let result: any = {};
+        try {
+            const user_res: any = await this.crudService.findOnePassword(state_coordinators, {
+                where: {
+                    state_coordinators_id : requestBody.id
+                }
+            });
+            if (!user_res) {
+                result['user_res'] = user_res;
+                result['error'] = speeches.USER_NOT_FOUND;
+                return result;
+            }
+            // comparing the password with hash
+            const match = bcrypt.compareSync(requestBody.old_password, user_res.dataValues.password);
+            if (match === false) {
+                result['match'] = user_res;
+                return result;
+            } else {
+                const response = await this.crudService.update(state_coordinators, {
+                    password: await bcrypt.hashSync(requestBody.new_password, process.env.SALT || baseConfig.SALT)
+                }, { where: { state_coordinators_id: user_res.dataValues.state_coordinators_id } });
+                result['data'] = response;
+                return result;
+            }
+        } catch (error) {
+            result['error'] = error;
+            return result;
+        }
+    }
+     //find the State user and reset the password to default value
+     async stateResetPassword(requestBody: any) {
+        let result: any = {};
+        let eval_res: any;
+        try {
+            eval_res = await this.crudService.findOne(state_coordinators, {
+                    where: { state_coordinators_id: requestBody.id }
+                });
+            if (!eval_res) {
+                result['error'] = speeches.USER_NOT_FOUND;
+                return result;
+            }
+            let hashString = await this.generateCryptEncryption('ATLcode@123')
+            const user_res: any = await this.crudService.updateAndFind(state_coordinators, {
+                password: await bcrypt.hashSync(hashString, process.env.SALT || baseConfig.SALT)
+            }, { where: { state_coordinators_id: requestBody.id } })
+            result['data'] = {
+                username: user_res.dataValues.username,
+                state_coordinators_id: user_res.dataValues.state_coordinators_id
+            };
+            return result;
+        } catch (error) {
+            result['error'] = error;
+            return result;
+        }
+    }
+
+    /**
+     * Get all the student for the mentioned team, we set the constant limit per team in constants, these function check if the team exceeded the constant limit
+     * @param argTeamId String
+     * @returns Boolean
+     */
+    async checkIfTeamHasPlaceForNewMember(argTeamId: any) {
+        try {
+            let studentResult: any = await student.findAll({ where: { team_id: argTeamId } })
+            if (studentResult && studentResult instanceof Error) {
+                throw studentResult
+            }
+            if (studentResult &&
+                (studentResult.length == 0 ||
+                    studentResult.length < constents.TEAMS_MAX_STUDENTS_ALLOWED)
+            ) {
+                return true;
+            }
+            return false
+        } catch (err) {
+            return err
+        }
+    }
+
+    /**
+     * Create a students user in bulk
+     * @param requestBody object
+     * @returns object
+     */
+    async bulkCreateStudentService(requestBody: any) {
+        /**
+         * @note for over requestBody and get single user set the password, find the user's if exist push to the error response or create user, student both
+         * 
+         */
+        let userProfile: any
+        let result: any;
+        let errorResponse: any = [];
+        let successResponse: any = [];
+        for (let payload of requestBody) {
+            const trimmedName = payload.full_name.trim();
+            if (!trimmedName || typeof trimmedName == undefined) {
+                errorResponse.push(`'${payload.full_name}'`);
+                continue;
+            }
+            let checkUserExisted = await this.crudService.findOne(user, {
+                attributes: ["user_id", "username"],
+                where: { username: payload.username }
+            });
+            if (!checkUserExisted) {
+                userProfile = await this.crudService.create(user, payload);
+                payload["user_id"] = userProfile.dataValues.user_id;
+                result = await this.crudService.create(student, payload);
+                successResponse.push(payload.full_name);
+            } else {
+                errorResponse.push(payload.username);
+            }
+        };
+        let successMsg = successResponse.length ? successResponse.join(', ') + " successfully created. " : ''
+        let errorMsg = errorResponse.length ? errorResponse.join(', ') + " invalid/already existed" : ''
+        return successMsg + errorMsg;
+    }
+
+     /**
+     * Register the User (STUDENT, MENTOR, EVALUATOR, ADMIN)
+     * @param requestBody object
+     * @returns object
+     */
+     async register(requestBody: any) {
+        let response: any = {};
+        let profile: any;
+        try {
+            const user_res = await this.crudService.findOne(user, { where: { username: requestBody.username } });
+            if (user_res) {
+                response['user_res'] = user_res;
+                return response
+            }
+            const result = await this.crudService.create(user, requestBody);
+            let whereClass = { ...requestBody, user_id: result.dataValues.user_id };
+            switch (requestBody.role) {
+                case 'STUDENT': {
+                    profile = await this.crudService.create(student, whereClass);
+                    break;
+                }
+                case 'MENTOR': {
+                    if (requestBody.organization_code) {
+                        profile = await this.crudService.create(mentor, whereClass);
+                        profile.dataValues['username'] = result.dataValues.username
+                        break;
+                    } else return false;
+                }
+                case 'EVALUATOR': {
+                    profile = await this.crudService.create(evaluator, whereClass);
+                    break;
+                }
+                case 'ADMIN':
+                    profile = await this.crudService.create(admin, whereClass);
+                    break;
+                case 'EADMIN':
+                    profile = await this.crudService.create(admin, whereClass);
+                    break;
+                default:
+                    profile = null;
+            }
+            response['profile'] = profile;
+            return response;
+        } catch (error: any) {
+            response['error'] = error;
+            return response
+        }
+    }
+
+     /**
+ * delete the user and user response (hard delete) for specific user
+ * @note Services includes ( Quiz_response, Quiz_survey_response, Reflective_quiz_response, User_topic_progress, Worksheet_response, student, user)
+ * @param user_id String
+ * @returns Object
+ */
+     async deleteStudentAndStudentResponse(user_id: any) {
+        try {
+            let result: any = {};
+            let errors: any = [];
+            let models = [
+                quiz_response,
+                quiz_survey_response,
+                user_topic_progress,
+                student,
+                user
+            ];
+            for (let i = 0; i < models.length; i++) {
+                let deleted = await this.crudService.delete(models[i], { where: { user_id } });
+                if (!deleted || deleted instanceof Error) errors.push(deleted);
+                let data = models[i].tableName;
+                result[`${data}`] = deleted
+            }
+            if (errors) errors.forEach((e: any) => { throw new Error(e.message) })
+            return result;
+        } catch (error) {
+            return error;
+        }
+    }
+     /**
+     * Get the student details with user_id update the password without OTP
+     * @param requestBody Object
+     * @returns Object
+     */
+     async studentResetPassword(requestBody: any) {
+        let result: any = {};
+        try {
+            const updatePassword: any = await this.crudService.update(user,
+                { password: await bcrypt.hashSync(requestBody.encryptedString, process.env.SALT || baseConfig.SALT) },
+                { where: { user_id: requestBody.user_id } }
+            );
+            const findStudentDetailsAndUpdateUUID: any = await this.crudService.updateAndFind(student,
+                { UUID: requestBody.UUID, qualification: requestBody.encryptedString },
+                { where: { user_id: requestBody.user_id } }
+            );
+            if (!updatePassword) throw badRequest(speeches.NOT_ACCEPTABLE)
+            if (!updatePassword) throw badRequest(speeches.NOT_ACCEPTABLE)
+            if (!findStudentDetailsAndUpdateUUID) throw badRequest(speeches.NOT_ACCEPTABLE)
+            if (!findStudentDetailsAndUpdateUUID) throw badRequest(speeches.NOT_ACCEPTABLE)
+            result['data'] = {
+                username: requestBody.username,
+                user_id: requestBody.user_id,
+                student_id: findStudentDetailsAndUpdateUUID.dataValues.student_id,
+                student_uuid: findStudentDetailsAndUpdateUUID.dataValues.UUID
+            };
+            return result;
+        } catch (error) {
+            result['error'] = error;
+            return result;
+        }
+    }
+
+    //bulk email process
+    async triggerBulkEmail(email: any,textBody:any,subText:any) {
+        const result: any = {}
+        AWS.config.update({
+            region: 'ap-south-1',
+            accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+            secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+        });
+        let params = {
+            Destination: { /* required */
+                CcAddresses: [
+                ],
+                ToAddresses:
+                    email
+            },
+            Message: { /* required */
+                Body: { /* required */
+                    Html: {
+                        Charset: "UTF-8",
+                        Data: textBody
+                    },
+                    Text: {
+                        Charset: "UTF-8",
+                        Data: "TEXT_FOR MAT_BODY"
+                    }
+                },
+                Subject: {
+                    Charset: 'UTF-8',
+                    Data: subText
+                }
+            },
+            Source: "aim-no-reply@inqui-lab.org", /* required */
+            ReplyToAddresses: [],
+        };
+        try {
+            // Create the promise and SES service object
+            let sendPromise = new AWS.SES({ apiVersion: '2010-12-01' }).sendEmail(params).promise();
+            // Handle promise's fulfilled/rejected states
+            await sendPromise.then((data: any) => {
+                result['messageId'] = data.MessageId;
+            }).catch((err: any) => {
+                throw err;
+            });
+            return result;
+        } catch (error) {
+            return error;
         }
     }
 }

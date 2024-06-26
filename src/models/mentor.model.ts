@@ -5,7 +5,7 @@ import db from '../utils/dbconnection.util';
 import { baseConfig } from '../configs/base.config';
 import { user } from './user.model';
 import { organization } from './organization.model';
-//import { student } from './student.model';
+import { student } from './student.model';
 
 
 export class mentor extends Model<InferAttributes<mentor>, InferCreationAttributes<mentor>> {
@@ -126,5 +126,5 @@ mentor.belongsTo(user, { foreignKey: 'user_id', constraints: false, scope: { rol
 user.hasOne(mentor, { foreignKey: 'user_id', constraints: false });
 mentor.belongsTo(organization, { targetKey: 'organization_code', foreignKey: 'organization_code', constraints: false });
 organization.hasOne(mentor, { sourceKey: 'organization_code', foreignKey: 'organization_code', constraints: false });
-//mentor.belongsTo(student, { targetKey: 'team_id', foreignKey: 'organization_code', constraints: false });
-//student.hasOne(mentor, { sourceKey: 'team_id', foreignKey: 'organization_code', constraints: false });
+mentor.belongsTo(student, { targetKey: 'team_id', foreignKey: 'organization_code', constraints: false });
+student.hasOne(mentor, { sourceKey: 'team_id', foreignKey: 'organization_code', constraints: false });
