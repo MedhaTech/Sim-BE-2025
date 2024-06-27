@@ -389,7 +389,7 @@ export default class authService {
                     Data: id === 1 ? verifyOtpSubject : id === 3 ? forgotPassSubjec : fullSubjec
                 }
             },
-            Source: "aim-no-reply@inqui-lab.org", /* required */
+            Source: "sim-no-reply@inqui-lab.org", /* required */
             ReplyToAddresses: [],
         };
         try {
@@ -955,7 +955,7 @@ export default class authService {
                     Data: subText
                 }
             },
-            Source: "aim-no-reply@inqui-lab.org", /* required */
+            Source: "sim-no-reply@inqui-lab.org", /* required */
             ReplyToAddresses: [],
         };
         try {
