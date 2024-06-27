@@ -300,7 +300,7 @@ export default class authService {
         }
     }
    
-    async mobileotp(requestBody: any) {
+    async emailotp(requestBody: any) {
         let result: any = {};
         try {
             const user_data = await this.crudService.findOne(user, { where: { username: requestBody.username } });
@@ -335,12 +335,12 @@ export default class authService {
         <div style="padding: 1% 5%;">
         <h3>Dear Guide Teacher,</h3>
         
-        <p>Your One-Time Password (OTP) to register yourself as a guide teacher in ATL Marathon 23-24 is <b>${otp}</b></p>
+        <p>Your One-Time Password (OTP) to register yourself as a guide teacher in School Innovation Marathon (SIM 24-25) is <b>${otp}</b></p>
         
         <p>We appreciate for your interest in inspiring students to solve problems with simplified design thinking process as a method to innovate through this program.</p>
         <p>
         <strong>
-        Regards,<br> ATL Marathon
+        Regards,<br> SIM Team
         </strong>
         </div></body>`
         const forgotPassData = `
@@ -348,18 +348,18 @@ export default class authService {
         <img src="https://aim-email-images.s3.ap-south-1.amazonaws.com/ATL-Marathon-Banner-1000X450px.jpg" alt="header" style="width: 100%;" />
         <div style="padding: 1% 5%;">
         <h3>Dear Guide Teacher,</h3>
-        <p>Your temporary password to login to ATL Marathon platform is <b>${otp}.</b></p>
+        <p>Your temporary password to login to School Innovation Marathon platform is <b>${otp}.</b></p>
         <p>Change your password as per your preference after you login with temporary password.</p>
         <p><strong>Link: https://atl.unisolve.org</strong></p>
         <p>
         <strong>
-        Regards,<br> ATL Marathon
+        Regards,<br> SIM Team
         </strong>
         </p>
         </div></body>`
-        const verifyOtpSubject =`OTP to register on AIM Platfrom`
-        const forgotPassSubjec =`Temporary Password to Login into AIM Platfrom`
-        const fullSubjec = `Welcome! Your AIM Registration was successful. Check out your login details`
+        const verifyOtpSubject =`OTP to register for School Innovation Marathon (SIM 24-25)`
+        const forgotPassSubjec =`Temporary Password to Login into School Innovation Marathon (SIM 24-25)`
+        const fullSubjec = `Welcome! Your School Innovation Marathon (SIM 24-25) registration was successful. Check out your login details.`
         AWS.config.update({
             region: 'ap-south-1',
             accessKeyId: process.env.AWS_ACCESS_KEY_ID,
@@ -481,7 +481,7 @@ export default class authService {
             <img src="https://aim-email-images.s3.ap-south-1.amazonaws.com/ATL-Marathon-Banner-1000X450px.jpg" alt="header" style="width: 100%;" />
             <div style="padding: 1% 5%;">
             <h3>Dear Guide Teacher,</h3>
-            <h4>Congratulations for successfully registering for ATL Marathon 23-24.</h4>
+            <h4>Congratulations for successfully registering for School Innovation Marathon 24-25</h4>
             <p>Your schools has been successfully registered with the following details :
             <br> School name: <strong> ${school_name}</strong> <br> UDISE CODE:<strong> ${udise_code}</strong>
             <br> ATL CODE:<strong> ${atl_code}</strong>
@@ -496,7 +496,7 @@ export default class authService {
             </strong> <br>
             Mobile no: <strong> ${mobile} </strong>
             <p>Please use your user id and password to login and proceed further.</p>
-            <p><strong>Link: https://atl.unisolve.org</strong></p>
+            <p><strong>Link: http://ec2-3-110-155-200.ap-south-1.compute.amazonaws.com/teacher</strong></p>
             <p><strong>Regards,<br> ATL Marathon</strong></p>
             </div></body>`
             const otp = await this.triggerEmail(email,2,WelcomeTemp);

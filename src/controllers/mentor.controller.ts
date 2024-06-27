@@ -43,7 +43,7 @@ export default class MentorController extends BaseController {
         this.router.put(`${this.path}/changePassword`, this.changePassword.bind(this));
         this.router.delete(`${this.path}/:mentor_user_id/deleteAllData`, this.deleteAllData.bind(this));
         this.router.put(`${this.path}/resetPassword`, this.resetPassword.bind(this));
-        this.router.post(`${this.path}/mobileOtp`,this.mobileOpt.bind(this));
+        this.router.post(`${this.path}/emailOtp`,this.emailOtp.bind(this));
         this.router.get(`${this.path}/mentorpdfdata`,this.mentorpdfdata.bind(this));
         this.router.post(`${this.path}/triggerWelcomeEmail`,this.triggerWelcomeEmail.bind(this));
         super.initializeRoutes();
@@ -450,13 +450,13 @@ export default class MentorController extends BaseController {
             next(error)
         }
     }
-    private async mobileOpt(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+    private async emailOtp(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try {
             const { username } = req.body;
             if (!username) {
                 throw badRequest(speeches.USER_EMAIL_REQUIRED);
             }
-            const result = await this.authService.mobileotp(req.body);
+            const result = await this.authService.emailotp(req.body);
             if (result.error) {
                 if (result && result.error.output && result.error.output.payload && result.error.output.payload.message == 'Email') {
                     return res.status(406).send(dispatcher(res, result.data, 'error', speeches.MENTOR_EXISTS, 406));
