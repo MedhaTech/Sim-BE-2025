@@ -9,7 +9,8 @@ import { user } from './user.model';
 export class team extends Model<InferAttributes<team>, InferCreationAttributes<team>> {
     declare team_id: CreationOptional<number>;
     declare team_name: string;
-    declare mentor_id: string;
+    declare mentor_id: number;
+    declare team_email: string;
     declare status: Enumerator;
     declare created_by: number;
     declare created_at: Date;
@@ -25,6 +26,10 @@ team.init(
             primaryKey: true
         },
         team_name: {
+            type: DataTypes.STRING,
+            allowNull: false
+        },
+        team_email: {
             type: DataTypes.STRING,
             allowNull: false
         },
