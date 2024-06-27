@@ -10,6 +10,7 @@ export class team extends Model<InferAttributes<team>, InferCreationAttributes<t
     declare team_id: CreationOptional<number>;
     declare team_name: string;
     declare mentor_id: number;
+    declare user_id: number;
     declare team_email: string;
     declare status: Enumerator;
     declare created_by: number;
@@ -34,6 +35,10 @@ team.init(
             allowNull: false
         },
         mentor_id: {
+            type: DataTypes.INTEGER,
+            allowNull: true
+        },
+        user_id: {
             type: DataTypes.INTEGER,
             allowNull: true
         },

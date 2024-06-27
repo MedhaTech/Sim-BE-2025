@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
-import { Op ,QueryTypes } from "sequelize";
+import { Op, QueryTypes } from "sequelize";
 import { constents } from "../configs/constents.config";
-import { teamSchema, teamUpdateSchema } from "../validations/team.validationa";
+import { teamSchema, teamUpdateSchema, teamChangePasswordSchema } from "../validations/team.validationa";
 import ValidationsHolder from "../validations/validationHolder";
 import BaseController from "./base.controller";
 import authService from '../services/auth.service';
@@ -14,6 +14,7 @@ import { student } from "../models/student.model";
 import { user } from "../models/user.model";
 import { mentor } from "../models/mentor.model";
 import { challenge_response } from "../models/challenge_response.model";
+import validationMiddleware from "../middlewares/validation.middleware";
 
 export default class TeamController extends BaseController {
 
@@ -31,11 +32,12 @@ export default class TeamController extends BaseController {
         this.router.get(`${this.path}/list`, this.getTeamsByMenter.bind(this));
         this.router.get(`${this.path}/namebymenterid`, this.getNameByMenter.bind(this));
         this.router.get(`${this.path}/listwithideaStatus`, this.getteamslistwithideastatus.bind(this));
+        this.router.put(`${this.path}/changePassword`, validationMiddleware(teamChangePasswordSchema), this.changePassword.bind(this));
         super.initializeRoutes();
     }
     protected async getData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STATE'){
-            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STATE') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
         }
         try {
             let data: any;
@@ -44,41 +46,41 @@ export default class TeamController extends BaseController {
                 this.model = model;
             };
             const current_user = res.locals.user_id || res.locals.id || res.locals.state_coordinators_id;
-            if(!current_user){
+            if (!current_user) {
                 throw forbidden()
             }
             // pagination
-            let newREQQuery : any = {}
-            if(req.query.Data){
-                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
-                newREQQuery  = JSON.parse(newQuery);
-            }else if(Object.keys(req.query).length !== 0){
-                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
+            let newREQQuery: any = {}
+            if (req.query.Data) {
+                let newQuery: any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery = JSON.parse(newQuery);
+            } else if (Object.keys(req.query).length !== 0) {
+                return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
             }
-            let mentor_id:any = null
-            const { page, size,  } = newREQQuery;
-            mentor_id =  newREQQuery.mentor_id
+            let mentor_id: any = null
+            const { page, size, } = newREQQuery;
+            mentor_id = newREQQuery.mentor_id
             // let condition = title ? { title: { [Op.like]: `%${title}%` } } : null;
-            let condition =  null;
-            if(mentor_id){
+            let condition = null;
+            if (mentor_id) {
                 const getUserIdFromMentorId = await mentor.findOne({
-                    attributes: ["user_id", "created_by"], 
+                    attributes: ["user_id", "created_by"],
                     where: {
-                         mentor_id: mentor_id 
-                        }
+                        mentor_id: mentor_id
+                    }
                 });
                 if (!getUserIdFromMentorId) throw badRequest(speeches.MENTOR_NOT_EXISTS);
                 if (getUserIdFromMentorId instanceof Error) throw getUserIdFromMentorId;
                 const providedMentorsUserId = getUserIdFromMentorId.getDataValue("user_id");
-                condition =  { 
-                    mentor_id:mentor_id,
-                    created_by:providedMentorsUserId
+                condition = {
+                    mentor_id: mentor_id,
+                    created_by: providedMentorsUserId
                 }
                 // if (current_user !== getUserIdFromMentorId.getDataValue("user_id")) {
                 //     throw forbidden();
                 // };
             }
-            
+
             const { limit, offset } = this.getPagination(page, size);
             const modelClass = await this.loadModel(model).catch(error => {
                 next(error)
@@ -161,7 +163,7 @@ export default class TeamController extends BaseController {
                 ]
             }
             if (id) {
-                const newParamId :any = await this.authService.decryptGlobal(req.params.id);
+                const newParamId: any = await this.authService.decryptGlobal(req.params.id);
                 where[`${this.model}_id`] = JSON.parse(newParamId);
                 data = await this.crudService.findOne(modelClass, {
                     attributes: [
@@ -234,8 +236,8 @@ export default class TeamController extends BaseController {
         }
     };
     protected async getTeamMembers(req: Request, res: Response, next: NextFunction) {
-        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR'){
-            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
         }
         // accept the team_id from the params and find the students details, user_id
         const newParamId: any = await this.authService.decryptGlobal(req.params.id);
@@ -249,12 +251,12 @@ export default class TeamController extends BaseController {
         }
         const where: any = { team_id };
         let whereClauseStatusPart: any = {};
-        let newREQQuery : any = {}
-        if(req.query.Data){
-            let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
-            newREQQuery  = JSON.parse(newQuery);
-        }else if(Object.keys(req.query).length !== 0){
-            return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
+        let newREQQuery: any = {}
+        if (req.query.Data) {
+            let newQuery: any = await this.authService.decryptGlobal(req.query.Data);
+            newREQQuery = JSON.parse(newQuery);
+        } else if (Object.keys(req.query).length !== 0) {
+            return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
         }
         const paramStatus: any = newREQQuery.status;
         if (paramStatus && (paramStatus in constents.common_status_flags.list)) {
@@ -262,8 +264,6 @@ export default class TeamController extends BaseController {
         }
         const student_res = await this.crudService.findAll(student, {
             where: {
-                //TODO: replace the UUID with password name, and attach the username in a single object
-                // attributes: ['UUID', 'password'],
                 [Op.and]: [
                     whereClauseStatusPart,
                     where
@@ -274,9 +274,7 @@ export default class TeamController extends BaseController {
                 attributes: ["username"]
             }]
         });
-        // console.log(student_res[0].dataValues.UUID)
-        // student_res.dataValues['password'] = "";
-        return res.status(200).send(dispatcher(res,student_res, 'success'));
+        return res.status(200).send(dispatcher(res, student_res, 'success'));
     };
     /**
      * 
@@ -287,32 +285,27 @@ export default class TeamController extends BaseController {
      * @returns 
      */
     protected async createData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR'){
-            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
         }
         try {
             const { model } = req.params;
             if (model) {
                 this.model = model;
             };
-            const current_user = res.locals.user_id; 
+            const current_user = res.locals.user_id;
             const modelLoaded = await this.loadModel(model);
-            // console.log(req.body.team_name);
-            // req.body.team_name = req.body.team_name.trim();
-            // if (!req.body.team_name) {
-            //     throw badRequest(speeches.TEAM_NAME_REQUIRED);
-            // }
             const getUserIdFromMentorId = await mentor.findOne({
                 attributes: ["user_id", "created_by"], where: { mentor_id: req.body.mentor_id }
             });
-            // console.log(getUserIdFromMentorId);
+
             if (!getUserIdFromMentorId) throw badRequest(speeches.MENTOR_NOT_EXISTS);
             if (getUserIdFromMentorId instanceof Error) throw getUserIdFromMentorId;
             if (current_user !== getUserIdFromMentorId.getDataValue("user_id")) {
                 throw forbidden();
             };
             const payload = this.autoFillTrackingColumns(req, res, modelLoaded);
-            // console.log(payload)
+
             const teamNameCheck: any = await team.findOne({
                 where: {
                     mentor_id: payload.mentor_id,
@@ -322,9 +315,22 @@ export default class TeamController extends BaseController {
             if (teamNameCheck) {
                 throw badRequest('code unique');
             }
-            // console.log("payload: ", payload)
+
             // add check if teamNameCheck is not an error and has data then return and err
-            const data = await this.crudService.create(modelLoaded, payload);
+            const findOrgCode = await db.query(`SELECT count(*) as teamCount  FROM teams ;`, { type: QueryTypes.SELECT });
+            const countINcrement = parseInt(Object.values(findOrgCode[0]).toString(), 10) + 1;
+            const paddingvalue = countINcrement.toString().padStart(5, '0')
+            const cryptoEncryptedString = await this.authService.generateCryptEncryption(payload.team_name.toLowerCase());
+            let userData = {
+                "username": `team_${paddingvalue}`,
+                "full_name": payload.team_name,
+                "password": cryptoEncryptedString,
+                "status": "ACTIVE",
+                "role": "TEAM"
+            }
+            const createUserAccount = await this.crudService.create(user, userData);
+            let payloaduserId = { ...payload, user_id: createUserAccount.dataValues.user_id };
+            const data = await this.crudService.create(modelLoaded, payloaduserId);
             if (!data) {
                 return res.status(404).send(dispatcher(res, data, 'error'));
             }
@@ -335,14 +341,14 @@ export default class TeamController extends BaseController {
                 throw data;
             }
             return res.status(201).send(dispatcher(res, data, 'created'));
-            
+
         } catch (error) {
             next(error);
         }
     }
     protected async deleteData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR'){
-            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
         }
         try {
             let deletingTeamDetails: any;
@@ -361,7 +367,6 @@ export default class TeamController extends BaseController {
             });
             if (getTeamDetails instanceof Error) throw getTeamDetails;
             if (!getTeamDetails) throw notFound(speeches.TEAM_NOT_FOUND);
-            // console.log(getTeamDetails);
             const getStudentDetails = await this.crudService.findAll(student, {
                 attributes: ["student_id", "user_id"],
                 where: { team_id: getTeamDetails.dataValues.team_id }
@@ -398,57 +403,57 @@ export default class TeamController extends BaseController {
         }
     }
     protected async getTeamsByMenter(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR'){
-            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
         }
-        try{
-            let newREQQuery : any = {}
-            if(req.query.Data){
-                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
-                newREQQuery  = JSON.parse(newQuery);
-            }else if(Object.keys(req.query).length !== 0){
-                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
+        try {
+            let newREQQuery: any = {}
+            if (req.query.Data) {
+                let newQuery: any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery = JSON.parse(newQuery);
+            } else if (Object.keys(req.query).length !== 0) {
+                return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
             }
             const mentorId = newREQQuery.mentor_id;
-            const result  = await db.query(`SELECT teams.team_id, team_name, COUNT(students.team_id) as StudentCount FROM teams left JOIN students ON teams.team_id = students.team_id where mentor_id = ${mentorId} GROUP BY teams.team_id order by team_id desc`,{ type: QueryTypes.SELECT });
+            const result = await db.query(`SELECT teams.team_id, team_name, COUNT(students.team_id) as StudentCount FROM teams left JOIN students ON teams.team_id = students.team_id where mentor_id = ${mentorId} GROUP BY teams.team_id order by team_id desc`, { type: QueryTypes.SELECT });
             res.status(200).send(dispatcher(res, result, "success"))
-        }catch (error) {
+        } catch (error) {
             next(error);
         }
     }
     protected async getNameByMenter(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STATE'){
-            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STATE') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
         }
-        try{
-            let newREQQuery : any = {}
-            if(req.query.Data){
-                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
-                newREQQuery  = JSON.parse(newQuery);
-            }else if(Object.keys(req.query).length !== 0){
-                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
+        try {
+            let newREQQuery: any = {}
+            if (req.query.Data) {
+                let newQuery: any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery = JSON.parse(newQuery);
+            } else if (Object.keys(req.query).length !== 0) {
+                return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
             }
             const mentorId = newREQQuery.mentor_id;
-            const result  = await db.query(`SELECT team_id,team_name FROM teams where mentor_id = ${mentorId} order by team_id desc;`,{ type: QueryTypes.SELECT });
+            const result = await db.query(`SELECT team_id,team_name FROM teams where mentor_id = ${mentorId} order by team_id desc;`, { type: QueryTypes.SELECT });
             res.status(200).send(dispatcher(res, result, "success"))
-        }catch (error) {
+        } catch (error) {
             next(error);
         }
     }
     protected async getteamslistwithideastatus(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR'){
-            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
         }
-        try{
-            let newREQQuery : any = {}
-            if(req.query.Data){
-                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
-                newREQQuery  = JSON.parse(newQuery);
-            }else if(Object.keys(req.query).length !== 0){
-                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
+        try {
+            let newREQQuery: any = {}
+            if (req.query.Data) {
+                let newQuery: any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery = JSON.parse(newQuery);
+            } else if (Object.keys(req.query).length !== 0) {
+                return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
             }
             const mentorId = newREQQuery.mentor_id;
-            const result  = await db.query(`SELECT teams.team_id,team_name,COUNT(teams.team_id) AS StudentCount,challenge_responses.status AS ideaStatus
+            const result = await db.query(`SELECT teams.team_id,team_name,COUNT(teams.team_id) AS StudentCount,challenge_responses.status AS ideaStatus
             FROM
                 teams
                     LEFT JOIN
@@ -457,10 +462,26 @@ export default class TeamController extends BaseController {
                 challenge_responses ON teams.team_id = challenge_responses.team_id
             WHERE
                 mentor_id = ${mentorId}
-            GROUP BY teams.team_id;`,{ type: QueryTypes.SELECT });
+            GROUP BY teams.team_id;`, { type: QueryTypes.SELECT });
             res.status(200).send(dispatcher(res, result, "success"))
-        }catch (error) {
+        } catch (error) {
             next(error);
+        }
+    }
+    private async changePassword(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
+        }
+        const result = await this.authService.changePassword(req.body, res);
+        if (!result) {
+            return res.status(404).send(dispatcher(res, null, 'error', speeches.USER_NOT_FOUND));
+        } else if (result.error) {
+            return res.status(404).send(dispatcher(res, result.error, 'error', result.error));
+        }
+        else if (result.match) {
+            return res.status(404).send(dispatcher(res, null, 'error', speeches.USER_PASSWORD));
+        } else {
+            return res.status(202).send(dispatcher(res, result.data, 'accepted', speeches.USER_PASSWORD_CHANGE, 202));
         }
     }
 }

@@ -10,6 +10,7 @@ import StudentController from "./controllers/student.controller";
 import popupController from "./controllers/popup.controller";
 import LatestNewsController from "./controllers/latest_news.controller";
 import ResourceController from "./controllers/resource.controller";
+import TeamController from "./controllers/team.controller";
 
 
 // validating env variables
@@ -25,7 +26,8 @@ try {
         new StudentController,
         new popupController,
         new LatestNewsController,
-        new ResourceController
+        new ResourceController,
+        new TeamController
     ], Number(process.env.APP_PORT));
     // starting app
     app.listen();
