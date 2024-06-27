@@ -425,6 +425,7 @@ export default class StudentController extends BaseController {
             teamDetails = await this.authService.getServiceDetails('team', { team_id: studentDetails.dataValues.team_id });
             result.data['team_id'] = studentDetails.dataValues.team_id;
             result.data['student_id'] = studentDetails.dataValues.student_id;
+            result.data['Gender'] = studentDetails.dataValues.Gender;
             if (!teamDetails) {
                 result.data['mentor_id'] = null;
                 result.data['team_name'] = null;

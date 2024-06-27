@@ -317,6 +317,7 @@ export default class MentorController extends BaseController {
                 result.data['organization_name'] = mentorData.dataValues.organization.organization_name;
                 result.data['state'] = mentorData.dataValues.organization.state;
                 result.data['title'] = mentorData.dataValues.title;
+                result.data['gender'] = mentorData.dataValues.gender;
                 return res.status(200).send(dispatcher(res, result.data, 'success', speeches.USER_LOGIN_SUCCESS));
             }
         } catch (error) {
