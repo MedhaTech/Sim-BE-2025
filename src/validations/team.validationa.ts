@@ -20,3 +20,15 @@ export const teamUpdateSchema = Joi.object().keys({
     }),
     team_email: Joi.string()
 });
+
+export const teamChangePasswordSchema = Joi.object().keys({
+    user_id: Joi.string().required().messages({
+        'string.empty': speeches.USER_USERID_REQUIRED
+    }),
+    old_password: Joi.string().required().regex(constents.ALPHA_NUMERIC_PATTERN).messages({
+        'string.empty': speeches.USER_OLDPASSWORD_REQUIRED
+    }),
+    new_password: Joi.string().trim().min(1).regex(constents.ALPHA_NUMERIC_PATTERN).required().messages({
+        'string.empty': speeches.USER_NEWPASSWORD_REQUIRED
+    })
+});
