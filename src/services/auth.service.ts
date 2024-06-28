@@ -21,7 +21,6 @@ import { quiz_response } from '../models/quiz_response.model';
 import { quiz_survey_response } from '../models/quiz_survey_response.model';
 import { user_topic_progress } from '../models/user_topic_progress.model';
 import { evaluator } from '../models/evaluator.model';
-import { mentor_topic_progress } from '../models/mentor_topic_progress.model';
 export default class authService {
     crudService: CRUDService = new CRUDService;
     private otp = '112233';
@@ -472,7 +471,7 @@ export default class authService {
     async triggerWelcome(requestBody: any) {
         let result: any = {};
         try {
-            const {school_name,udise_code,atl_code,district,state,pin_code,email,mobile} = requestBody;
+            const {school_name,udise_code,district,state,pin_code,email,mobile} = requestBody;
             var pass = email.trim();
             var myArray = pass.split('@');
             let word = myArray[0];
@@ -484,7 +483,6 @@ export default class authService {
             <h4>Congratulations for successfully registering for School Innovation Marathon 24-25</h4>
             <p>Your schools has been successfully registered with the following details :
             <br> School name: <strong> ${school_name}</strong> <br> UDISE CODE:<strong> ${udise_code}</strong>
-            <br> ATL CODE:<strong> ${atl_code}</strong>
             <br> District:<strong> ${district}</strong>
              <br> State:<strong> ${state}</strong>
              <br> Pincode:<strong> ${pin_code}</strong>
@@ -513,7 +511,7 @@ export default class authService {
 
      /**
  * delete the Mentor response (hard delete) for specific user
- * @note Services includes ( Quiz_response, Quiz_survey_response, Reflective_quiz_response, Mentor_topic_progress)
+ * @note Services includes ( Quiz_survey_response)
  * @param user_id String
  * @returns Object
  */
@@ -521,9 +519,7 @@ export default class authService {
         try {
             let result: any = {};
             let models = [
-                quiz_response,
                 quiz_survey_response,
-                mentor_topic_progress
             ];
             for (let i = 0; i < models.length; i++) {
                 let deleted = await this.crudService.delete(models[i], { where: { user_id } });
@@ -538,7 +534,7 @@ export default class authService {
 
     /**
      * delete the user response (hard delete) for specific user
-     * @note Services includes ( Quiz_response, Quiz_survey_response, Reflective_quiz_response, User_topic_progress, Worksheet_response)
+     * @note Services includes ( Quiz_response, Quiz_survey_response, User_topic_progress)
      * @param user_id String
      * @returns Object
      */
