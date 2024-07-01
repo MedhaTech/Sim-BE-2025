@@ -261,15 +261,9 @@ export default class StudentController extends BaseController {
             const modelLoaded = await this.loadModel(model);
             const payload = this.autoFillTrackingColumns(req, res, modelLoaded);
             if (req.body.username) {
-                    const usernameforpass = req.body.username.split('@');
-                    const studentPassword = usernameforpass[0];
-                    const cryptoEncryptedString = await this.authService.generateCryptEncryption(studentPassword);
+                    const cryptoEncryptedString = await this.authService.generateCryptEncryption('STUDENT@123');
                     const username = req.body.username;
-                    payload['qualification'] = cryptoEncryptedString
-                    payload['UUID'] = studentPassword;
                     const studentDetails = await this.crudService.findOne(user, { where: { username: username } });
-                    // console.log(studentDetails);
-
                     if (studentDetails) {
                         if (studentDetails.dataValues.username == username) throw badRequest(speeches.USER_EMAIL_EXISTED);
                         if (studentDetails instanceof Error) throw studentDetails;
@@ -334,10 +328,9 @@ export default class StudentController extends BaseController {
     private async register(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try {
             // const randomGeneratedSixDigitID = this.nanoid();
-            const { team_id ,username} = req.body;
-            const usernameforpass = username.split('@');
-            const studentPassword = usernameforpass[0];
-            const cryptoEncryptedString = await this.authService.generateCryptEncryption(studentPassword);
+            const { team_id } = req.body;
+            const cryptoEncryptedString = await this.authService.generateCryptEncryption('STUDENT@123');
+            req.body.username = `${req.body.team_id}_${req.body.full_name.trim()}`
             if (!req.body.role || req.body.role !== 'STUDENT') return res.status(406).send(dispatcher(res, null, 'error', speeches.USER_ROLE_REQUIRED, 406));
             if (!req.body.team_id) return res.status(406).send(dispatcher(res, null, 'error', speeches.USER_TEAMID_REQUIRED, 406));
             if (team_id) {
@@ -351,10 +344,7 @@ export default class StudentController extends BaseController {
             }
             const teamDetails = await this.authService.crudService.findOne(team, { where: { team_id } });
             if (!teamDetails) return res.status(406).send(dispatcher(res, null, 'error', speeches.TEAM_NOT_FOUND, 406));
-            else
-                req.body['UUID'] = studentPassword;
-                req.body.qualification = cryptoEncryptedString // saving the encrypted text in the qualification as for now just for debugging
-
+        
             if (!req.body.password || req.body.password === "") req.body.password = cryptoEncryptedString;
             const payload = this.autoFillTrackingColumns(req, res, student)
             const result = await this.authService.register(payload);
@@ -366,9 +356,6 @@ export default class StudentController extends BaseController {
     }
     private async bulkCreateStudent(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try {
-            // if (req.body.length >= constents.TEAMS_MAX_STUDENTS_ALLOWED) {
-            //     throw badRequest(speeches.TEAM_MAX_MEMBES_EXCEEDED);
-            // }
             for (let student in req.body) {
                 if (!req.body[student].team_id) throw notFound(speeches.USER_TEAMID_REQUIRED);
                 const team_id = req.body[student].team_id
@@ -382,8 +369,6 @@ export default class StudentController extends BaseController {
                     }
                 }
             }
-            let usernameforpass: any; 
-            let studentPassword: any;
             let cryptoEncryptedString: any;
             const teamName = await this.authService.crudService.findOne(team, {
                 attributes: ["team_name"], where: { team_id: req.body[0].team_id }
@@ -391,20 +376,15 @@ export default class StudentController extends BaseController {
             if (!teamName) throw notFound(speeches.TEAM_NOT_FOUND, 406);
             if (teamName instanceof Error) throw teamName;
             for (let student in req.body) {
-                const usernameforpass = req.body[student].username.split('@');
-                studentPassword = usernameforpass[0];
-                cryptoEncryptedString = await this.authService.generateCryptEncryption(studentPassword);
+                cryptoEncryptedString = await this.authService.generateCryptEncryption('STUDENT@123');
+                req.body[student].username = `${req.body[student].team_id}_${req.body[student].full_name.trim()}`;
                 req.body[student].full_name = req.body[student].full_name.trim();
                 req.body[student].role = 'STUDENT';
-                req.body[student].UUID = studentPassword;
                 req.body[student].password = cryptoEncryptedString;
-                req.body[student].qualification = cryptoEncryptedString; // password filed will hashed further by the backend system hence we saving the encrypted text in the qualification filed as for now just for debugging
                 req.body[student].created_by = res.locals.user_id
                 req.body[student].updated_by = res.locals.user_id
             }
-            // console.log(req.body);
             const responseFromService = await this.authService.bulkCreateStudentService(req.body);
-            // if (responseFromService.error) return res.status(406).send(dispatcher(res, responseFromService.error, 'error', speeches.STUDENT_EXISTS, 406));
             return res.status(201).send(dispatcher(res, responseFromService, 'success', speeches.USER_REGISTERED_SUCCESSFULLY, 201));
         } catch (error) {
             next(error);
