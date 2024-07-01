@@ -267,6 +267,14 @@ export default class MentorController extends BaseController {
         }
         req.body['reg_status'] = '3';
         if (!req.body.password || req.body.password == null) req.body.password = '';
+        if(req.body.district){
+            const where: any = {};
+            where[`organization_code`] = req.body.organization_code;
+            const playload = {
+                'district': req.body.district
+            }
+           const uporg =  await this.crudService.update(organization,playload,{where: where})
+        }
         const result: any = await this.authService.mentorRegister(req.body);
         if (result && result.output && result.output.payload && result.output.payload.message == 'Email') {
             return res.status(406).send(dispatcher(res, result.data, 'error', speeches.MENTOR_EXISTS, 406));
