@@ -67,5 +67,6 @@ export const mentorRegSchema = Joi.object().keys({
     whatapp_mobile: Joi.string().max(10).regex(constents.ONLY_DIGIT_PATTERN),
     role: Joi.string().required().regex(constents.ALPHA_NUMERIC_PATTERN).messages({
         'string.empty': speeches.USER_ROLE_REQUIRED
-    })
+    }),
+    district: Joi.string().regex(constents.ALPHA_NUMERIC_PATTERN)
 });
