@@ -12,6 +12,9 @@ import LatestNewsController from "./controllers/latest_news.controller";
 import ResourceController from "./controllers/resource.controller";
 import TeamController from "./controllers/team.controller";
 import QuizSurveyController from "./controllers/quiz_survey.controller";
+import VideoController from "./controllers/video.controller";
+import SupportTicketController from "./controllers/supportTickets.controller";
+import SupportTicketRepliesController from "./controllers/supportTicketsReplies.controller";
 
 
 // validating env variables
@@ -29,7 +32,10 @@ try {
         new LatestNewsController,
         new ResourceController,
         new TeamController,
-        new QuizSurveyController
+        new QuizSurveyController,
+        new VideoController,
+        new SupportTicketController,
+        new SupportTicketRepliesController
     ], Number(process.env.APP_PORT));
     // starting app
     app.listen();
