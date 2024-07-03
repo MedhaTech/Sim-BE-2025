@@ -8,7 +8,9 @@ export const supportTicketsReplies = Joi.object().keys({
     }),
     reply_details: Joi.string().trim().min(1).required().messages({
         'string.empty': speeches.QUERY_DETAILS
-    })
+    }),
+    file:Joi.string(),
+    link:Joi.string()
 });
 
 export const supportTicketsRepliesUpdateSchema = Joi.object().keys({

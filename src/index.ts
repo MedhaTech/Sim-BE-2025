@@ -15,6 +15,15 @@ import QuizSurveyController from "./controllers/quiz_survey.controller";
 import VideoController from "./controllers/video.controller";
 import SupportTicketController from "./controllers/supportTickets.controller";
 import SupportTicketRepliesController from "./controllers/supportTicketsReplies.controller";
+import CourseController from "./controllers/course.controller";
+import FaqCategoryController from "./controllers/faq_category.controller";
+import FaqController from "./controllers/faq.controller";
+import MentorCourseController from "./controllers/mentorCourse.controller";
+import MentorTopicProgressController from "./controllers/mentorTopicProgress.controller";
+import QuizController from "./controllers/quiz.controller";
+import TranslationController from "./controllers/translation.controller";
+import WorksheetController from "./controllers/worksheet.controller";
+import UserTopicProgress from "./controllers/userTopicProgress.controller";
 
 
 // validating env variables
@@ -35,7 +44,17 @@ try {
         new QuizSurveyController,
         new VideoController,
         new SupportTicketController,
-        new SupportTicketRepliesController
+        new SupportTicketRepliesController,
+        new CourseController,
+        new FaqCategoryController,
+        new FaqController,
+        new MentorCourseController,
+        new MentorTopicProgressController,
+        new QuizController,
+        new TranslationController,
+        new WorksheetController,
+        new UserTopicProgress
+
     ], Number(process.env.APP_PORT));
     // starting app
     app.listen();
