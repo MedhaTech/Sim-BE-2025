@@ -1,22 +1,22 @@
 import BaseJobs from "./base.job";
 
 export default class DefaultJob extends BaseJobs {
-    
-    callBackFunction:any;
 
-    constructor(argName:string,argPeriod:any,argFn: any){
+    callBackFunction: any;
+
+    constructor(argName: string, argPeriod: any, argFn: any) {
         super()
-        this.setData(argName,argPeriod,argFn);
+        this.setData(argName, argPeriod, argFn);
     }
 
-    public setData(argName:string,argPeriod:any,argFn: any){
+    public setData(argName: string, argPeriod: any, argFn: any) {
         this.name = argName;
         this.period = argPeriod;
         this.callBackFunction = argFn;
     }
 
-    public async executeJob(){
-        if(this.callBackFunction){
+    public async executeJob() {
+        if (this.callBackFunction) {
             this.callBackFunction()
         }
     }

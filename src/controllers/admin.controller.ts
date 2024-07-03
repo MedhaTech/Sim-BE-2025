@@ -32,7 +32,7 @@ export default class AdminController extends BaseController {
         super.initializeRoutes();
     }
     protected getData(req: Request, res: Response, next: NextFunction) {
-        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'EADMIN'){
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'EADMIN') {
             throw unauthorized(speeches.ROLE_ACCES_DECLINE)
         }
         return super.getData(req, res, next, [],
@@ -51,8 +51,8 @@ export default class AdminController extends BaseController {
     }
 
     protected async updateData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if(res.locals.role !== 'ADMIN'){
-            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        if (res.locals.role !== 'ADMIN') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
         }
         try {
             const { model, id } = req.params;
@@ -90,14 +90,14 @@ export default class AdminController extends BaseController {
 
     private async login(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         let adminDetails: any;
-        let newREQQuery : any = {}
-            if(req.query.Data){
-                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
-                newREQQuery  = JSON.parse(newQuery);
-            }else if(Object.keys(req.query).length !== 0){
-                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
-            }
-        if (newREQQuery.eAdmin && newREQQuery.eAdmin == 'true') { req.body['role'] = 'EADMIN' } else if(newREQQuery.report && newREQQuery.report == 'true') { req.body['role'] = 'REPORT' } else{ req.body['role'] = 'ADMIN' }
+        let newREQQuery: any = {}
+        if (req.query.Data) {
+            let newQuery: any = await this.authService.decryptGlobal(req.query.Data);
+            newREQQuery = JSON.parse(newQuery);
+        } else if (Object.keys(req.query).length !== 0) {
+            return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
+        }
+        if (newREQQuery.eAdmin && newREQQuery.eAdmin == 'true') { req.body['role'] = 'EADMIN' } else if (newREQQuery.report && newREQQuery.report == 'true') { req.body['role'] = 'REPORT' } else { req.body['role'] = 'ADMIN' }
         const result = await this.authService.login(req.body);
         if (!result) {
             return res.status(404).send(dispatcher(res, result, 'error', speeches.USER_NOT_FOUND));
@@ -124,8 +124,8 @@ export default class AdminController extends BaseController {
     }
 
     private async changePassword(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'EADMIN'){
-            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'EADMIN') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
         }
         const result = await this.authService.changePassword(req.body, res);
         if (!result) {

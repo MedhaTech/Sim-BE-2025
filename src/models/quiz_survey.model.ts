@@ -2,7 +2,7 @@ import { CreationOptional, DataTypes, InferAttributes, InferCreationAttributes, 
 import { constents } from '../configs/constents.config';
 import db from '../utils/dbconnection.util';
 
-export class quiz_survey extends Model<InferAttributes<quiz_survey>,InferCreationAttributes<quiz_survey>> {
+export class quiz_survey extends Model<InferAttributes<quiz_survey>, InferCreationAttributes<quiz_survey>> {
     declare quiz_survey_id: CreationOptional<number>;
     declare no_of_questions: number;
     declare role: string;
@@ -29,7 +29,7 @@ quiz_survey.init(
         role: {
             type: DataTypes.STRING,
             allowNull: false,
-            defaultValue:constents.user_role_flags.default
+            defaultValue: constents.user_role_flags.default
         },
         name: {
             type: DataTypes.STRING,
@@ -47,7 +47,7 @@ quiz_survey.init(
         created_by: {
             type: DataTypes.INTEGER,
             allowNull: true,
-            defaultValue:null
+            defaultValue: null
         },
         created_at: {
             type: DataTypes.DATE,

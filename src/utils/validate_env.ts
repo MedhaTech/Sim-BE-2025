@@ -1,4 +1,4 @@
-import { cleanEnv, str, port} from "envalid"; 
+import { cleanEnv, str, port } from "envalid";
 import { baseConfig } from "../configs/base.config";
 
 /**
@@ -18,7 +18,7 @@ export default function validateEnv(): void {
         API_VERSION: str({
             default: baseConfig.API_VERSION,
         }),
-        APP_PORT:port({
+        APP_PORT: port({
             default: baseConfig.APP_PORT,
         }),
         APP_HOST: str({

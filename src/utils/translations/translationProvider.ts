@@ -38,7 +38,7 @@ export default class TranslationsProvider {
         await this.initSupportedLanguages()
         await this.initTranslationsFromDb()
     }
-    
+
     /**
      * gets the supported languages from the database and store them in object.
      */
@@ -112,16 +112,16 @@ export default class TranslationsProvider {
         if (this.translationsFromDbArr[argToLocale]) {
             const translationsForToLocale = this.translationsFromDbArr[argToLocale]
             const objKeys = Object.keys(translationsForToLocale)
-            let translatedObjKey=null
-            for(var i =0;i<objKeys.length;i++){
+            let translatedObjKey = null
+            for (var i = 0; i < objKeys.length; i++) {
                 const objkey = objKeys[i]
-                if(translationsForToLocale[objkey] == argValue){
-                    translatedObjKey =  objkey
+                if (translationsForToLocale[objkey] == argValue) {
+                    translatedObjKey = objkey
                     break;
                 }
             }
-            
-            
+
+
             if (translatedObjKey) {
                 return translatedObjKey;
             }
@@ -150,45 +150,37 @@ export default class TranslationsProvider {
      * @param translateTable model name
      * @returns array 
      */
-    static async translateRefresh(translateTable:any)
-    {
-        let bulkInsert:any = [];
-        if(translateTable != "*")
-        {            
-            for(let i=0;i<translateTable.length;i++)
-            {
-                let columns:any = constents.TRANSLATION_CONFIG.table_column[translateTable[i] as keyof Object]['columns' as keyof Object]
-                let indexNo:any = constents.TRANSLATION_CONFIG.table_column[translateTable[i] as keyof Object]['primary_key' as keyof Object]
-                let translateKeys:any = await db.query(`SELECT ${columns} , ${indexNo} as index_no FROM ${translateTable[i]}`);
+    static async translateRefresh(translateTable: any) {
+        let bulkInsert: any = [];
+        if (translateTable != "*") {
+            for (let i = 0; i < translateTable.length; i++) {
+                let columns: any = constents.TRANSLATION_CONFIG.table_column[translateTable[i] as keyof Object]['columns' as keyof Object]
+                let indexNo: any = constents.TRANSLATION_CONFIG.table_column[translateTable[i] as keyof Object]['primary_key' as keyof Object]
+                let translateKeys: any = await db.query(`SELECT ${columns} , ${indexNo} as index_no FROM ${translateTable[i]}`);
                 let tableName = translateTable[i];
                 translateKeys = translateKeys[0];
                 // console.log("🚀 ~ file: translationProvider.ts ~ line 152 ~ TranslationsProvider ~ translateKeys", translateKeys,tableName,indexNo);
-                for(let z:any=0;z<translateKeys.length;z++)
-                {
+                for (let z: any = 0; z < translateKeys.length; z++) {
                     // console.log("🚀 ~ file: translationProvider.ts ~ line 158 ~ TranslationsProvider ~ translateKeys", translateKeys[z]);
-                    for(let eachColumn of Object.keys(translateKeys[z]))
-                    {
+                    for (let eachColumn of Object.keys(translateKeys[z])) {
                         // console.log("🚀 ~ file: translationProvider.ts ~ line 162 ~ TranslationsProvider ~ eachColumn", eachColumn)
-                        if(eachColumn !== 'index_no')
-                        {
-                            let insertTranslate:any = {
-                                                    "table_name" : tableName,
-                                                    "coloumn_name": eachColumn,
-                                                    "index_no" : translateKeys[z]['index_no'],
-                                                    // "key" : translateKeys[z][eachColumn],
-                                                  }
-                            let translateData:any = await translation2.findOne({
-                                where:insertTranslate,
+                        if (eachColumn !== 'index_no') {
+                            let insertTranslate: any = {
+                                "table_name": tableName,
+                                "coloumn_name": eachColumn,
+                                "index_no": translateKeys[z]['index_no'],
+                                // "key" : translateKeys[z][eachColumn],
+                            }
+                            let translateData: any = await translation2.findOne({
+                                where: insertTranslate,
                                 raw: true
                             })
 
                             let translateKey = translateKeys[z][eachColumn];
-                            if(translateData)
-                            {
+                            if (translateData) {
                                 insertTranslate['translation_id'] = translateData['translation_id']
                                 insertTranslate['value'] = '';
-                                if(translateKey == translateData['key'])
-                                {
+                                if (translateKey == translateData['key']) {
                                     continue;
                                 }
                             }
@@ -196,25 +188,24 @@ export default class TranslationsProvider {
                             //translate table key
                             insertTranslate['key'] = translateKey;
                             bulkInsert.push(insertTranslate);
-                            
+
                             // console.log("🚀 ~ file: translationProvider.ts ~ line 167 ~ TranslationsProvider ~ Object.keys ~ insertTranslate", insertTranslate)
                         }
                     }
-                    
+
                 }
 
             }
 
             let result;
-            if(bulkInsert.length)
-            {
-                
-                result = await translation2.bulkCreate(bulkInsert,{ updateOnDuplicate: ["table_name","coloumn_name","index_no","key"] }
+            if (bulkInsert.length) {
+
+                result = await translation2.bulkCreate(bulkInsert, { updateOnDuplicate: ["table_name", "coloumn_name", "index_no", "key"] }
                 );
                 // console.log("🚀 ~ file: translationProvider.ts ~ line 186 ~ TranslationsProvider ~ result", result);
             }
 
-            return [result,bulkInsert];
+            return [result, bulkInsert];
         }
     }
 

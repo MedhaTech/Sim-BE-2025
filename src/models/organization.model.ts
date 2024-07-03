@@ -10,9 +10,9 @@ export class organization extends Model<InferAttributes<organization>, InferCrea
     declare city: string;
     declare district: string;
     declare new_district: string;
-    declare category : string;
+    declare category: string;
     declare state: string;
-    declare unique_code : string;
+    declare unique_code: string;
     declare country: string;
     declare pin_code: string;
     declare principal_name: string;
@@ -24,7 +24,7 @@ export class organization extends Model<InferAttributes<organization>, InferCrea
     declare created_at: Date;
     declare updated_by: number;
     declare updated_at: Date;
-    
+
 }
 
 organization.init({

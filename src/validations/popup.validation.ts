@@ -12,6 +12,6 @@ export const popupUpdateSchema = Joi.object().keys({
         'any.only': speeches.COMMON_STATUS_INVALID,
         'string.empty': speeches.COMMON_STATUS_REQUIRED
     }),
-    on_off:Joi.string(),
+    on_off: Joi.string(),
     url: Joi.string()
 });

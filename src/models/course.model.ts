@@ -35,12 +35,12 @@ course.init(
             allowNull: false
         },
         description: {
-            type:  DataTypes.TEXT('long'),
+            type: DataTypes.TEXT('long'),
             allowNull: true
         },
         thumbnail: {
             type: DataTypes.STRING,
-            defaultValue:constents.default_image_path
+            defaultValue: constents.default_image_path
         },
         status: {
             type: DataTypes.ENUM(...Object.values(constents.common_status_flags.list)),
@@ -49,7 +49,7 @@ course.init(
         created_by: {
             type: DataTypes.INTEGER,
             allowNull: true,
-            defaultValue:null
+            defaultValue: null
         },
         created_at: {
             type: DataTypes.DATE,

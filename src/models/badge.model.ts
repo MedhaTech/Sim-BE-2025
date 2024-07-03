@@ -4,7 +4,7 @@ import { constents } from '../configs/constents.config';
 
 
 export class badge extends Model<InferAttributes<badge>, InferCreationAttributes<badge>> {
-    
+
     declare badge_id: CreationOptional<number>;
     declare slug: CreationOptional<string>;
     declare name: string;
@@ -15,9 +15,9 @@ export class badge extends Model<InferAttributes<badge>, InferCreationAttributes
     declare created_at: CreationOptional<Date>;
     declare updated_by: CreationOptional<number>;
     declare updated_at: CreationOptional<Date>;
-    
+
     static modelTableName = "badges";
-    static structrue:any =  {
+    static structrue: any = {
         badge_id: {
             type: DataTypes.INTEGER,
             autoIncrement: true,
@@ -25,12 +25,12 @@ export class badge extends Model<InferAttributes<badge>, InferCreationAttributes
         },
         slug: {
             type: DataTypes.STRING,
-            unique:true
+            unique: true
         },
         name: {
             type: DataTypes.STRING,
             allowNull: false,
-            unique:true
+            unique: true
         },
         desc: {
             type: DataTypes.TEXT('long'),
@@ -64,8 +64,8 @@ export class badge extends Model<InferAttributes<badge>, InferCreationAttributes
             onUpdate: new Date().toLocaleString()
         }
     };
-    static getSlugValue(name:string){
-       return name.trim().split(" ").join("_").toLowerCase()
+    static getSlugValue(name: string) {
+        return name.trim().split(" ").join("_").toLowerCase()
     }
 
 }
@@ -79,7 +79,7 @@ badge.init(
         updatedAt: 'updated_at',
         createdAt: 'created_at',
         hooks: {
-            beforeCreate: async (argBadge:any) => {
+            beforeCreate: async (argBadge: any) => {
                 if (argBadge.name) {
                     argBadge.slug = badge.getSlugValue(argBadge.name);
                 }

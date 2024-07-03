@@ -34,7 +34,7 @@ export default class StudentController extends BaseController {
         this.validations = new ValidationsHolder(studentSchema, studentUpdateSchema);
     }
     protected initializeRoutes(): void {
-        this.router.post(`${this.path}/addStudent`,validationMiddleware(studentRegSchema), this.register.bind(this));
+        this.router.post(`${this.path}/addStudent`, validationMiddleware(studentRegSchema), this.register.bind(this));
         this.router.post(`${this.path}/bulkCreateStudent`, this.bulkCreateStudent.bind(this));
         this.router.post(`${this.path}/login`, validationMiddleware(studentLoginSchema), this.login.bind(this));
         this.router.get(`${this.path}/logout`, this.logout.bind(this));
@@ -43,20 +43,20 @@ export default class StudentController extends BaseController {
         this.router.get(`${this.path}/:student_user_id/studentCertificate`, this.studentCertificate.bind(this));
         this.router.post(`${this.path}/:student_user_id/badges`, this.addBadgeToStudent.bind(this));
         this.router.get(`${this.path}/:student_user_id/badges`, this.getStudentBadges.bind(this));
-        this.router.post(`${this.path}/stuIdeaSubmissionEmail`,this.stuIdeaSubmissionEmail.bind(this));
+        this.router.post(`${this.path}/stuIdeaSubmissionEmail`, this.stuIdeaSubmissionEmail.bind(this));
         super.initializeRoutes();
     }
     protected async getData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STATE'){
-            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STATE') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
         }
         try {
-            let newREQQuery : any = {}
-            if(req.query.Data){
-                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
-                newREQQuery  = JSON.parse(newQuery);
-            }else if(Object.keys(req.query).length !== 0){
-                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
+            let newREQQuery: any = {}
+            if (req.query.Data) {
+                let newQuery: any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery = JSON.parse(newQuery);
+            } else if (Object.keys(req.query).length !== 0) {
+                return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
             }
             let data: any;
             const { model, id } = req.params;
@@ -102,7 +102,7 @@ export default class StudentController extends BaseController {
                                 db.literal(`( SELECT username FROM users AS u WHERE u.user_id = \`student\`.\`user_id\`)`), 'username_email'
                             ]
                         ]
-                },
+                    },
                     where: {
                         [Op.and]: [
                             whereClauseStatusPart,
@@ -145,7 +145,7 @@ export default class StudentController extends BaseController {
                                     'address'
                                 ],
                             },
-                            
+
                         },
                     },
                 });
@@ -158,7 +158,7 @@ export default class StudentController extends BaseController {
                                     db.literal(`( SELECT username FROM users AS u WHERE u.user_id = \`student\`.\`user_id\`)`), 'username_email'
                                 ]
                             ]
-                    },
+                        },
                         where: {
                             [Op.and]: [
                                 whereClauseStatusPart,
@@ -232,8 +232,8 @@ export default class StudentController extends BaseController {
         }
     }
     protected async updateData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STATE'){
-            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STATE') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
         }
         try {
             const { model, id } = req.params;
@@ -241,7 +241,7 @@ export default class StudentController extends BaseController {
                 this.model = model;
             };
             const user_id = res.locals.user_id
-            const newParamId :any = await this.authService.decryptGlobal(req.params.id);
+            const newParamId: any = await this.authService.decryptGlobal(req.params.id);
             const studentTableDetails = await student.findOne(
                 {
                     where: {
@@ -261,24 +261,24 @@ export default class StudentController extends BaseController {
             const modelLoaded = await this.loadModel(model);
             const payload = this.autoFillTrackingColumns(req, res, modelLoaded);
             if (req.body.username) {
-                    const cryptoEncryptedString = await this.authService.generateCryptEncryption('STUDENT@123');
-                    const username = req.body.username;
-                    const studentDetails = await this.crudService.findOne(user, { where: { username: username } });
-                    if (studentDetails) {
-                        if (studentDetails.dataValues.username == username) throw badRequest(speeches.USER_EMAIL_EXISTED);
-                        if (studentDetails instanceof Error) throw studentDetails;
-                    };
-                    const user_data = await this.crudService.update(user, {
-                        full_name: payload.full_name,
-                        username: username,
-                        password: await bcrypt.hashSync(cryptoEncryptedString, process.env.SALT || baseConfig.SALT),
-                    }, { where: { user_id: studentTableDetails.getDataValue("user_id") } });
-                    if (!user_data) {
-                        throw internal()
-                    }
-                    if (user_data instanceof Error) {
-                        throw user_data;
-                    }
+                const cryptoEncryptedString = await this.authService.generateCryptEncryption('STUDENT@123');
+                const username = req.body.username;
+                const studentDetails = await this.crudService.findOne(user, { where: { username: username } });
+                if (studentDetails) {
+                    if (studentDetails.dataValues.username == username) throw badRequest(speeches.USER_EMAIL_EXISTED);
+                    if (studentDetails instanceof Error) throw studentDetails;
+                };
+                const user_data = await this.crudService.update(user, {
+                    full_name: payload.full_name,
+                    username: username,
+                    password: await bcrypt.hashSync(cryptoEncryptedString, process.env.SALT || baseConfig.SALT),
+                }, { where: { user_id: studentTableDetails.getDataValue("user_id") } });
+                if (!user_data) {
+                    throw internal()
+                }
+                if (user_data instanceof Error) {
+                    throw user_data;
+                }
             }
             if (req.body.full_name) {
                 const user_data = await this.crudService.update(user, {
@@ -305,8 +305,8 @@ export default class StudentController extends BaseController {
         }
     }
     protected async deleteData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR'){
-            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
         }
         try {
             const { model, id } = req.params;
@@ -344,7 +344,7 @@ export default class StudentController extends BaseController {
             }
             const teamDetails = await this.authService.crudService.findOne(team, { where: { team_id } });
             if (!teamDetails) return res.status(406).send(dispatcher(res, null, 'error', speeches.TEAM_NOT_FOUND, 406));
-        
+
             if (!req.body.password || req.body.password === "") req.body.password = cryptoEncryptedString;
             const payload = this.autoFillTrackingColumns(req, res, student)
             const result = await this.authService.register(payload);
@@ -440,8 +440,8 @@ export default class StudentController extends BaseController {
         }
     }
     private async changePassword(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR'){
-            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
         }
         const result = await this.authService.changePassword(req.body, res);
         if (!result) {
@@ -456,8 +456,8 @@ export default class StudentController extends BaseController {
         }
     }
     private async resetPassword(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STATE'){
-            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STATE') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
         }
         // accept the user_id or user_name from the req.body and update the password in the user table
         // perviously while student registration changes we have changed the password is changed to random generated UUID and stored and send in the payload,
@@ -467,7 +467,7 @@ export default class StudentController extends BaseController {
         if (!user_id) throw badRequest(speeches.USER_USERID_REQUIRED);
         const findUser: any = await this.crudService.findOne(user, { where: { user_id } });
         if (!findUser) throw badRequest(speeches.USER_NOT_FOUND);
-        if (findUser instanceof Error) throw findUser; 
+        if (findUser instanceof Error) throw findUser;
         const usernameforpass = findUser.dataValues.username.split('@');
         const studentPassword = usernameforpass[0];
         const cryptoEncryptedString = await this.authService.generateCryptEncryption(studentPassword);
@@ -494,8 +494,8 @@ export default class StudentController extends BaseController {
         // }
     }
     private async addBadgeToStudent(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR'){
-            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
         }
         try {
             //todo: test this api : haven't manually tested this api yet 
@@ -586,12 +586,12 @@ export default class StudentController extends BaseController {
         }
     }
     private async getStudentBadges(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR'){
-            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
         }
         //todo: implement this api ...!!
         try {
-            const student_user_id : any = await this.authService.decryptGlobal(req.params.student_user_id);
+            const student_user_id: any = await this.authService.decryptGlobal(req.params.student_user_id);
             const serviceStudent = new StudentService()
             let studentBadgesObj: any = await serviceStudent.getStudentBadges(student_user_id);
             ///do not do empty or null check since badges obj can be null if no badges earned yet hence this is not an error condition 
@@ -602,12 +602,12 @@ export default class StudentController extends BaseController {
                 studentBadgesObj = {};
             }
             const studentBadgesObjKeysArr = Object.keys(studentBadgesObj)
-            let newREQQuery : any = {}
-            if(req.query.Data){
-                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
-                newREQQuery  = JSON.parse(newQuery);
-            }else if(Object.keys(req.query).length !== 0){
-                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
+            let newREQQuery: any = {}
+            if (req.query.Data) {
+                let newQuery: any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery = JSON.parse(newQuery);
+            } else if (Object.keys(req.query).length !== 0) {
+                return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
             }
             const paramStatus: any = newREQQuery.status;
             const where: any = {};
@@ -651,15 +651,15 @@ export default class StudentController extends BaseController {
         }
     }
     private async studentCertificate(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR'){
-            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
         }
         try {
-            let newREParams : any = {};
-            if(req.params){
-                const newParams : any = await this.authService.decryptGlobal(req.params);
+            let newREParams: any = {};
+            if (req.params) {
+                const newParams: any = await this.authService.decryptGlobal(req.params);
                 newREParams = JSON.parse(newParams);
-            }else {
+            } else {
                 newREParams = req.params
             }
             const { model, student_user_id } = newREParams;
@@ -687,11 +687,11 @@ export default class StudentController extends BaseController {
         }
     }
     private async stuIdeaSubmissionEmail(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT'){
-            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
         }
         try {
-            const { mentor_id,team_id,team_name,title} = req.body;
+            const { mentor_id, team_id, team_name, title } = req.body;
             let data: any = {}
             const contentText = `
             <body style="border: solid;margin-right: 15%;margin-left: 15%; ">
@@ -731,11 +731,11 @@ export default class StudentController extends BaseController {
                 WHERE
                     s.team_id = ${team_id}
             ) AS combined_usernames;`, { type: QueryTypes.SELECT });
-           data= summary;
+            data = summary;
             const usernameArray = data[0].all_usernames;
             let arrayOfUsernames = usernameArray.split(', ');
-            const result = await this.authService.triggerBulkEmail(arrayOfUsernames,contentText,subject);
-            
+            const result = await this.authService.triggerBulkEmail(arrayOfUsernames, contentText, subject);
+
             return res.status(200).send(dispatcher(res, result, 'Email sent'));
         } catch (error) {
             next(error);

@@ -176,7 +176,7 @@ export const worksheetById = {
                             data: {
                                 type: 'array',
                                 example: ['object']
-                            } 
+                            }
                         }
                     }
                 }

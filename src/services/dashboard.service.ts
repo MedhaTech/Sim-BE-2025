@@ -64,7 +64,7 @@ export default class DashboardService extends BaseService {
             return err
         }
     }
-    
+
     /**
      * Get map stats data with based on state
      * @param argdistric String default set to null

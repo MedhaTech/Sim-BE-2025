@@ -5,7 +5,7 @@ import HttpStatus from 'http-status-codes';
  * @param  {Error} err
  * @returns {Object} modified response
  */
-function buildResponse(dataValue:any) {
+function buildResponse(dataValue: any) {
     return {
         code: HttpStatus.OK,
         message: HttpStatus.getStatusText(HttpStatus.OK),

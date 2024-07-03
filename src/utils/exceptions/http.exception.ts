@@ -9,7 +9,7 @@ export default class HttpException extends Error {
     public message: string;
     public data: any;
     status_type: string;
-    
+
     constructor(status: number, message: string, data?: any) {
         super(message);
         this.status = status;

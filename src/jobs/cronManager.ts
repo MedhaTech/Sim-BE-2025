@@ -73,7 +73,7 @@ export class CronManager {
     };
     public startAll() {
         for (let name in this.jobs) {
-            console.log("starting cron job "+name)
+            console.log("starting cron job " + name)
             this.jobs[name].start()
         }
     }

@@ -193,7 +193,7 @@ export const courseTopicById = {
                             data: {
                                 type: 'array',
                                 example: ['object']
-                            } 
+                            }
                         }
                     }
                 }

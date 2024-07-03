@@ -32,7 +32,7 @@ course_module.init(
             allowNull: false
         },
         description: {
-            type:  DataTypes.TEXT('long'),
+            type: DataTypes.TEXT('long'),
             allowNull: true
         },
         status: {
@@ -42,7 +42,7 @@ course_module.init(
         created_by: {
             type: DataTypes.INTEGER,
             allowNull: true,
-            defaultValue:null
+            defaultValue: null
         },
         created_at: {
             type: DataTypes.DATE,
@@ -70,5 +70,5 @@ course_module.init(
     }
 );
 
-course_module.belongsTo(course, { foreignKey: 'course_id'});
-course.hasMany(course_module, { foreignKey: 'course_id'});
+course_module.belongsTo(course, { foreignKey: 'course_id' });
+course.hasMany(course_module, { foreignKey: 'course_id' });

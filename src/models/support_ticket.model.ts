@@ -35,7 +35,7 @@ support_ticket.init(
             type: DataTypes.ENUM(...Object.values(constents.support_tickets_status_flags.list)),
             defaultValue: constents.support_tickets_status_flags.default
         },
-        state :{
+        state: {
             type: DataTypes.STRING,
         },
         created_by: {

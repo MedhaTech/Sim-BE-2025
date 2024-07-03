@@ -6,7 +6,7 @@ let logger: any = null
 
 // setting up differ logger for different env's
 if (process.env.NODE_ENV === 'development' || 'test') {
-    logger = buildDevLogger(); 
+    logger = buildDevLogger();
 } else logger = buildProdLogger();
 
 // logger are displayed in node console for development and testing env's 

@@ -10,7 +10,7 @@ import logger from "./logger";
  * @param res Response object
  * @deprecated
  */
-export default async function logIt(flag: string, message: string, req: any= {}, res: any= {}): Promise<any> {
+export default async function logIt(flag: string, message: string, req: any = {}, res: any = {}): Promise<any> {
     // const logBody = {
     //     log_type: flag,
     //     message: message,
@@ -25,7 +25,7 @@ export default async function logIt(flag: string, message: string, req: any= {},
     //     user_details: JSON.stringify(res.locals || {})
     // };
     // await logintodb(logBody);
-    
+
     // flag = (flag === constents.log_levels.list.INBOUND || flag === constents.log_levels.list.OUTBOUND)? constents.log_levels.list.INFO : flag;
     // await logger.log(flag.toLowerCase(), message);
 }

@@ -22,7 +22,7 @@ module.exports = {
   rules: {
     'prettier/prettier ': 'error',
     'import/extensions': 'off',
-    'no-console': 'off', 
+    'no-console': 'off',
     'import/order': [
       'error',
       {
@@ -40,7 +40,7 @@ module.exports = {
     },
     'import/resolver': {
       alwaysTryTypes: true,
-      project:'./tsconfig.json'
+      project: './tsconfig.json'
     },
   },
 };

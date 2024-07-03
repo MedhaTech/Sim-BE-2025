@@ -4,7 +4,7 @@ import { constents } from '../configs/constents.config';
 
 
 export class supported_language extends Model<InferAttributes<supported_language>, InferCreationAttributes<supported_language>> {
-    
+
     declare supported_language_id: CreationOptional<number>;
     declare locale: string;
     declare status: Enumerator;
@@ -12,9 +12,9 @@ export class supported_language extends Model<InferAttributes<supported_language
     declare created_at: Date;
     declare updated_by: number;
     declare updated_at: Date;
-    
+
     static modelTableName = "supported_languages";
-    static structrue:any =  {
+    static structrue: any = {
         supported_language_id: {
             type: DataTypes.INTEGER,
             autoIncrement: true,
@@ -23,7 +23,7 @@ export class supported_language extends Model<InferAttributes<supported_language
         locale: {
             type: DataTypes.STRING,
             allowNull: false,
-            unique:true
+            unique: true
         },
         status: {
             type: DataTypes.ENUM(...Object.values(constents.common_status_flags.list)),
@@ -51,7 +51,7 @@ export class supported_language extends Model<InferAttributes<supported_language
             onUpdate: new Date().toLocaleString()
         }
     };
-    
+
 
 }
 
