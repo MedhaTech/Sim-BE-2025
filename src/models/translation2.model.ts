@@ -4,7 +4,7 @@ import { constents } from '../configs/constents.config';
 
 
 export class translation2 extends Model<InferAttributes<translation2>, InferCreationAttributes<translation2>> {
-    
+
     declare translation_id: CreationOptional<number>;
     declare to_locale: string;
     declare table_name: string;
@@ -18,9 +18,9 @@ export class translation2 extends Model<InferAttributes<translation2>, InferCrea
     declare created_at: Date;
     declare updated_by: number;
     declare updated_at: Date;
-    
+
     static modelTableName = "translations2";
-    static structrue:any =  {
+    static structrue: any = {
         translation_id: {
             type: DataTypes.INTEGER,
             autoIncrement: true,
@@ -49,11 +49,11 @@ export class translation2 extends Model<InferAttributes<translation2>, InferCrea
         },
         key: {
             type: DataTypes.TEXT('long'),
-            
+
         },
         value: {
             type: DataTypes.TEXT('long'),
-            
+
         },
         status: {
             type: DataTypes.ENUM(...Object.values(constents.common_status_flags.list)),
@@ -81,12 +81,12 @@ export class translation2 extends Model<InferAttributes<translation2>, InferCrea
             onUpdate: new Date().toLocaleString()
         }
     };
-    
+
 
 }
 
 translation2.init(
-   translation2.structrue,
+    translation2.structrue,
     {
         sequelize: db,
         tableName: translation2.modelTableName,

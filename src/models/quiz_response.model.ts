@@ -12,8 +12,8 @@ export class quiz_response extends Model<InferAttributes<quiz_response>, InferCr
     declare created_at: Date;
     declare updated_by: number;
     declare updated_at: Date;
-    declare attempts:number;
-    declare score:number
+    declare attempts: number;
+    declare score: number
 }
 
 quiz_response.init(

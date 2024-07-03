@@ -53,8 +53,8 @@ export const mentorUpdateSchema = Joi.object().keys({
 export const mentorRegSchema = Joi.object().keys({
     status: Joi.string().valid(...Object.values(constents.common_status_flags.list)),
     organization_code: Joi.string(),
-    password:Joi.string(),
-    reg_status:Joi.any(),
+    password: Joi.string(),
+    reg_status: Joi.any(),
     username: Joi.string().trim().min(1).required().email().messages({
         'string.empty': speeches.USER_USERNAME_REQUIRED
     }),

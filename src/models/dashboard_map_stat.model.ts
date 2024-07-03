@@ -37,7 +37,7 @@ dashboard_map_stat.init(
             type: DataTypes.STRING,
             allowNull: false
         },
-        schools_with_teams:{
+        schools_with_teams: {
             type: DataTypes.STRING,
             allowNull: false
         },

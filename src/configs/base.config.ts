@@ -42,10 +42,10 @@ export const baseConfig = {
   SHOW_ROUTES: "true",
   STREAM_INTERVAL: "1000", // in milliseconds 1000 = 1 second",
 
-  MENTOR_COURSE:"8",
+  MENTOR_COURSE: "8",
 
-//NO_of_evaluation for L2
-  EVAL_FOR_L2 : "2"
+  //NO_of_evaluation for L2
+  EVAL_FOR_L2: "2"
 
 };
 

@@ -18,20 +18,20 @@ export default class popupController extends BaseController {
         this.validations = new ValidationsHolder(popupSchema, popupUpdateSchema);
     }
     protected initializeRoutes(): void {
-        this.router.post(`${this.path}/popupFileUpload`,this.handleAttachment.bind(this));
+        this.router.post(`${this.path}/popupFileUpload`, this.handleAttachment.bind(this));
         super.initializeRoutes();
     }
     protected async handleAttachment(req: Request, res: Response, next: NextFunction) {
-        if(res.locals.role !== 'ADMIN'){
-            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
-        } 
-        
+        if (res.locals.role !== 'ADMIN') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
+        }
+
         try {
             const rawfiles: any = req.files;
             const files: any = Object.values(rawfiles);
             const allowedTypes = ['image/jpeg', 'image/png'];
             if (!allowedTypes.includes(files[0].type)) {
-                return res.status(400).send(dispatcher(res,'','error','This file type not allowed',400)); 
+                return res.status(400).send(dispatcher(res, '', 'error', 'This file type not allowed', 400));
             }
             const errs: any = [];
             let attachments: any = [];
@@ -48,7 +48,7 @@ export default class popupController extends BaseController {
             let file_name_prefix: any;
             if (process.env.DB_HOST?.includes("prod")) {
                 file_name_prefix = `Popup`
-            } else if(process.env.DB_HOST?.includes("dev")) {
+            } else if (process.env.DB_HOST?.includes("dev")) {
                 file_name_prefix = `Popup/dev`
             }
             else {

@@ -14,14 +14,25 @@
     "baseUrl": ".",
     "resolveJsonModule": true,
     "paths": {
-      "../*": ["src/*"] 
+      "../*": [
+        "src/*"
+      ]
     },
     "esModuleInterop": true,
     "experimentalDecorators": true,
-    "emitDecoratorMetadata": true, 
+    "emitDecoratorMetadata": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true
   },
-  "exclude": ["node_modules", "dist", "coverage"],
-  "include": ["src", "config", "singUp.json", "src/models/quiz.model.ts"]
+  "exclude": [
+    "node_modules",
+    "dist",
+    "coverage"
+  ],
+  "include": [
+    "src",
+    "config",
+    "singUp.json",
+    "src/models/quiz.model.ts"
+  ]
 }

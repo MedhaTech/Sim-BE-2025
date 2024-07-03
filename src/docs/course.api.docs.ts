@@ -168,7 +168,7 @@ export const courseById = {
                             data: {
                                 type: 'array',
                                 example: ['object']
-                            } 
+                            }
                         }
                     }
                 }

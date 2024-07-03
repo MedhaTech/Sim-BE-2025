@@ -5,7 +5,7 @@ import { Request, Response, NextFunction } from 'express';
 import { notFound } from "boom";
 import dispatcher from "../utils/dispatch.util";
 import ValidationsHolder from "../validations/validationHolder";
-import {latest_newsSchema, latest_newsUpdateSchema} from '../validations/latest_news.validation';
+import { latest_newsSchema, latest_newsUpdateSchema } from '../validations/latest_news.validation';
 import { S3 } from "aws-sdk";
 import fs from 'fs';
 import { speeches } from "../configs/speeches.config";
@@ -18,27 +18,27 @@ export default class LatestNewsController extends BaseController {
         this.path = '/latest_news';
     }
     protected initializeValidations(): void {
-        this.validations =  new ValidationsHolder(latest_newsSchema,latest_newsUpdateSchema);
+        this.validations = new ValidationsHolder(latest_newsSchema, latest_newsUpdateSchema);
     }
     protected initializeRoutes(): void {
         this.router.get(`${this.path}/list`, this.getlist.bind(this));
-        this.router.post(`${this.path}/latestnewsFileUpload`,this.handleAttachment.bind(this));
+        this.router.post(`${this.path}/latestnewsFileUpload`, this.handleAttachment.bind(this));
         super.initializeRoutes();
     }
     protected async getlist(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STATE'){
-            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
-        } 
-        try{
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STATE') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
+        }
+        try {
             let data: any;
-            let newREQQuery : any = {}
-            if(req.query.Data){
-                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
-                newREQQuery  = JSON.parse(newQuery);
-            }else if(Object.keys(req.query).length !== 0){
-                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
+            let newREQQuery: any = {}
+            if (req.query.Data) {
+                let newQuery: any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery = JSON.parse(newQuery);
+            } else if (Object.keys(req.query).length !== 0) {
+                return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
             }
-            const paramCategory: any  = newREQQuery.category;
+            const paramCategory: any = newREQQuery.category;
             const paramStatus: any = newREQQuery.status;
             const whereClauseRolePart = { "category": paramCategory }
             data = await this.crudService.findAll(latest_news, {
@@ -55,20 +55,20 @@ export default class LatestNewsController extends BaseController {
             }
             return res.status(200).send(dispatcher(res, data, 'success'));
         }
-        catch(err){
+        catch (err) {
             next(err)
         }
     }
     protected async handleAttachment(req: Request, res: Response, next: NextFunction) {
-        if(res.locals.role !== 'ADMIN'){
-            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
-        } 
+        if (res.locals.role !== 'ADMIN') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
+        }
         try {
             const rawfiles: any = req.files;
             const files: any = Object.values(rawfiles);
-            const allowedTypes = ['image/jpeg', 'image/png','application/msword','application/pdf','application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+            const allowedTypes = ['image/jpeg', 'image/png', 'application/msword', 'application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
             if (!allowedTypes.includes(files[0].type)) {
-                return res.status(400).send(dispatcher(res,'','error','This file type not allowed',400)); 
+                return res.status(400).send(dispatcher(res, '', 'error', 'This file type not allowed', 400));
             }
             const errs: any = [];
             let attachments: any = [];
@@ -85,7 +85,7 @@ export default class LatestNewsController extends BaseController {
             let file_name_prefix: any;
             if (process.env.DB_HOST?.includes("prod")) {
                 file_name_prefix = `LatestNews`
-            } else if(process.env.DB_HOST?.includes("dev")) {
+            } else if (process.env.DB_HOST?.includes("dev")) {
                 file_name_prefix = `LatestNews/dev`
             }
             else {

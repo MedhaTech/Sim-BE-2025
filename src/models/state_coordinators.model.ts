@@ -14,8 +14,8 @@ export class state_coordinators extends Model<InferAttributes<state_coordinators
     declare updated_by: number;
     declare updated_at: Date;
     declare is_loggedin: Enumerator;
-    declare last_login : Date;
-    declare role : string;
+    declare last_login: Date;
+    declare role: string;
 }
 
 state_coordinators.init({

@@ -16,23 +16,7 @@ export const quizUpdateSchema = Joi.object().keys({
 });
 
 export const quizSubmitResponsesSchema = Joi.object().keys({
-    // quiz_id: Joi.number().required().messages({
-    //     'string.empty': speeches.QUIZ_ID_REQUIRED
-    // }),
     responses: Joi.array().required().messages({
         'array.empty': speeches.SELCTED_OPTION_REQUIRED
-    }),
-    // question:Joi.string().required().messages({
-    //     'string.empty': speeches.QUESTION_REQUIRED
-    // }),
-    // correct_answer:Joi.string().required().messages({
-    //     'string.empty': speeches.CORRECT_ANSWER_REQUIRED
-    // }),
-    // level:Joi.string().required().messages({
-    //     'string.empty': speeches.LEVEL_REQUIRED
-    // }),
-    // question_no:Joi.number().required().messages({
-    //     'string.empty': speeches.QUESTION_NO_REQUIRED
-    // }),
-
+    })
 });

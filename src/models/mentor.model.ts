@@ -50,7 +50,7 @@ mentor.init(
             type: DataTypes.STRING,
             allowNull: false
         },
-       
+
         full_name: {
             type: DataTypes.STRING,
             allowNull: false,
@@ -89,15 +89,15 @@ mentor.init(
             onUpdate: new Date().toLocaleString()
         },
         title: {
-            type:DataTypes.STRING,
+            type: DataTypes.STRING,
             allowNull: false
         },
-        gender:{
-            type:DataTypes.STRING,
+        gender: {
+            type: DataTypes.STRING,
             allowNull: false
         },
-        whatapp_mobile:{
-            type:DataTypes.STRING,
+        whatapp_mobile: {
+            type: DataTypes.STRING,
             allowNull: false
         }
     },

@@ -12,7 +12,6 @@ export default class SupportTicketRepliesController extends BaseController {
         this.validations = new ValidationsHolder(supportTicketsReplies, supportTicketsRepliesUpdateSchema);
     };
     protected initializeRoutes(): void {
-        //example route to add
         super.initializeRoutes();
     };
 };

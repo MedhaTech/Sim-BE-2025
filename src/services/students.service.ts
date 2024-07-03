@@ -7,16 +7,16 @@ import { student } from "../models/student.model";
 import BaseService from "./base.service";
 import DashboardService from "./dashboard.service";
 
-export default class StudentService extends BaseService{
+export default class StudentService extends BaseService {
     /**
      * invoke get Team Members For UserId With Progress As Optional without stats
      * @param student_user_id String  student_id
      * @returns Object 
      */
-    async getTeamMembersForUserId(student_user_id:any){
-        try{
-            return await this.getTeamMembersForUserIdWithProgressAsOptional(student_user_id,false);
-        }catch(err){
+    async getTeamMembersForUserId(student_user_id: any) {
+        try {
+            return await this.getTeamMembersForUserIdWithProgressAsOptional(student_user_id, false);
+        } catch (err) {
             return err;
         }
     }
@@ -30,16 +30,16 @@ export default class StudentService extends BaseService{
      * @param showCurrUserAsWell boolean to show current user details
      * @returns Object 
      */
-    async getTeamMembersForUserIdWithProgressAsOptional(student_user_id:any,
-        showProgressAsWell=false,addWhereClauseStatusPart=false,whereClauseStatusPartLiteral="1=1",showCurrUserAsWell=true){
-        try{
-            if(!student_user_id){
+    async getTeamMembersForUserIdWithProgressAsOptional(student_user_id: any,
+        showProgressAsWell = false, addWhereClauseStatusPart = false, whereClauseStatusPartLiteral = "1=1", showCurrUserAsWell = true) {
+        try {
+            if (!student_user_id) {
                 throw badRequest(speeches.USER_NOT_FOUND)
             }
             const serviceDashboard = new DashboardService()
-            let attrsToIncludeForProgress:any = []
-            if(showProgressAsWell){
-                attrsToIncludeForProgress=[
+            let attrsToIncludeForProgress: any = []
+            if (showProgressAsWell) {
+                attrsToIncludeForProgress = [
                     [
                         db.literal(`(
                             ${serviceDashboard.getDbLieralForAllToipcsCount(addWhereClauseStatusPart,
@@ -78,20 +78,21 @@ export default class StudentService extends BaseService{
                 ]
             }
             let whereClauseShowCurrUserPart = {}
-            if(!showCurrUserAsWell){
-                whereClauseShowCurrUserPart = { 
-                    user_id:{
+            if (!showCurrUserAsWell) {
+                whereClauseShowCurrUserPart = {
+                    user_id: {
                         [Op.notIn]: [student_user_id],
                     }
                 }
             }
             const studentResult = await student.findAll({
-                attributes:{
-                    include:attrsToIncludeForProgress
+                attributes: {
+                    include: attrsToIncludeForProgress
                 },
-                where:{
-                    [Op.and]:[
-                        {   team_id:{
+                where: {
+                    [Op.and]: [
+                        {
+                            team_id: {
                                 [Op.in]: [
                                     db.literal(`(
                                         SELECT CASE WHEN EXISTS 
@@ -107,18 +108,18 @@ export default class StudentService extends BaseService{
                         },
                         whereClauseShowCurrUserPart
                     ]
-                    
+
                 },
             })
 
-            if(!studentResult){
+            if (!studentResult) {
                 return studentResult
             }
-            if(studentResult instanceof Error){
+            if (studentResult instanceof Error) {
                 throw studentResult;
             }
             return studentResult
-        }catch(err){
+        } catch (err) {
             return err;
         }
     }
@@ -128,28 +129,28 @@ export default class StudentService extends BaseService{
      * @param student_user_id string student_id
      * @returns object
      */
-    async getTeamIdForUserId(student_user_id:any){
-        try{
-            if(!student_user_id){
+    async getTeamIdForUserId(student_user_id: any) {
+        try {
+            if (!student_user_id) {
                 throw badRequest(speeches.USER_NOT_FOUND)
             }
             const studentResult = await student.findOne({
-                where:{
-                    user_id:student_user_id
+                where: {
+                    user_id: student_user_id
                 },
-                attributes:[
+                attributes: [
                     "team_id"
                 ],
-                raw:true
+                raw: true
             })
-            if(!studentResult){
+            if (!studentResult) {
                 throw notFound(speeches.USER_NOT_FOUND)
             }
-            if(studentResult instanceof Error){
+            if (studentResult instanceof Error) {
                 throw studentResult;
             }
             return studentResult.team_id
-        }catch(err){
+        } catch (err) {
             return err;
         }
     }
@@ -158,32 +159,32 @@ export default class StudentService extends BaseService{
      * @param student_user_id string student_id
      * @returns object
      */
-    async getStudentBadges(student_user_id:any){
-        try{
-            
-            if(!student_user_id){
+    async getStudentBadges(student_user_id: any) {
+        try {
+
+            if (!student_user_id) {
                 throw badRequest(speeches.USER_NOT_FOUND)
             }
             const studentResult = await student.findOne({
-                where:{
-                    user_id:student_user_id
+                where: {
+                    user_id: student_user_id
                 },
-                attributes:[
+                attributes: [
                     'badges',
                 ]
             })
-            if(!studentResult){
-                throw badRequest(speeches.USER_NOT_FOUND) 
+            if (!studentResult) {
+                throw badRequest(speeches.USER_NOT_FOUND)
             }
-            if(studentResult instanceof Error){
+            if (studentResult instanceof Error) {
                 throw studentResult
             }
-            
+
             //@ts-ignore
             const studentBadgesString = studentResult.dataValues.badges;
-            const studentBadgesObj:any = JSON.parse(studentBadgesString);
+            const studentBadgesObj: any = JSON.parse(studentBadgesString);
             return studentBadgesObj
-        }catch(err){
+        } catch (err) {
             return err
         }
     }

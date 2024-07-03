@@ -49,7 +49,7 @@ export const studentUpdateSchema = Joi.object().keys({
     Grade: Joi.string().regex(constents.ALPHA_NUMERIC_PATTERN),
     team_id: Joi.string().regex(constents.ALPHA_NUMERIC_PATTERN),
     disability: Joi.string().regex(constents.ALPHA_NUMERIC_PATTERN),
-    username:Joi.string().email(),
+    username: Joi.string().email(),
     Gender: Joi.string().valid(...Object.values(constents.gender_flags.list))
 });
 export const studentRegSchema = Joi.object().keys({
@@ -59,9 +59,9 @@ export const studentRegSchema = Joi.object().keys({
     Grade: Joi.string().regex(constents.ALPHA_NUMERIC_PATTERN),
     team_id: Joi.string().regex(constents.ALPHA_NUMERIC_PATTERN),
     disability: Joi.string().regex(constents.ALPHA_NUMERIC_PATTERN),
-    username:Joi.string().email(),
+    username: Joi.string().email(),
     Gender: Joi.string().valid(...Object.values(constents.gender_flags.list)),
-    role:Joi.string().regex(constents.ALPHA_NUMERIC_PATTERN).messages({
+    role: Joi.string().regex(constents.ALPHA_NUMERIC_PATTERN).messages({
         'string.empty': speeches.USER_ROLE_REQUIRED
     }),
 });

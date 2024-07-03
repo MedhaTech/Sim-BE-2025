@@ -3,7 +3,7 @@ import db from '../utils/dbconnection.util';
 import { constents } from '../configs/constents.config';
 
 export class popup extends Model<InferAttributes<popup>, InferCreationAttributes<popup>> {
-    
+
     declare popup_id: CreationOptional<number>;
     declare on_off: Enumerator;
     declare url: string;
@@ -12,15 +12,15 @@ export class popup extends Model<InferAttributes<popup>, InferCreationAttributes
     declare created_at: Date;
     declare updated_by: number;
     declare updated_at: Date;
-    
+
     static modelTableName = "popup";
-    static structure:any =  {
+    static structure: any = {
         popup_id: {
             type: DataTypes.INTEGER,
             autoIncrement: true,
             primaryKey: true
         },
-        on_off :{
+        on_off: {
             type: DataTypes.ENUM(...Object.values(constents.evaluation_status.list)),
             allowNull: true
         },

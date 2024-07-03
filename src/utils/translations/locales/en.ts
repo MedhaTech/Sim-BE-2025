@@ -97,7 +97,7 @@ export const speeches_en = {
     ORG_CODE_REQUIRED: "Organization code is required.",
     ORG_CODE_NOT_EXISTS: "Organization code does not exists.",
     ORG_NAME_REQUIRED: "Organization name is required.",
-    
+
     PRINCIPAL_NAME_REQ: "principal name  is required.",
     PRINCIPAL_EMAIL_REQ: "principal email  is required.",
     PRINCIPAL_MOBILE_REQ: "principal mobile  is required.",

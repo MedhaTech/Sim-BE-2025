@@ -10,8 +10,8 @@ export const latest_newsSchema = Joi.object().keys({
         'string.empty': speeches.ID_REQUIRED
     }),
     url: Joi.string(),
-    file_name:Joi.string(),
-    new_status:Joi.string()
+    file_name: Joi.string(),
+    new_status: Joi.string()
 });
 
 export const latest_newsUpdateSchema = Joi.object().keys({
@@ -26,6 +26,6 @@ export const latest_newsUpdateSchema = Joi.object().keys({
         'string.empty': speeches.ID_REQUIRED
     }),
     url: Joi.string(),
-    file_name:Joi.string(),
-    new_status:Joi.string()
+    file_name: Joi.string(),
+    new_status: Joi.string()
 });

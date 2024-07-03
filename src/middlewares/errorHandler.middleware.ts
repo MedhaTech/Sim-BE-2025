@@ -11,12 +11,12 @@ import dispatcher from '../utils/dispatch.util';
  * @param {Object} req
  * @param {Object} res
  */
-export function notFound(req:Request, res:Response) {
+export function notFound(req: Request, res: Response) {
   res.status(HttpStatus.NOT_FOUND).json({
-      code: HttpStatus.NOT_FOUND,
-      message: HttpStatus.getStatusText(HttpStatus.NOT_FOUND),
-      error: HttpStatus.getStatusText(HttpStatus.NOT_FOUND),
-      data:{}
+    code: HttpStatus.NOT_FOUND,
+    message: HttpStatus.getStatusText(HttpStatus.NOT_FOUND),
+    error: HttpStatus.getStatusText(HttpStatus.NOT_FOUND),
+    data: {}
   });
 }
 
@@ -27,12 +27,12 @@ export function notFound(req:Request, res:Response) {
  * @param {Object} req
  * @param {Object} res
  */
-export function methodNotAllowed(req:Request, res:Response) {
+export function methodNotAllowed(req: Request, res: Response) {
   res.status(HttpStatus.METHOD_NOT_ALLOWED).json({
-      code: HttpStatus.METHOD_NOT_ALLOWED,
-      message: HttpStatus.getStatusText(HttpStatus.METHOD_NOT_ALLOWED),
-      error: HttpStatus.getStatusText(HttpStatus.METHOD_NOT_ALLOWED),
-      data:{}
+    code: HttpStatus.METHOD_NOT_ALLOWED,
+    message: HttpStatus.getStatusText(HttpStatus.METHOD_NOT_ALLOWED),
+    error: HttpStatus.getStatusText(HttpStatus.METHOD_NOT_ALLOWED),
+    data: {}
   });
 }
 
@@ -49,10 +49,10 @@ export const bodyParser: ErrorRequestHandler = async (err: any, req: Request, re
   await logIt(constents.log_levels.list.ERROR, `${err.message}: ${err}`, req, res);
 
   res.status(err.status).json({
-      code: err.status,
-      message: HttpStatus.getStatusText(err.status),
-      error: HttpStatus.getStatusText(err.status),
-      data:{}
+    code: err.status,
+    message: HttpStatus.getStatusText(err.status),
+    error: HttpStatus.getStatusText(err.status),
+    data: {}
   });
 }
 
@@ -67,5 +67,5 @@ export const bodyParser: ErrorRequestHandler = async (err: any, req: Request, re
 export const genericErrorHandler: ErrorRequestHandler = async (err: any, req: Request, res: Response, next: NextFunction) => {
   await logIt(constents.log_levels.list.ERROR, `${err.message}: ${err}`, req, res);
   const error = buildError(err);
-  res.status(error.code).send(dispatcher(res,null, 'error',error.message,error.code))
+  res.status(error.code).send(dispatcher(res, null, 'error', error.message, error.code))
 }

@@ -24,24 +24,22 @@ export default class SupportTicketController extends BaseController {
         super.initializeRoutes();
     }
     protected async getData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STATE'){
-            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STATE') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
         }
         try {
-            // console.log('came here..>! 31')
             let data: any;
             const { model, id } = req.params;
-            // const paramStatus: any = req.query.status;
             if (model) {
                 this.model = model;
             };
             // pagination
-            let newREQQuery : any = {}
-            if(req.query.Data){
-                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
-                newREQQuery  = JSON.parse(newQuery);
-            }else if(Object.keys(req.query).length !== 0){
-                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
+            let newREQQuery: any = {}
+            if (req.query.Data) {
+                let newQuery: any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery = JSON.parse(newQuery);
+            } else if (Object.keys(req.query).length !== 0) {
+                return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
             }
             const { page, size, status, user_id, state } = newREQQuery;
             let condition = status ? { status: { [Op.like]: `%${status}%` } } : null;
@@ -82,7 +80,6 @@ export default class SupportTicketController extends BaseController {
                     ],
                     where: {
                         [Op.and]: [
-                            // whereClauseStatusPart,
                             where
                         ]
                     },
@@ -130,7 +127,7 @@ export default class SupportTicketController extends BaseController {
                             [
                                 db.literal(`(SELECT o.district FROM organizations as o join mentors as m on o.organization_code = m.organization_code where user_id = \`support_ticket\`.\`created_by\` )`), 'district'
                             ],
-                            
+
                         ],
                         where: {
                             [Op.and]: [
@@ -157,8 +154,8 @@ export default class SupportTicketController extends BaseController {
         }
     };
     protected async updateData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STATE'){
-            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STATE') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
         }
         try {
             const { model, id } = req.params;
@@ -170,7 +167,7 @@ export default class SupportTicketController extends BaseController {
             const modelLoaded = await this.loadModel(model);
             let payload: any = req.body;
             payload['updated_by'] = user_id;
-            const newParamId :any = await this.authService.decryptGlobal(req.params.id);
+            const newParamId: any = await this.authService.decryptGlobal(req.params.id);
             where[`${this.model}_id`] = JSON.parse(newParamId);
             const data = await this.crudService.update(modelLoaded, payload, { where: where });
             if (!data) {

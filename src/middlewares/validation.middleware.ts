@@ -1,11 +1,11 @@
-import { Request, Response,NextFunction, RequestHandler } from 'express';
+import { Request, Response, NextFunction, RequestHandler } from 'express';
 import Joi from 'joi';
 import { speeches } from '../configs/speeches.config';
 import dispatcher from '../utils/dispatch.util';
 
 export default function validationMiddleware(schema?: Joi.Schema | null): RequestHandler {
     return async (request: Request, response: Response, next: NextFunction): Promise<void> => {
-        if(!schema) {
+        if (!schema) {
             next();
         }
         const validationOptions = {
@@ -22,7 +22,7 @@ export default function validationMiddleware(schema?: Joi.Schema | null): Reques
             error.details.forEach((e: Joi.ValidationErrorItem) => {
                 errors.push(e.message);
             });
-            response.status(400).send(dispatcher(response,errors, 'validation', speeches.BAD_REQUEST));
+            response.status(400).send(dispatcher(response, errors, 'validation', speeches.BAD_REQUEST));
         }
     }
 }

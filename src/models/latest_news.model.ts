@@ -3,7 +3,7 @@ import db from '../utils/dbconnection.util';
 import { constents } from '../configs/constents.config';
 
 export class latest_news extends Model<InferAttributes<latest_news>, InferCreationAttributes<latest_news>> {
-    
+
     declare latest_news_id: CreationOptional<number>;
     declare details: string;
     declare category: string;
@@ -15,9 +15,9 @@ export class latest_news extends Model<InferAttributes<latest_news>, InferCreati
     declare created_at: Date;
     declare updated_by: number;
     declare updated_at: Date;
-    
+
     static modelTableName = "latest_news";
-    static structure:any =  {
+    static structure: any = {
         latest_news_id: {
             type: DataTypes.INTEGER,
             autoIncrement: true,
@@ -43,7 +43,7 @@ export class latest_news extends Model<InferAttributes<latest_news>, InferCreati
             type: DataTypes.ENUM(...Object.values(constents.common_status_flags.list)),
             defaultValue: constents.common_status_flags.default
         },
-        new_status :{
+        new_status: {
             type: DataTypes.ENUM(...Object.values(constents.evaluation_status.list)),
             allowNull: true
         },

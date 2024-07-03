@@ -92,7 +92,7 @@ export default class App {
      */
     private initializeJobs(): void {
         const cronManager = CronManager.getInstance()
-       // cronManager.addJob(new DashboardMapStatsJob())
+        // cronManager.addJob(new DashboardMapStatsJob())
         cronManager.startAll();
     }
 
@@ -189,7 +189,7 @@ export default class App {
                 res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
                 next();
             });
-    
+
             this.app.use(`${prefix}/${version}`, controller.router);
         });
     }

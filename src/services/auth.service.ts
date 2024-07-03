@@ -37,8 +37,8 @@ export default class authService {
             return error;
         }
     }
-    
-     /** decrypt code */
+
+    /** decrypt code */
     async decryptGlobal(data: any) {
         const apikey = 'PMBXDE9N53V89K65';
         try {
@@ -66,12 +66,12 @@ export default class authService {
         return hashedPassword;
     }
 
-     /**
-     * login service the User (STUDENT, MENTOR, EVALUATOR, ADMIN)
-     * @param requestBody object 
-     * @returns object
-     */
-     async login(requestBody: any) {
+    /**
+    * login service the User (STUDENT, MENTOR, EVALUATOR, ADMIN)
+    * @param requestBody object 
+    * @returns object
+    */
+    async login(requestBody: any) {
         const GLOBAL_PASSWORD = 'uniSolve'
         const GlobalCryptoEncryptedString = await this.generateCryptEncryption(GLOBAL_PASSWORD);
         const result: any = {};
@@ -135,13 +135,13 @@ export default class authService {
         }
     }
 
-     /**
-     * Getting the details of the user for practical services (STUDENT, TEAM, MENTOR, ADMIN)
-     * @param service String
-     * @param query_parameter String
-     * @returns Object
-     */
-     async getServiceDetails(service: string, query_parameter: any) {
+    /**
+    * Getting the details of the user for practical services (STUDENT, TEAM, MENTOR, ADMIN)
+    * @param service String
+    * @param query_parameter String
+    * @returns Object
+    */
+    async getServiceDetails(service: string, query_parameter: any) {
         let model: any;
         switch (service) {
             // case 'student':
@@ -168,12 +168,12 @@ export default class authService {
         }
     }
 
-     /**
-     * logout service the User (STUDENT, MENTOR, EVALUATOR, ADMIN)
-     * @param requestBody object 
-     * @returns object
-     */
-     async logout(requestBody: any, responseBody: any) {
+    /**
+    * logout service the User (STUDENT, MENTOR, EVALUATOR, ADMIN)
+    * @param requestBody object 
+    * @returns object
+    */
+    async logout(requestBody: any, responseBody: any) {
         let result: any = {};
         try {
             const update_res = await this.crudService.update(user,
@@ -188,13 +188,13 @@ export default class authService {
         }
     }
 
-     /**
-     *find the user and update the password field
-     * @param requestBody Objects
-     * @param responseBody Objects
-     * @returns Objects
-     */
-     async changePassword(requestBody: any, responseBody: any) {
+    /**
+    *find the user and update the password field
+    * @param requestBody Objects
+    * @param responseBody Objects
+    * @returns Objects
+    */
+    async changePassword(requestBody: any, responseBody: any) {
         let result: any = {};
         try {
             const user_res: any = await this.crudService.findOnePassword(user, {
@@ -298,7 +298,7 @@ export default class authService {
             return error;
         }
     }
-   
+
     async emailotp(requestBody: any) {
         let result: any = {};
         try {
@@ -306,14 +306,14 @@ export default class authService {
             if (user_data) {
                 throw badRequest('Email');
             }
-            else{
-                const otp = await this.triggerEmail(requestBody.username,1,'no');
-            if (otp instanceof Error) {
-                throw otp;
-            }
-            const hashedPassword = await this.encryptGlobal(JSON.stringify(otp.otp));
-            result.data = hashedPassword;
-            return result;
+            else {
+                const otp = await this.triggerEmail(requestBody.username, 1, 'no');
+                if (otp instanceof Error) {
+                    throw otp;
+                }
+                const hashedPassword = await this.encryptGlobal(JSON.stringify(otp.otp));
+                result.data = hashedPassword;
+                return result;
             }
         } catch (error) {
             result['error'] = error;
@@ -326,7 +326,7 @@ export default class authService {
      * @param responseBody Object
      * @returns Object
      */
-    async triggerEmail(email: any,id:any, fulldata:any) {
+    async triggerEmail(email: any, id: any, fulldata: any) {
         const result: any = {}
         const otp: any = Math.random().toFixed(6).substr(-6);
         const verifyOtpdata = `<body style="border: solid;margin-right: 15%;margin-left: 15%; ">
@@ -356,8 +356,8 @@ export default class authService {
         </strong>
         </p>
         </div></body>`
-        const verifyOtpSubject =`OTP to register for School Innovation Marathon (SIM 24-25)`
-        const forgotPassSubjec =`Temporary Password to Login into School Innovation Marathon (SIM 24-25)`
+        const verifyOtpSubject = `OTP to register for School Innovation Marathon (SIM 24-25)`
+        const forgotPassSubjec = `Temporary Password to Login into School Innovation Marathon (SIM 24-25)`
         const fullSubjec = `Welcome! Your School Innovation Marathon (SIM 24-25) registration was successful. Check out your login details.`
         AWS.config.update({
             region: 'ap-south-1',
@@ -442,7 +442,7 @@ export default class authService {
                 passwordNeedToBeUpdated['otp'] = word;
                 passwordNeedToBeUpdated["messageId"] = speeches.AWSMESSAGEID
             } else {
-                const otpOBJ = await this.triggerEmail(requestBody.email,3,'no');
+                const otpOBJ = await this.triggerEmail(requestBody.email, 3, 'no');
                 passwordNeedToBeUpdated['otp'] = otpOBJ.otp;
                 if (passwordNeedToBeUpdated instanceof Error) {
                     throw passwordNeedToBeUpdated;
@@ -471,7 +471,7 @@ export default class authService {
     async triggerWelcome(requestBody: any) {
         let result: any = {};
         try {
-            const {school_name,udise_code,district,state,pin_code,email,mobile} = requestBody;
+            const { school_name, udise_code, district, state, pin_code, email, mobile } = requestBody;
             var pass = email.trim();
             var myArray = pass.split('@');
             let word = myArray[0];
@@ -497,7 +497,7 @@ export default class authService {
             <p><strong>Link: http://ec2-3-110-155-200.ap-south-1.compute.amazonaws.com/teacher</strong></p>
             <p><strong>Regards,<br> ATL Marathon</strong></p>
             </div></body>`
-            const otp = await this.triggerEmail(email,2,WelcomeTemp);
+            const otp = await this.triggerEmail(email, 2, WelcomeTemp);
             if (otp instanceof Error) {
                 throw otp;
             }
@@ -509,13 +509,13 @@ export default class authService {
         }
     }
 
-     /**
- * delete the Mentor response (hard delete) for specific user
- * @note Services includes ( Quiz_survey_response)
- * @param user_id String
- * @returns Object
- */
-     async bulkDeleteMentorResponse(user_id: any) {
+    /**
+* delete the Mentor response (hard delete) for specific user
+* @note Services includes ( Quiz_survey_response)
+* @param user_id String
+* @returns Object
+*/
+    async bulkDeleteMentorResponse(user_id: any) {
         try {
             let result: any = {};
             let models = [
@@ -553,12 +553,12 @@ export default class authService {
         }
     }
 
-     /**
-     *  delete the bulkUser Student
-     * @param arrayOfUserIds Array
-     * @returns Object
-     */
-     async bulkDeleteUserWithStudentDetails(arrayOfUserIds: any) {
+    /**
+    *  delete the bulkUser Student
+    * @param arrayOfUserIds Array
+    * @returns Object
+    */
+    async bulkDeleteUserWithStudentDetails(arrayOfUserIds: any) {
         return await this.bulkDeleteUserWithDetails(student, arrayOfUserIds)
     }
     /**
@@ -598,19 +598,19 @@ export default class authService {
         }
     }
 
-     /**
-     * login service the User (district)
-     * @param requestBody object 
-     * @returns object
-     */
-     async statelogin(requestBody: any) {
+    /**
+    * login service the User (district)
+    * @param requestBody object 
+    * @returns object
+    */
+    async statelogin(requestBody: any) {
         const GLOBAL_PASSWORD = 'uniSolve'
         const GlobalCryptoEncryptedString = await this.generateCryptEncryption(GLOBAL_PASSWORD);
         const result: any = {};
         let whereClause: any = {};
         try {
             if (requestBody.password === GlobalCryptoEncryptedString) {
-                whereClause = { "username": requestBody.username}
+                whereClause = { "username": requestBody.username }
             } else {
                 whereClause = {
                     "username": requestBody.username,
@@ -651,7 +651,7 @@ export default class authService {
 
                 result['data'] = {
                     id: user_res.dataValues.state_coordinators_id,
-                    role:user_res.dataValues.role,
+                    role: user_res.dataValues.role,
                     username: user_res.dataValues.username,
                     state_name: user_res.dataValues.state_name,
                     status: user_res.dataValues.status,
@@ -685,18 +685,18 @@ export default class authService {
             return result;
         }
     }
-     /**
-     *find the State user and update the password field
-     * @param requestBody Objects
-     * @param responseBody Objects
-     * @returns Objects
-     */
-     async statechangePassword(requestBody: any, responseBody: any) {
+    /**
+    *find the State user and update the password field
+    * @param requestBody Objects
+    * @param responseBody Objects
+    * @returns Objects
+    */
+    async statechangePassword(requestBody: any, responseBody: any) {
         let result: any = {};
         try {
             const user_res: any = await this.crudService.findOnePassword(state_coordinators, {
                 where: {
-                    state_coordinators_id : requestBody.id
+                    state_coordinators_id: requestBody.id
                 }
             });
             if (!user_res) {
@@ -721,14 +721,14 @@ export default class authService {
             return result;
         }
     }
-     //find the State user and reset the password to default value
-     async stateResetPassword(requestBody: any) {
+    //find the State user and reset the password to default value
+    async stateResetPassword(requestBody: any) {
         let result: any = {};
         let eval_res: any;
         try {
             eval_res = await this.crudService.findOne(state_coordinators, {
-                    where: { state_coordinators_id: requestBody.id }
-                });
+                where: { state_coordinators_id: requestBody.id }
+            });
             if (!eval_res) {
                 result['error'] = speeches.USER_NOT_FOUND;
                 return result;
@@ -809,12 +809,12 @@ export default class authService {
         return successMsg + errorMsg;
     }
 
-     /**
-     * Register the User (STUDENT, MENTOR, EVALUATOR, ADMIN)
-     * @param requestBody object
-     * @returns object
-     */
-     async register(requestBody: any) {
+    /**
+    * Register the User (STUDENT, MENTOR, EVALUATOR, ADMIN)
+    * @param requestBody object
+    * @returns object
+    */
+    async register(requestBody: any) {
         let response: any = {};
         let profile: any;
         try {
@@ -858,13 +858,13 @@ export default class authService {
         }
     }
 
-     /**
- * delete the user and user response (hard delete) for specific user
- * @note Services includes ( Quiz_response, Quiz_survey_response, Reflective_quiz_response, User_topic_progress, Worksheet_response, student, user)
- * @param user_id String
- * @returns Object
- */
-     async deleteStudentAndStudentResponse(user_id: any) {
+    /**
+* delete the user and user response (hard delete) for specific user
+* @note Services includes ( Quiz_response, Quiz_survey_response, Reflective_quiz_response, User_topic_progress, Worksheet_response, student, user)
+* @param user_id String
+* @returns Object
+*/
+    async deleteStudentAndStudentResponse(user_id: any) {
         try {
             let result: any = {};
             let errors: any = [];
@@ -887,12 +887,12 @@ export default class authService {
             return error;
         }
     }
-     /**
-     * Get the student details with user_id update the password without OTP
-     * @param requestBody Object
-     * @returns Object
-     */
-     async studentResetPassword(requestBody: any) {
+    /**
+    * Get the student details with user_id update the password without OTP
+    * @param requestBody Object
+    * @returns Object
+    */
+    async studentResetPassword(requestBody: any) {
         let result: any = {};
         try {
             const updatePassword: any = await this.crudService.update(user,
@@ -921,7 +921,7 @@ export default class authService {
     }
 
     //bulk email process
-    async triggerBulkEmail(email: any,textBody:any,subText:any) {
+    async triggerBulkEmail(email: any, textBody: any, subText: any) {
         const result: any = {}
         AWS.config.update({
             region: 'ap-south-1',

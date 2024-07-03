@@ -82,7 +82,7 @@ user.init(
         updatedAt: 'updated_at',
         createdAt: 'created_at',
         hooks: {
-            beforeCreate: async (user:any) => {
+            beforeCreate: async (user: any) => {
                 if (user.password) {
                     user.password = await bcrypt.hashSync(user.password, process.env.SALT || baseConfig.SALT);
                 }

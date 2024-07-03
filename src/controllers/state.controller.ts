@@ -16,8 +16,8 @@ export default class StateController extends BaseController {
     protected initializeValidations(): void {
     }
     protected initializeRoutes(): void {
-        this.router.post(`${this.path}/login`,this.login.bind(this));
-        this.router.get(`${this.path}/logout`,this.logout.bind(this));
+        this.router.post(`${this.path}/login`, this.login.bind(this));
+        this.router.get(`${this.path}/logout`, this.logout.bind(this));
         this.router.put(`${this.path}/changePassword`, this.changePassword.bind(this));
         this.router.put(`${this.path}/resetPassword`, this.resetPassword.bind(this));
         super.initializeRoutes();
@@ -29,8 +29,8 @@ export default class StateController extends BaseController {
             if (!result) {
                 return res.status(404).send(dispatcher(res, result, 'error', speeches.USER_NOT_FOUND));
             }
-            else if (result.error){
-                return res.status(403).send(dispatcher(res,result,'error'));
+            else if (result.error) {
+                return res.status(403).send(dispatcher(res, result, 'error'));
             }
             else {
                 return res.status(200).send(dispatcher(res, result.data, 'success', speeches.USER_LOGIN_SUCCESS));
@@ -50,8 +50,8 @@ export default class StateController extends BaseController {
     }
 
     private async changePassword(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if(res.locals.role !== 'ADMIN' &&res.locals.role !== 'STATE'){
-            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STATE') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
         }
         const result = await this.authService.statechangePassword(req.body, res);
         if (!result) {
@@ -66,16 +66,16 @@ export default class StateController extends BaseController {
         }
     }
     private async resetPassword(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if(res.locals.role !== 'ADMIN' &&res.locals.role !== 'STATE'){
-            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STATE') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
         }
         try {
-            const {id} = req.body;
+            const { id } = req.body;
             if (!id) {
                 throw badRequest(speeches.ID_REQUIRED);
             }
             const result = await this.authService.stateResetPassword(req.body);
-             if (result.error) {
+            if (result.error) {
                 return res.status(404).send(dispatcher(res, result.error, 'error', result.error));
             } else {
                 return res.status(202).send(dispatcher(res, result.data, 'accepted', 'The password has been reset', 202));

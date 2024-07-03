@@ -15,7 +15,7 @@ import authService from '../services/auth.service';
 export default class CRUDController implements IController {
     model: string = "";
     public path = "";
-    public statusFlagsToUse:any = []
+    public statusFlagsToUse: any = []
     public router = Router();
     crudService: CRUDService = new CRUDService();
     authService: authService = new authService;
@@ -83,18 +83,18 @@ export default class CRUDController implements IController {
 
 
     protected async getData(req: Request, res: Response, next: NextFunction,
-        findQueryWhereClauseArr:any=[],
-        findQueryAttrs:any={exclude:[]},
-        findQueryinclude:any=null,
-        findQueryOrderArr:any=[]
-        ): Promise<Response | void> {
+        findQueryWhereClauseArr: any = [],
+        findQueryAttrs: any = { exclude: [] },
+        findQueryinclude: any = null,
+        findQueryOrderArr: any = []
+    ): Promise<Response | void> {
         try {
-            let newREQQuery : any = {}
-            if(req.query.Data){
-                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
-                newREQQuery  = JSON.parse(newQuery);
-            }else if(Object.keys(req.query).length !== 0){
-                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
+            let newREQQuery: any = {}
+            if (req.query.Data) {
+                let newQuery: any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery = JSON.parse(newQuery);
+            } else if (Object.keys(req.query).length !== 0) {
+                return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
             }
             let data: any;
             const { model, id } = req.params;
@@ -113,11 +113,11 @@ export default class CRUDController implements IController {
             let objwhereClauseStatusPart = this.getWhereClauseStatsPart(newREQQuery);
 
             if (id) {
-                const newParamId : any = await this.authService.decryptGlobal(req.params.id);
-                
+                const newParamId: any = await this.authService.decryptGlobal(req.params.id);
+
                 where[`${this.model}_id`] = JSON.parse(newParamId);
                 data = await this.crudService.findOne(modelClass, {
-                    attributes:findQueryAttrs,
+                    attributes: findQueryAttrs,
                     where: {
                         [Op.and]: [
                             objwhereClauseStatusPart.whereClauseStatusPart,
@@ -125,22 +125,22 @@ export default class CRUDController implements IController {
                             ...findQueryWhereClauseArr
                         ]
                     },
-                    include:findQueryinclude,
-                    order:findQueryOrderArr
+                    include: findQueryinclude,
+                    order: findQueryOrderArr
                 });
             } else {
                 try {
                     const responseOfFindAndCountAll = await this.crudService.findAndCountAll(modelClass, {
-                        attributes:findQueryAttrs,
+                        attributes: findQueryAttrs,
                         where: {
                             [Op.and]: [
                                 objwhereClauseStatusPart.whereClauseStatusPart,
                                 ...findQueryWhereClauseArr
                             ]
                         },
-                        include:findQueryinclude,
+                        include: findQueryinclude,
                         limit, offset,
-                        order:findQueryOrderArr
+                        order: findQueryOrderArr
                     })
                     const result = this.getPagingData(responseOfFindAndCountAll, page, limit);
                     data = result;
@@ -160,7 +160,7 @@ export default class CRUDController implements IController {
                 } else {
                     throw notFound()
                 }
-                res.status(200).send(dispatcher(res,null, "error", speeches.DATA_NOT_FOUND));
+                res.status(200).send(dispatcher(res, null, "error", speeches.DATA_NOT_FOUND));
                 // if(data!=null){
                 //     throw 
                 (data.message)
@@ -168,13 +168,13 @@ export default class CRUDController implements IController {
                 //     throw notFound()
                 // }
             }
-            return res.status(200).send(dispatcher(res,data, 'success'));
+            return res.status(200).send(dispatcher(res, data, 'success'));
         } catch (error) {
             console.log(error)
             next(error);
         }
     }
-    
+
     protected async createData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try {
             const { model } = req.params;
@@ -188,14 +188,14 @@ export default class CRUDController implements IController {
             // if (!data) {
             //     return res.status(404).send(dispatcher(res,data, 'error'));
             // }
-            if(!data){
+            if (!data) {
                 throw badRequest()
             }
-            if ( data instanceof Error) {
+            if (data instanceof Error) {
                 throw data;
             }
-            
-            return res.status(201).send(dispatcher(res,data, 'created'));
+
+            return res.status(201).send(dispatcher(res, data, 'created'));
         } catch (error) {
             next(error);
         }
@@ -217,13 +217,13 @@ export default class CRUDController implements IController {
             // if (!data) {
             //     return res.status(404).send(dispatcher(res,data, 'error'));
             // }
-            if(!data){
+            if (!data) {
                 throw badRequest()
             }
             if (data instanceof Error) {
                 throw data;
             }
-            return res.status(200).send(dispatcher(res,data, 'updated'));
+            return res.status(200).send(dispatcher(res, data, 'updated'));
         } catch (error) {
             next(error);
         }
@@ -242,24 +242,24 @@ export default class CRUDController implements IController {
             // if (!data) {
             //     return res.status(404).send(dispatcher(res,data, 'error'));
             // }
-            if(!data){
+            if (!data) {
                 throw badRequest()
             }
             if (data instanceof Error) {
                 throw data
             }
-            return res.status(200).send(dispatcher(res,data, 'deleted'));
+            return res.status(200).send(dispatcher(res, data, 'deleted'));
         } catch (error) {
             next(error);
         }
     }
 
-    protected getWhereClauseStatsPart(req:Request):any{
-        const paramStatus:any = req.query?.status ? req.query.status : false
-        let whereClauseStatusPart:any = {};
+    protected getWhereClauseStatsPart(req: Request): any {
+        const paramStatus: any = req.query?.status ? req.query.status : false
+        let whereClauseStatusPart: any = {};
         let whereClauseStatusPartLiteral = "1=1";
         let addWhereClauseStatusPart = false
-        
+
         if (paramStatus && (paramStatus in this.statusFlagsToUse)) {
             if (paramStatus === 'ALL') {
                 whereClauseStatusPart = {};
@@ -276,10 +276,10 @@ export default class CRUDController implements IController {
         }
 
         return {
-            paramStatus:paramStatus,
-            whereClauseStatusPart:whereClauseStatusPart,
-            whereClauseStatusPartLiteral:whereClauseStatusPartLiteral,
-            addWhereClauseStatusPart:addWhereClauseStatusPart
+            paramStatus: paramStatus,
+            whereClauseStatusPart: whereClauseStatusPart,
+            whereClauseStatusPartLiteral: whereClauseStatusPartLiteral,
+            addWhereClauseStatusPart: addWhereClauseStatusPart
         }
     }
 }

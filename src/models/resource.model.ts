@@ -3,7 +3,7 @@ import db from '../utils/dbconnection.util';
 import { constents } from '../configs/constents.config';
 
 export class resource extends Model<InferAttributes<resource>, InferCreationAttributes<resource>> {
-    
+
     declare resource_id: CreationOptional<number>;
     declare description: string;
     declare role: string;
@@ -14,9 +14,9 @@ export class resource extends Model<InferAttributes<resource>, InferCreationAttr
     declare created_at: Date;
     declare updated_by: number;
     declare updated_at: Date;
-    
+
     static modelTableName = "resource";
-    static structure:any =  {
+    static structure: any = {
         resource_id: {
             type: DataTypes.INTEGER,
             autoIncrement: true,
