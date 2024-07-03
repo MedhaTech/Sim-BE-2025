@@ -11,7 +11,9 @@ export const supportTickets = Joi.object().keys({
     }),
     state: Joi.string().trim().min(1).required().messages({
         'string.empty': speeches.QUERY_STATE
-    })
+    }),
+    file:Joi.string(),
+    link:Joi.string()
 });
 
 export const supportTicketsUpdateSchema = Joi.object().keys({

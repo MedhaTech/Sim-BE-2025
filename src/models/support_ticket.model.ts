@@ -6,6 +6,8 @@ export interface supportTicketAttributes {
     support_ticket_id: number;
     query_category: string;
     query_details: string;
+    file: string;
+    link: string;
     status: Enumerator;
     state: string;
     created_by: number;
@@ -30,6 +32,12 @@ support_ticket.init(
         query_details: {
             type: DataTypes.TEXT("long"),
             allowNull: false
+        },
+        file: {
+            type: DataTypes.TEXT("long")
+        },
+        link: {
+            type: DataTypes.TEXT("long")
         },
         status: {
             type: DataTypes.ENUM(...Object.values(constents.support_tickets_status_flags.list)),
