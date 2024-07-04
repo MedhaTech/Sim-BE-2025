@@ -24,6 +24,7 @@ import QuizController from "./controllers/quiz.controller";
 import TranslationController from "./controllers/translation.controller";
 import WorksheetController from "./controllers/worksheet.controller";
 import UserTopicProgress from "./controllers/userTopicProgress.controller";
+import DashboardController from "./controllers/dashboard.controller";
 
 
 // validating env variables
@@ -53,7 +54,8 @@ try {
         new QuizController,
         new TranslationController,
         new WorksheetController,
-        new UserTopicProgress
+        new UserTopicProgress,
+        new DashboardController
 
     ], Number(process.env.APP_PORT));
     // starting app
