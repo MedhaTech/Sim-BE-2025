@@ -42,6 +42,8 @@ export default class DashboardController extends BaseController {
         //singledashboard mentor api's 
         this.router.get(`${this.path}/ideaCount`, this.getideaCount.bind(this));
         this.router.get(`${this.path}/mentorpercentage`, this.getmentorpercentage.bind(this));
+        this.router.get(`${this.path}/mentorSurveyStatus`, this.getmentorSurveyStatus.bind(this));
+        this.router.get(`${this.path}/whatappLink`, this.getWhatappLink.bind(this));
         //singledashboard common api's 
         this.router.get(`${this.path}/teamCount`, this.getteamCount.bind(this));
         this.router.get(`${this.path}/studentCount`, this.getstudentCount.bind(this));
@@ -680,7 +682,62 @@ export default class DashboardController extends BaseController {
             next(err)
         }
     }
-
+    protected async getmentorSurveyStatus(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
+        }
+        try {
+            let result: any = {};
+            let newREQQuery: any = {}
+            if (req.query.Data) {
+                let newQuery: any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery = JSON.parse(newQuery);
+            } else if (Object.keys(req.query).length !== 0) {
+                return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
+            }
+            const { user_id } = newREQQuery
+            if (user_id) {
+                const preSurvey = await db.query(`SELECT count(*) as preSurvey FROM Aim_db.quiz_survey_responses where quiz_survey_id =1 and user_id = ${user_id};`, { type: QueryTypes.SELECT });
+                const postSurvey = await db.query(`SELECT count(*) as postSurvey FROM Aim_db.quiz_survey_responses where quiz_survey_id =3 and user_id = ${user_id};`, { type: QueryTypes.SELECT });
+                if (Object.values(preSurvey[0]).toString() === '1') {
+                    result['preSurvey'] = "COMPLETED"
+                } else
+                    result['preSurvey'] = "INCOMPLETED"
+                if (Object.values(postSurvey[0]).toString() === '1') {
+                    result['postSurvey'] = "COMPLETED"
+                } else
+                    result['postSurvey'] = "INCOMPLETED"
+            }
+            res.status(200).send(dispatcher(res, result, 'done'))
+        }
+        catch (err) {
+            next(err)
+        }
+    }
+    protected async getWhatappLink(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
+        }
+        try {
+            let result: any = {};
+            let newREQQuery: any = {}
+            if (req.query.Data) {
+                let newQuery: any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery = JSON.parse(newQuery);
+            } else if (Object.keys(req.query).length !== 0) {
+                return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
+            }
+            const { state_name } = newREQQuery
+            if (state_name) {
+                const preSurvey = await db.query(`SELECT whatapp_link FROM Aim_db.state_coordinators where state_name like "${state_name}";`, { type: QueryTypes.SELECT });
+                result = Object.values(preSurvey[0]).toString()
+            }
+            res.status(200).send(dispatcher(res, result, 'done'))
+        }
+        catch (err) {
+            next(err)
+        }
+    }
     protected async getstudentCourseCount(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if (res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR') {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
