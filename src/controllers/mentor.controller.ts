@@ -275,7 +275,8 @@ export default class MentorController extends BaseController {
             }
             const uporg = await this.crudService.update(organization, playload, { where: where })
         }
-        const result: any = await this.authService.mentorRegister(req.body);
+        const payloadData = this.autoFillTrackingColumns(req, res, mentor);
+        const result: any = await this.authService.mentorRegister(payloadData);
         if (result && result.output && result.output.payload && result.output.payload.message == 'Email') {
             return res.status(406).send(dispatcher(res, result.data, 'error', speeches.MENTOR_EXISTS, 406));
         }
