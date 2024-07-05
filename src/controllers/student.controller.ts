@@ -36,10 +36,6 @@ export default class StudentController extends BaseController {
     protected initializeRoutes(): void {
         this.router.post(`${this.path}/addStudent`, validationMiddleware(studentRegSchema), this.register.bind(this));
         this.router.post(`${this.path}/bulkCreateStudent`, this.bulkCreateStudent.bind(this));
-        this.router.post(`${this.path}/login`, validationMiddleware(studentLoginSchema), this.login.bind(this));
-        this.router.get(`${this.path}/logout`, this.logout.bind(this));
-        this.router.put(`${this.path}/changePassword`, validationMiddleware(studentChangePasswordSchema), this.changePassword.bind(this));
-        this.router.put(`${this.path}/resetPassword`, validationMiddleware(studentResetPasswordSchema), this.resetPassword.bind(this));
         this.router.get(`${this.path}/:student_user_id/studentCertificate`, this.studentCertificate.bind(this));
         this.router.post(`${this.path}/:student_user_id/badges`, this.addBadgeToStudent.bind(this));
         this.router.get(`${this.path}/:student_user_id/badges`, this.getStudentBadges.bind(this));
@@ -389,109 +385,6 @@ export default class StudentController extends BaseController {
         } catch (error) {
             next(error);
         }
-    }
-    private async login(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        let teamDetails: any;
-        let studentDetails: any;
-        let result;
-        req.body['role'] = 'STUDENT'
-        result = await this.authService.login(req.body);
-        if (!result) {
-            return res.status(404).send(dispatcher(res, result, 'error', speeches.USER_NOT_FOUND));
-        } else if (result.error) {
-            return res.status(401).send(dispatcher(res, result.error, 'error', speeches.USER_RISTRICTED, 401));
-        } else {
-            studentDetails = await this.authService.getServiceDetails('student', { user_id: result.data.user_id });
-            teamDetails = await this.authService.getServiceDetails('team', { team_id: studentDetails.dataValues.team_id });
-            result.data['team_id'] = studentDetails.dataValues.team_id;
-            result.data['student_id'] = studentDetails.dataValues.student_id;
-            result.data['Gender'] = studentDetails.dataValues.Gender;
-            if (!teamDetails) {
-                result.data['mentor_id'] = null;
-                result.data['team_name'] = null;
-            } else {
-                result.data['mentor_id'] = teamDetails.dataValues.mentor_id;
-                result.data['team_name'] = teamDetails.dataValues.team_name;
-            }
-            const mentorData = await this.authService.crudService.findOne(mentor, {
-                where: { mentor_id: teamDetails.dataValues.mentor_id },
-                include: {
-                    model: organization
-                }
-            });
-            if (!mentorData || mentorData instanceof Error) {
-                return res.status(404).send(dispatcher(res, null, 'error', speeches.USER_REG_STATUS));
-            }
-            if (mentorData.dataValues.reg_status !== '3') {
-                return res.status(404).send(dispatcher(res, null, 'error', speeches.USER_REG_STATUS));
-            }
-            result.data['organization_name'] = mentorData.dataValues.organization.organization_name;
-            result.data['district'] = mentorData.dataValues.organization.district;
-            result.data['state'] = mentorData.dataValues.organization.state;
-            return res.status(200).send(dispatcher(res, result.data, 'success', speeches.USER_LOGIN_SUCCESS));
-        }
-    }
-    private async logout(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        const result = await this.authService.logout(req.body, res);
-        if (result.error) {
-            next(result.error);
-        } else {
-            return res.status(200).send(dispatcher(res, speeches.LOGOUT_SUCCESS, 'success'));
-        }
-    }
-    private async changePassword(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR') {
-            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
-        }
-        const result = await this.authService.changePassword(req.body, res);
-        if (!result) {
-            return res.status(404).send(dispatcher(res, null, 'error', speeches.USER_NOT_FOUND));
-        } else if (result.error) {
-            return res.status(404).send(dispatcher(res, result.error, 'error', result.error));
-        }
-        else if (result.match) {
-            return res.status(404).send(dispatcher(res, null, 'error', speeches.USER_PASSWORD));
-        } else {
-            return res.status(202).send(dispatcher(res, result.data, 'accepted', speeches.USER_PASSWORD_CHANGE, 202));
-        }
-    }
-    private async resetPassword(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STATE') {
-            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
-        }
-        // accept the user_id or user_name from the req.body and update the password in the user table
-        // perviously while student registration changes we have changed the password is changed to random generated UUID and stored and send in the payload,
-        // now reset password use case is to change the password using user_id to some random generated ID and update the UUID 
-        // now reset password use case is to change to student_use_full_name123 and update the UUID 
-        const { user_id } = req.body;
-        if (!user_id) throw badRequest(speeches.USER_USERID_REQUIRED);
-        const findUser: any = await this.crudService.findOne(user, { where: { user_id } });
-        if (!findUser) throw badRequest(speeches.USER_NOT_FOUND);
-        if (findUser instanceof Error) throw findUser;
-        const usernameforpass = findUser.dataValues.username.split('@');
-        const studentPassword = usernameforpass[0];
-        const cryptoEncryptedString = await this.authService.generateCryptEncryption(studentPassword);
-        try {
-            req.body['username'] = findUser.dataValues.username;
-            req.body['UUID'] = studentPassword;
-            req.body['encryptedString'] = cryptoEncryptedString;
-            const result = await this.authService.studentResetPassword(req.body);
-            if (!result) return res.status(404).send(dispatcher(res, null, 'error', speeches.USER_NOT_FOUND));
-            else if (result.error) return res.status(404).send(dispatcher(res, result.error, 'error', result.error));
-            else return res.status(200).send(dispatcher(res, result.data, 'accepted', speeches.USER_PASSWORD_CHANGE, 200));
-        } catch (error) {
-            next(error)
-        }
-        // const generatedUUID = this.nanoid();
-        // req.body['generatedPassword'] = generatedUUID;
-        // const result = await this.authService.restPassword(req.body, res);
-        // if (!result) {
-        //     return res.status(404).send(dispatcher(res, result.user_res, 'error', speeches.USER_NOT_FOUND));
-        // } else if (result.match) {
-        //     return res.status(404).send(dispatcher(res, result.match, 'error', speeches.USER_PASSWORD));
-        // } else {
-        //     return res.status(202).send(dispatcher(res, result, 'accepted', speeches.USER_PASSWORD_CHANGE, 202));
-        // }
     }
     private async addBadgeToStudent(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR') {
