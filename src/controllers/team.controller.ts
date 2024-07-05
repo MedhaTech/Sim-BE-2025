@@ -317,7 +317,7 @@ export default class TeamController extends BaseController {
             }
 
             // add check if teamNameCheck is not an error and has data then return and err
-            const findOrgCode = await db.query(`SELECT team_id FROM Aim_db.teams ORDER BY team_id DESC LIMIT 1;`, { type: QueryTypes.SELECT });
+            const findOrgCode = await db.query(`SELECT COALESCE(MAX(team_id), 0) AS team_id FROM Aim_db.teams;`, { type: QueryTypes.SELECT });
             const countINcrement = parseInt(Object.values(findOrgCode[0]).toString(), 10) + 1;
             const paddingvalue = countINcrement.toString().padStart(5, '0')
             const cryptoEncryptedString = await this.authService.generateCryptEncryption(payload.team_name.toLowerCase());

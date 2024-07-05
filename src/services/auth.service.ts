@@ -360,6 +360,7 @@ export default class authService {
         const verifyOtpSubject = `OTP to register for School Innovation Marathon (SIM 24-25)`
         const forgotPassSubjec = `Temporary Password to Login into School Innovation Marathon (SIM 24-25)`
         const fullSubjec = `Welcome! Your School Innovation Marathon (SIM 24-25) registration was successful. Check out your login details.`
+        const teamsCredentials = `SIM 2024 - Teams Credentials`
         AWS.config.update({
             region: 'ap-south-1',
             accessKeyId: process.env.AWS_ACCESS_KEY_ID,
@@ -386,7 +387,7 @@ export default class authService {
                 },
                 Subject: {
                     Charset: 'UTF-8',
-                    Data: id === 1 ? verifyOtpSubject : id === 3 ? forgotPassSubjec : fullSubjec
+                    Data: id === 1 ? verifyOtpSubject : id === 3 ? forgotPassSubjec : id === 4 ? teamsCredentials : fullSubjec
                 }
             },
             Source: "sim-no-reply@inqui-lab.org", /* required */
@@ -496,7 +497,7 @@ export default class authService {
             Mobile no: <strong> ${mobile} </strong>
             <p>Please use your user id and password to login and proceed further.</p>
             <p><strong>Link: http://ec2-3-110-155-200.ap-south-1.compute.amazonaws.com/teacher</strong></p>
-            <p><strong>Regards,<br> ATL Marathon</strong></p>
+            <p><strong>Regards,<br> SIM Team</strong></p>
             </div></body>`
             const otp = await this.triggerEmail(email, 2, WelcomeTemp);
             if (otp instanceof Error) {
@@ -978,7 +979,7 @@ export default class authService {
             let allstring: String = ''
             for (let x in requestBody) {
                 requestBody[x].password = requestBody[x].team_name.toLowerCase();
-                allstring += `<tr><td>${requestBody[x].team_name}</td><td>${requestBody[x].username}</td><td>${requestBody[x].team_name.toLowerCase()}</td></tr>`
+                allstring += `<tr><td>${parseInt(x)+1}</td><td>${requestBody[x].team_name}</td><td>${requestBody[x].username}</td><td>${requestBody[x].team_name.toLowerCase()}</td></tr>`
             }
             const WelcomeTemp = `
             <!DOCTYPE html>
@@ -1005,20 +1006,26 @@ export default class authService {
 <body style="border: solid;margin-right: 15%;margin-left: 15%;">
 <img src="https://aim-email-images.s3.ap-south-1.amazonaws.com/ATL-Marathon-Banner-1000X450px.jpg" alt="header" style="width: 100%;" />
 <div style="padding: 1% 5%;">
-    <h1>Team Credentials</h1>
+    <h3>Dear Guide Teacher,</h3>
+    <p>Greetings from School Innovation Marathom 2024. Here are your <strong>SIM student teams credentials</strong> for your reference.</p>
     <table>
         <tr>
+            <th>SL No</th>
             <th>Team Name</th>
-            <th>Username</th>
-            <th>Password</th>
+            <th>Team Login ID</th>
+            <th>Team Password</th>
         </tr>
         ${allstring}
     </table>
+    <p><strong>Team login URL : http://ec2-3-110-155-200.ap-south-1.compute.amazonaws.com/team</strong></p>
+    <strong>
+        Regards,<br> SIM Team
+        </strong>
 </div>
 </body>
 </html>
 `
-            const otp = await this.triggerEmail(email, 2, WelcomeTemp);
+            const otp = await this.triggerEmail(email, 4, WelcomeTemp);
             if (otp instanceof Error) {
                 throw otp;
             }
