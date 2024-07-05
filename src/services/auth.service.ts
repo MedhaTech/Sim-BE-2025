@@ -21,6 +21,7 @@ import { quiz_response } from '../models/quiz_response.model';
 import { quiz_survey_response } from '../models/quiz_survey_response.model';
 import { user_topic_progress } from '../models/user_topic_progress.model';
 import { evaluator } from '../models/evaluator.model';
+import { team } from '../models/team.model';
 export default class authService {
     crudService: CRUDService = new CRUDService;
     private otp = '112233';
@@ -597,7 +598,6 @@ export default class authService {
             return error;
         }
     }
-
     /**
     * login service the User (district)
     * @param requestBody object 
@@ -810,7 +810,7 @@ export default class authService {
     }
 
     /**
-    * Register the User (STUDENT, MENTOR, EVALUATOR, ADMIN)
+    * Register the User (STUDENT, MENTOR, EVALUATOR, ADMIN, TEAM)
     * @param requestBody object
     * @returns object
     */
@@ -828,6 +828,10 @@ export default class authService {
             switch (requestBody.role) {
                 case 'STUDENT': {
                     profile = await this.crudService.create(student, whereClass);
+                    break;
+                }
+                case 'TEAM': {
+                    profile = await this.crudService.create(team, whereClass);
                     break;
                 }
                 case 'MENTOR': {
@@ -968,4 +972,62 @@ export default class authService {
             return error;
         }
     }
+    async triggerteamDeatils(requestBody: any, email: any) {
+        let result: any = {};
+        try {
+            let allstring: String = ''
+            for (let x in requestBody) {
+                requestBody[x].password = requestBody[x].team_name.toLowerCase();
+                allstring += `<tr><td>${requestBody[x].team_name}</td><td>${requestBody[x].username}</td><td>${requestBody[x].team_name.toLowerCase()}</td></tr>`
+            }
+            const WelcomeTemp = `
+            <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team Credentials</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body style="border: solid;margin-right: 15%;margin-left: 15%;">
+<img src="https://aim-email-images.s3.ap-south-1.amazonaws.com/ATL-Marathon-Banner-1000X450px.jpg" alt="header" style="width: 100%;" />
+<div style="padding: 1% 5%;">
+    <h1>Team Credentials</h1>
+    <table>
+        <tr>
+            <th>Team Name</th>
+            <th>Username</th>
+            <th>Password</th>
+        </tr>
+        ${allstring}
+    </table>
+</div>
+</body>
+</html>
+`
+            const otp = await this.triggerEmail(email, 2, WelcomeTemp);
+            if (otp instanceof Error) {
+                throw otp;
+            }
+            result.data = 'Email sent successfully'
+            return result;
+        } catch (error) {
+            result['error'] = error;
+            return result;
+        }
+    }
+
 }

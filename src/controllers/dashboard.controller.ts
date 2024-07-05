@@ -44,6 +44,7 @@ export default class DashboardController extends BaseController {
         this.router.get(`${this.path}/mentorpercentage`, this.getmentorpercentage.bind(this));
         this.router.get(`${this.path}/mentorSurveyStatus`, this.getmentorSurveyStatus.bind(this));
         this.router.get(`${this.path}/whatappLink`, this.getWhatappLink.bind(this));
+        this.router.get(`${this.path}/teamCredentials`, this.getteamCredentials.bind(this));
         //singledashboard common api's 
         this.router.get(`${this.path}/teamCount`, this.getteamCount.bind(this));
         this.router.get(`${this.path}/studentCount`, this.getstudentCount.bind(this));
@@ -330,7 +331,6 @@ export default class DashboardController extends BaseController {
             next(err)
         }
     }
-
     private async getStudentChallengeDetails(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if (res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STUDENT') {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
@@ -534,7 +534,6 @@ export default class DashboardController extends BaseController {
             next(err)
         }
     }
-
     protected async getUserQuizScores(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if (res.locals.role !== 'ADMIN' && res.locals.role !== 'EADMIN' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STATE') {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
@@ -738,6 +737,32 @@ export default class DashboardController extends BaseController {
             next(err)
         }
     }
+    protected async getteamCredentials(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
+        }
+        try {
+            let result: any = {};
+            let newREQQuery: any = {}
+            if (req.query.Data) {
+                let newQuery: any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery = JSON.parse(newQuery);
+            } else if (Object.keys(req.query).length !== 0) {
+                return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
+            }
+           // const { mentor_id,email } = newREQQuery
+           const email = 'ramant@inqui-lab.org'
+           const mentor_id = 1
+            if (mentor_id) {
+                const teamList = await db.query(`SELECT teams.team_id,team_name,(SELECT username FROM users WHERE user_id = teams.user_id) AS username FROM teams WHERE mentor_id = 17 GROUP BY teams.team_id ORDER BY team_id DESC`, { type: QueryTypes.SELECT });
+                result = await this.authService.triggerteamDeatils(teamList,email);
+            }
+           return res.status(200).send(dispatcher(res, result, 'success'));
+        }
+        catch (err) {
+            next(err)
+        }
+    }
     protected async getstudentCourseCount(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if (res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR') {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
@@ -828,7 +853,6 @@ export default class DashboardController extends BaseController {
             next(err)
         }
     }
-
     protected async getmentorCount(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if (res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR') {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
