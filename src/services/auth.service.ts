@@ -833,7 +833,6 @@ export default class authService {
                 }
                 case 'TEAM': {
                     profile = await this.crudService.create(team, whereClass);
-                    result.dataValues['team_id'] = profile.dataValues['team_id']
                     break;
                 }
                 case 'MENTOR': {

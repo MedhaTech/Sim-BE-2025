@@ -348,6 +348,7 @@ export default class TeamController extends BaseController {
         try {
             let deletingTeamDetails: any;
             let deletingChallengeDetails: any;
+            let deletingTeamuserDetails: any;
             let deleteTeam: any = 1;
             const { model, id } = req.params;
             if (model) {
@@ -357,7 +358,7 @@ export default class TeamController extends BaseController {
             const newParamId = await this.authService.decryptGlobal(req.params.id);
             where[`${this.model}_id`] = newParamId;
             const getTeamDetails = await this.crudService.findOne(await this.loadModel(model), {
-                attributes: ["team_id", "mentor_id"],
+                attributes: ["team_id", "mentor_id","user_id"],
                 where
             });
             if (getTeamDetails instanceof Error) throw getTeamDetails;
@@ -377,6 +378,7 @@ export default class TeamController extends BaseController {
             if (deleteTeam >= 1) {
                 deletingChallengeDetails = await this.crudService.delete(challenge_response, { where: { team_id: getTeamDetails.dataValues.team_id } });
                 deletingTeamDetails = await this.crudService.delete(await this.loadModel(model), { where: where });
+                deletingTeamuserDetails = await this.crudService.delete(user, { where: { user_id: getTeamDetails.dataValues.user_id } })
             }
             return res.status(200).send(dispatcher(res, deletingTeamDetails, 'deleted'));
             //         if (exist(team_id))
