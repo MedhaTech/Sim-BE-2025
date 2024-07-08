@@ -308,13 +308,18 @@ export default class authService {
                 throw badRequest('Email');
             }
             else {
-                const otp = await this.triggerEmail(requestBody.username, 1, 'no');
-                if (otp instanceof Error) {
-                    throw otp;
+                const mentor_data = await this.crudService.findOne(mentor, { where: { mobile: requestBody.mobile } })
+                if (mentor_data) {
+                    throw badRequest('Mobile')
+                } else {
+                    const otp = await this.triggerEmail(requestBody.username, 1, 'no');
+                    if (otp instanceof Error) {
+                        throw otp;
+                    }
+                    const hashedPassword = await this.encryptGlobal(JSON.stringify(otp.otp));
+                    result.data = hashedPassword;
+                    return result;
                 }
-                const hashedPassword = await this.encryptGlobal(JSON.stringify(otp.otp));
-                result.data = hashedPassword;
-                return result;
             }
         } catch (error) {
             result['error'] = error;
@@ -979,7 +984,7 @@ export default class authService {
             let allstring: String = ''
             for (let x in requestBody) {
                 requestBody[x].password = requestBody[x].team_name.toLowerCase();
-                allstring += `<tr><td>${parseInt(x)+1}</td><td>${requestBody[x].team_name}</td><td>${requestBody[x].username}</td><td>${requestBody[x].team_name.toLowerCase()}</td></tr>`
+                allstring += `<tr><td>${parseInt(x) + 1}</td><td>${requestBody[x].team_name}</td><td>${requestBody[x].username}</td><td>${requestBody[x].team_name.toLowerCase()}</td></tr>`
             }
             const WelcomeTemp = `
             <!DOCTYPE html>
