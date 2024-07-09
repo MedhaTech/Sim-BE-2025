@@ -469,7 +469,10 @@ export default class MentorController extends BaseController {
             if (result.error) {
                 if (result && result.error.output && result.error.output.payload && result.error.output.payload.message == 'Email') {
                     return res.status(406).send(dispatcher(res, result.data, 'error', speeches.MENTOR_EXISTS, 406));
-                } else {
+                } else if (result && result.error.output && result.error.output.payload && result.error.output.payload.message == 'Mobile') {
+                    return res.status(406).send(dispatcher(res, result.data, 'error', speeches.MENTOR_EXISTS_MOBILE, 406));
+                 }
+                else {
                     return res.status(404).send(dispatcher(res, result.error, 'error', result.error));
                 }
             } else {
