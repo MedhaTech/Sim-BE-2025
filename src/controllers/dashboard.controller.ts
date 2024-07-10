@@ -483,12 +483,12 @@ export default class DashboardController extends BaseController {
             const selected_round_one_count = await db.query("SELECT count(challenge_response_id) as 'selected_round_one_count' FROM challenge_responses where evaluation_status = 'SELECTEDROUND1'", { type: QueryTypes.SELECT });
             const rejected_round_one_count = await db.query("SELECT count(challenge_response_id) as 'rejected_round_one_count' FROM challenge_responses where evaluation_status = 'REJECTEDROUND1'", { type: QueryTypes.SELECT });
             const l2_yet_to_processed = await db.query("SELECT COUNT(*) AS l2_yet_to_processed FROM l1_accepted;", { type: QueryTypes.SELECT });
-            const l2_processed = await db.query(`SELECT challenge_response_id, count(challenge_response_id) AS l2_processed FROM unisolve_db.evaluator_ratings group by challenge_response_id HAVING COUNT(challenge_response_id) >= ${baseConfig.EVAL_FOR_L2}`, { type: QueryTypes.SELECT });
+            const l2_processed = await db.query(`SELECT challenge_response_id, count(challenge_response_id) AS l2_processed FROM evaluator_ratings group by challenge_response_id HAVING COUNT(challenge_response_id) >= ${baseConfig.EVAL_FOR_L2}`, { type: QueryTypes.SELECT });
             const draft_count = await db.query("SELECT count(challenge_response_id) as 'draft_count' FROM challenge_responses where status = 'DRAFT'", { type: QueryTypes.SELECT });
             const final_challenges = await db.query("SELECT count(challenge_response_id) as 'final_challenges' FROM evaluation_results where status = 'ACTIVE'", { type: QueryTypes.SELECT });
-            const l1_yet_to_process = await db.query(`SELECT COUNT(challenge_response_id) AS l1YetToProcess FROM unisolve_db.challenge_responses WHERE status = 'SUBMITTED' AND evaluation_status is NULL OR evaluation_status = ''`, { type: QueryTypes.SELECT });
-            const final_evaluation_challenge = await db.query(`SELECT COUNT(challenge_response_id) FROM unisolve_db.challenge_responses WHERE final_result = '0'`, { type: QueryTypes.SELECT });
-            const final_evaluation_final = await db.query(`SELECT COUNT(challenge_response_id) FROM unisolve_db.challenge_responses WHERE final_result = '1'`, { type: QueryTypes.SELECT });
+            const l1_yet_to_process = await db.query(`SELECT COUNT(challenge_response_id) AS l1YetToProcess FROM challenge_responses WHERE status = 'SUBMITTED' AND evaluation_status is NULL OR evaluation_status = ''`, { type: QueryTypes.SELECT });
+            const final_evaluation_challenge = await db.query(`SELECT COUNT(challenge_response_id) FROM challenge_responses WHERE final_result = '0'`, { type: QueryTypes.SELECT });
+            const final_evaluation_final = await db.query(`SELECT COUNT(challenge_response_id) FROM challenge_responses WHERE final_result = '1'`, { type: QueryTypes.SELECT });
             if (submitted_count instanceof Error) {
                 throw submitted_count
             }
@@ -548,10 +548,10 @@ export default class DashboardController extends BaseController {
                 return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
             }
             const { user_id, role } = newREQQuery
-            const quizscores = await db.query(`SELECT user_id,quiz_id,attempts,score FROM unisolve_db.quiz_responses where user_id = ${user_id}`, { type: QueryTypes.SELECT })
+            const quizscores = await db.query(`SELECT user_id,quiz_id,attempts,score FROM quiz_responses where user_id = ${user_id}`, { type: QueryTypes.SELECT })
             result['scores'] = quizscores
             if (role === "MENTOR") {
-                const currentProgress = await db.query(`SELECT count(*)as currentValue FROM unisolve_db.mentor_topic_progress where user_id = ${user_id}`, { type: QueryTypes.SELECT })
+                const currentProgress = await db.query(`SELECT count(*)as currentValue FROM mentor_topic_progress where user_id = ${user_id}`, { type: QueryTypes.SELECT })
                 result['currentProgress'] = Object.values(currentProgress[0]).toString()
                 result['totalProgress'] = baseConfig.MENTOR_COURSE
             }
@@ -750,11 +750,9 @@ export default class DashboardController extends BaseController {
             } else if (Object.keys(req.query).length !== 0) {
                 return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
             }
-           // const { mentor_id,email } = newREQQuery
-           const email = 'ramant@inqui-lab.org'
-           const mentor_id = 1
+           const { mentor_id,email } = newREQQuery
             if (mentor_id) {
-                const teamList = await db.query(`SELECT teams.team_id,team_name,(SELECT username FROM users WHERE user_id = teams.user_id) AS username FROM teams WHERE mentor_id = 17 GROUP BY teams.team_id ORDER BY team_id DESC`, { type: QueryTypes.SELECT });
+                const teamList = await db.query(`SELECT teams.team_id,team_name,(SELECT username FROM users WHERE user_id = teams.user_id) AS username FROM teams WHERE mentor_id = ${mentor_id} GROUP BY teams.team_id ORDER BY team_id DESC`, { type: QueryTypes.SELECT });
                 result = await this.authService.triggerteamDeatils(teamList,email);
             }
            return res.status(200).send(dispatcher(res, result, 'success'));
@@ -935,16 +933,16 @@ export default class DashboardController extends BaseController {
             result = await db.query(`select count(*) as mentorCoursesCompletedCount from (SELECT 
             district,cou
         FROM
-            unisolve_db.organizations AS og
+            organizations AS og
                 LEFT JOIN
             (SELECT 
                 organization_code, cou
             FROM
-                unisolve_db.mentors AS mn
+                mentors AS mn
             LEFT JOIN (SELECT 
                 user_id, COUNT(*) AS cou
             FROM
-                unisolve_db.mentor_topic_progress
+                mentor_topic_progress
             GROUP BY user_id having count(*)>=8) AS t ON mn.user_id = t.user_id ) AS c ON c.organization_code = og.organization_code WHERE og.status='ACTIVE'
         group by organization_id having cou>=8) as final`, { type: QueryTypes.SELECT })
             res.status(200).send(dispatcher(res, result, 'done'))
@@ -1065,16 +1063,16 @@ export default class DashboardController extends BaseController {
             const courseCompleted = await db.query(`select state,count(*) as courseCMP from (SELECT 
                 state,cou
             FROM
-                unisolve_db.organizations AS og
+                organizations AS og
                     LEFT JOIN
                 (SELECT 
                     organization_code, cou
                 FROM
-                    unisolve_db.mentors AS mn
+                    mentors AS mn
                 LEFT JOIN (SELECT 
                     user_id, COUNT(*) AS cou
                 FROM
-                    unisolve_db.mentor_topic_progress
+                    mentor_topic_progress
                 GROUP BY user_id having count(*)>=8) AS t ON mn.user_id = t.user_id ) AS c ON c.organization_code = og.organization_code WHERE og.status='ACTIVE' ${wherefilter}
             group by organization_id having cou>=8) as final group by state`, { type: QueryTypes.SELECT });
             const StudentCourseCompleted = await db.query(`SELECT 
