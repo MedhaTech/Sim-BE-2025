@@ -375,7 +375,7 @@ export default class DashboardService extends BaseService {
      */
     getDbLieralForPostSurveyCreatedAt(addWhereClauseStatusPart: any, whereClauseStatusPartLiteral: any) {
         return `
-            SELECT created_at FROM unisolve_db.quiz_survey_responses where quiz_survey_id = 4 and user_Id = \`student\`.\`user_id\`
+            SELECT created_at FROM quiz_survey_responses where quiz_survey_id = 4 and user_Id = \`student\`.\`user_id\`
             `
     }
     /**
