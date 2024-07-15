@@ -1013,6 +1013,7 @@ export default class authService {
 <div style="padding: 1% 5%;">
     <h3>Dear Guide Teacher,</h3>
     <p>Greetings from School Innovation Marathom 2024. Here are your <strong>SIM student teams credentials</strong> for your reference.</p>
+    <p><strong>Team login URL : http://ec2-3-110-155-200.ap-south-1.compute.amazonaws.com/team</strong></p>
     <table>
         <tr>
             <th>SL No</th>
@@ -1022,7 +1023,6 @@ export default class authService {
         </tr>
         ${allstring}
     </table>
-    <p><strong>Team login URL : http://ec2-3-110-155-200.ap-south-1.compute.amazonaws.com/team</strong></p>
     <strong>
         Regards,<br> SIM Team
         </strong>
