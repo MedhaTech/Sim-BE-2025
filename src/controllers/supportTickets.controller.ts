@@ -76,6 +76,8 @@ export default class SupportTicketController extends BaseController {
                         'support_ticket_id',
                         'query_category',
                         'query_details',
+                        "link",
+                        "file",
                         'status',
                         'created_at',
                         'updated_at',
@@ -89,6 +91,8 @@ export default class SupportTicketController extends BaseController {
                     include: {
                         attributes: [
                             "support_tickets_reply_id",
+                            "link",
+                            "file",
                             "reply_details",
                             "status",
                             "created_at",
@@ -114,6 +118,8 @@ export default class SupportTicketController extends BaseController {
                             'status',
                             'created_at',
                             'updated_at',
+                            "link",
+                            "file",
                             'state',
                             [
                                 db.literal(`(SELECT full_name FROM users As s WHERE s.user_id = \`support_ticket\`.\`created_by\` )`), 'created_by'
