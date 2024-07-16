@@ -35,12 +35,10 @@ support_ticket_reply.init(
             allowNull: false
         },
         file: {
-            type: DataTypes.TEXT("long"),
-            allowNull: false
+            type: DataTypes.TEXT("long")
         },
         link: {
-            type: DataTypes.TEXT("long"),
-            allowNull: true
+            type: DataTypes.TEXT("long")
         },
         status: {
             type: DataTypes.ENUM(...Object.values(constents.common_status_flags.list)),
