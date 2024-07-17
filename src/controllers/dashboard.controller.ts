@@ -943,8 +943,8 @@ export default class DashboardController extends BaseController {
                 user_id, COUNT(*) AS cou
             FROM
                 mentor_topic_progress
-            GROUP BY user_id having count(*)>=8) AS t ON mn.user_id = t.user_id ) AS c ON c.organization_code = og.organization_code WHERE og.status='ACTIVE'
-        group by organization_id having cou>=8) as final`, { type: QueryTypes.SELECT })
+            GROUP BY user_id having count(*)>=7) AS t ON mn.user_id = t.user_id ) AS c ON c.organization_code = og.organization_code WHERE og.status='ACTIVE'
+        group by organization_id having cou>=7) as final`, { type: QueryTypes.SELECT })
             res.status(200).send(dispatcher(res, result, 'done'))
         }
         catch (err) {
@@ -1073,8 +1073,8 @@ export default class DashboardController extends BaseController {
                     user_id, COUNT(*) AS cou
                 FROM
                     mentor_topic_progress
-                GROUP BY user_id having count(*)>=8) AS t ON mn.user_id = t.user_id ) AS c ON c.organization_code = og.organization_code WHERE og.status='ACTIVE' ${wherefilter}
-            group by organization_id having cou>=8) as final group by state`, { type: QueryTypes.SELECT });
+                GROUP BY user_id having count(*)>=7) AS t ON mn.user_id = t.user_id ) AS c ON c.organization_code = og.organization_code WHERE og.status='ACTIVE' ${wherefilter}
+            group by organization_id having cou>=7) as final group by state`, { type: QueryTypes.SELECT });
             const StudentCourseCompleted = await db.query(`SELECT 
             og.state,count(st.student_id) as studentCourseCMP
         FROM
