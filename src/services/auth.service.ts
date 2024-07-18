@@ -145,15 +145,15 @@ export default class authService {
     async getServiceDetails(service: string, query_parameter: any) {
         let model: any;
         switch (service) {
-            // case 'student':
-            //     model = student;
-            //     break
-            // case 'team':
-            //     model = team;
-            //     break;
-            // case 'mentor':
-            //     model = mentor;
-            //     break;
+            case 'student':
+                model = student;
+                break
+            case 'team':
+                model = team;
+                break;
+            case 'mentor':
+                model = mentor;
+                break;
             case 'admin':
                 model = admin;
                 break;

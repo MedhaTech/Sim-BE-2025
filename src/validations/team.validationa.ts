@@ -32,3 +32,12 @@ export const teamChangePasswordSchema = Joi.object().keys({
         'string.empty': speeches.USER_NEWPASSWORD_REQUIRED
     })
 });
+
+export const teamLoginSchema = Joi.object().keys({
+    username: Joi.string().required().messages({
+        'string.empty': speeches.USER_USERNAME_REQUIRED
+    }),
+    password: Joi.string().required().messages({
+        'string.empty': speeches.USER_PASSWORD_REQUIRED
+    })
+});

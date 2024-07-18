@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { Op, QueryTypes } from "sequelize";
 import { constents } from "../configs/constents.config";
-import { teamSchema, teamUpdateSchema, teamChangePasswordSchema } from "../validations/team.validationa";
+import { teamSchema, teamUpdateSchema, teamChangePasswordSchema,teamLoginSchema } from "../validations/team.validationa";
 import ValidationsHolder from "../validations/validationHolder";
 import BaseController from "./base.controller";
 import authService from '../services/auth.service';
@@ -15,6 +15,7 @@ import { user } from "../models/user.model";
 import { mentor } from "../models/mentor.model";
 import { challenge_response } from "../models/challenge_response.model";
 import validationMiddleware from "../middlewares/validation.middleware";
+import { organization } from "../models/organization.model";
 
 export default class TeamController extends BaseController {
 
@@ -33,7 +34,42 @@ export default class TeamController extends BaseController {
         this.router.get(`${this.path}/namebymenterid`, this.getNameByMenter.bind(this));
         this.router.get(`${this.path}/listwithideaStatus`, this.getteamslistwithideastatus.bind(this));
         this.router.put(`${this.path}/changePassword`, validationMiddleware(teamChangePasswordSchema), this.changePassword.bind(this));
+        this.router.post(`${this.path}/login`, validationMiddleware(teamLoginSchema), this.login.bind(this));
         super.initializeRoutes();
+    }
+    private async login(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        let teamDetails: any;
+        let result;
+        req.body['role'] = 'TEAM'
+        result = await this.authService.login(req.body);
+        if (!result) {
+            return res.status(404).send(dispatcher(res, result, 'error', speeches.USER_NOT_FOUND));
+        } else if (result.error) {
+            return res.status(401).send(dispatcher(res, result.error, 'error', speeches.USER_RISTRICTED, 401));
+        } else {
+            teamDetails = await this.authService.getServiceDetails('team', { user_id: result.data.user_id });
+            result.data['team_id'] = teamDetails.dataValues.team_id;
+            result.data['mentor_id'] = teamDetails.dataValues.mentor_id;
+            result.data['team_name'] = teamDetails.dataValues.team_name;
+            result.data['team_email'] = teamDetails.dataValues.team_email;
+
+            const mentorData = await this.authService.crudService.findOne(mentor, {
+                where: { mentor_id: teamDetails.dataValues.mentor_id },
+                include: {
+                    model: organization
+                }
+            });
+            if (!mentorData || mentorData instanceof Error) {
+                return res.status(404).send(dispatcher(res, null, 'error', speeches.USER_REG_STATUS));
+            }
+            if (mentorData.dataValues.reg_status !== '3') {
+                return res.status(404).send(dispatcher(res, null, 'error', speeches.USER_REG_STATUS));
+            }
+            result.data['organization_name'] = mentorData.dataValues.organization.organization_name;
+            result.data['district'] = mentorData.dataValues.organization.district;
+            result.data['state'] = mentorData.dataValues.organization.state;
+            return res.status(200).send(dispatcher(res, result.data, 'success', speeches.USER_LOGIN_SUCCESS));
+        }
     }
     protected async getData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STATE') {

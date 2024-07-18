@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { customAlphabet } from 'nanoid';
 import { speeches } from '../configs/speeches.config';
 import dispatcher from '../utils/dispatch.util';
-import { studentSchema, studentLoginSchema, studentUpdateSchema, studentChangePasswordSchema, studentResetPasswordSchema, studentRegSchema } from '../validations/student.validationa';
+import { studentSchema, studentUpdateSchema} from '../validations/student.validationa';
 import bcrypt from 'bcrypt';
 import authService from '../services/auth.service';
 import BaseController from './base.controller';
@@ -34,12 +34,13 @@ export default class StudentController extends BaseController {
         this.validations = new ValidationsHolder(studentSchema, studentUpdateSchema);
     }
     protected initializeRoutes(): void {
-        this.router.post(`${this.path}/addStudent`, validationMiddleware(studentRegSchema), this.register.bind(this));
-        this.router.post(`${this.path}/bulkCreateStudent`, this.bulkCreateStudent.bind(this));
+        this.router.post(`${this.path}/addStudent`, validationMiddleware(studentSchema), this.register.bind(this));
+        this.router.post(`${this.path}/bulkCreateStudent`, validationMiddleware(studentSchema), this.bulkCreateStudent.bind(this));
         this.router.get(`${this.path}/:student_user_id/studentCertificate`, this.studentCertificate.bind(this));
         this.router.post(`${this.path}/:student_user_id/badges`, this.addBadgeToStudent.bind(this));
         this.router.get(`${this.path}/:student_user_id/badges`, this.getStudentBadges.bind(this));
         this.router.post(`${this.path}/stuIdeaSubmissionEmail`, this.stuIdeaSubmissionEmail.bind(this));
+        this.router.get(`${this.path}/studentsList/:teamId`, this.getStudentsList.bind(this));
         super.initializeRoutes();
     }
     protected async getData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
@@ -111,10 +112,7 @@ export default class StudentController extends BaseController {
                             'team_id',
                             'team_name',
                             'mentor_id',
-                            'moc_name',
-                            'moc_gender',
-                            'moc_email',
-                            'moc_phone'
+                            'team_email'
                         ],
                         include: {
                             model: mentor,
@@ -167,10 +165,7 @@ export default class StudentController extends BaseController {
                             attributes: [
                                 'team_id',
                                 'team_name',
-                                'moc_name',
-                                'moc_gender',
-                                'moc_email',
-                                'moc_phone'
+                                'team_email'
                             ],
                             include: {
                                 model: mentor,
@@ -630,6 +625,76 @@ export default class StudentController extends BaseController {
             const result = await this.authService.triggerBulkEmail(arrayOfUsernames, contentText, subject);
 
             return res.status(200).send(dispatcher(res, result, 'Email sent'));
+        } catch (error) {
+            next(error);
+        }
+    }
+    protected async getStudentsList(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STATE') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
+        }
+        try {
+            let data: any;
+            const where: any = {};
+            const { teamId } = req.params;
+            if (teamId) {
+                const newParamId = await this.authService.decryptGlobal(req.params.teamId);
+                where[`team_id`] = newParamId;
+                data = await this.crudService.findAll(student, {
+                    attributes: [
+                           'full_name',
+                           'student_id',
+                           'user_id'
+                    ],
+                    where: {
+                        [Op.and]: [
+                            where
+                        ],
+                    },
+                    // include: {
+                    //     model: team,
+                    //     attributes: [
+                    //         'team_id',
+                    //         'team_name',
+                    //     ],
+                    //     include: {
+                    //         model: mentor,
+                    //         attributes: [
+                    //             'organization_code',
+                    //             'full_name',
+                    //             'gender',
+                    //             'mobile',
+                    //         ],
+                    //         include: {
+                    //             model: organization,
+                    //             attributes: [
+                    //                 "organization_name",
+                    //                 'organization_code',
+                    //                 "unique_code",
+                    //                 "pin_code",
+                    //                 "category",
+                    //                 "principal_name",
+                    //                 "principal_mobile",
+                    //                 "city",
+                    //                 "district",
+                    //                 "state",
+                    //                 "country",
+                    //                 'address'
+                    //             ],
+                    //         },
+
+                    //     },
+                    // },
+                });
+            } 
+            if (!data || data instanceof Error) {
+                if (data != null) {
+                    throw notFound(data.message)
+                } else {
+                    throw notFound()
+                }
+            }
+            return res.status(200).send(dispatcher(res, data, 'success'));
         } catch (error) {
             next(error);
         }
