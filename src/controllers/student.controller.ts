@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { customAlphabet } from 'nanoid';
 import { speeches } from '../configs/speeches.config';
 import dispatcher from '../utils/dispatch.util';
-import { studentSchema, studentUpdateSchema} from '../validations/student.validationa';
+import { studentSchema, studentUpdateSchema } from '../validations/student.validationa';
 import bcrypt from 'bcrypt';
 import authService from '../services/auth.service';
 import BaseController from './base.controller';
@@ -637,15 +637,20 @@ export default class StudentController extends BaseController {
             let data: any;
             const where: any = {};
             const { teamId } = req.params;
+            console.log(teamId);
             if (teamId) {
                 const newParamId = await this.authService.decryptGlobal(req.params.teamId);
+                console.log(newParamId);
                 where[`team_id`] = newParamId;
                 data = await this.crudService.findAll(student, {
-                    attributes: [
-                           'full_name',
-                           'student_id',
-                           'user_id'
-                    ],
+                    attributes: {
+                        include: [
+                            [
+                                db.literal(`( SELECT role FROM users AS u WHERE u.user_id = \`student\`.\`user_id\`)`), 'role'
+                            ],
+
+                        ]
+                    },
                     where: {
                         [Op.and]: [
                             where
@@ -686,7 +691,7 @@ export default class StudentController extends BaseController {
                     //     },
                     // },
                 });
-            } 
+            }
             if (!data || data instanceof Error) {
                 if (data != null) {
                     throw notFound(data.message)
