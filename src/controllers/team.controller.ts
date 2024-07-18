@@ -356,8 +356,9 @@ export default class TeamController extends BaseController {
             const findOrgCode = await db.query(`SELECT COALESCE(MAX(team_id), 0) AS team_id FROM Aim_db.teams;`, { type: QueryTypes.SELECT });
             const countINcrement = parseInt(Object.values(findOrgCode[0]).toString(), 10) + 1;
             const paddingvalue = countINcrement.toString().padStart(5, '0')
-            const cryptoEncryptedString = await this.authService.generateCryptEncryption(payload.team_name.toLowerCase());
-            payload['username'] = `team_${paddingvalue}`
+            let password = payload.team_name.replace(/\s/g, '');
+            const cryptoEncryptedString = await this.authService.generateCryptEncryption(password.toLowerCase());
+            payload['username'] = `SIM${paddingvalue}`
             payload['full_name'] = payload.team_name
             payload['password'] = cryptoEncryptedString
             payload['role'] = "TEAM"
