@@ -20,7 +20,7 @@ export default class FaqController extends BaseController {
         this.router.get(`${this.path}/getbyCategoryid/:id`, this.getbyCategoryid.bind(this));
     }
     protected async getbyCategoryid(req: Request, res: Response, next: NextFunction) {
-        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR') {
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'TEAM' && res.locals.role !== 'MENTOR') {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
         }
         try {
@@ -296,7 +296,7 @@ export default class FaqController extends BaseController {
     }
 
     protected getData(req: Request, res: Response, next: NextFunction) {
-        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR') {
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'TEAM' && res.locals.role !== 'MENTOR') {
             throw unauthorized(speeches.ROLE_ACCES_DECLINE)
         }
         return super.getData(req, res, next, [],

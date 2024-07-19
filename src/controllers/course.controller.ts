@@ -20,7 +20,7 @@ export default class CourseController extends BaseController {
 
     }
     protected async getData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT') {
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'TEAM') {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
         }
         try {
@@ -113,7 +113,7 @@ export default class CourseController extends BaseController {
     }
 
     async getDetailsData(req: Request, res: Response, modelClass: any) {
-        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT') {
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'TEAM') {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
         }
         let whereClause: any = {};
