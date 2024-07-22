@@ -368,7 +368,18 @@ export default class DashboardService extends BaseService {
         `
     }
     /**
-     * get created_at for student user from quiz survey responses
+     * get created_at for student pre survey user from quiz survey responses
+     * @param addWhereClauseStatusPart String
+     * @param whereClauseStatusPartLiteral String
+     * @returns Object
+     */
+    getDbLieralForPreSurveyCreatedAt(addWhereClauseStatusPart: any, whereClauseStatusPartLiteral: any) {
+        return `
+            SELECT created_at FROM quiz_survey_responses where quiz_survey_id = 2 and user_Id = \`student\`.\`user_id\`
+            `
+    }
+    /**
+     * get created_at for student post survey user from quiz survey responses
      * @param addWhereClauseStatusPart String
      * @param whereClauseStatusPartLiteral String
      * @returns Object
