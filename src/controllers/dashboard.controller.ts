@@ -30,9 +30,14 @@ export default class DashboardController extends BaseController {
         this.router.get(`${this.path}/mapStats`, this.getMapStats.bind(this))
         this.router.get(`${this.path}/refreshMapStats`, this.refreshMapStats.bind(this))
         //student Stats...
-        this.router.get(`${this.path}/studentStats/:student_user_id`, this.getStudentStats.bind(this))
-        this.router.get(`${this.path}/studentStats/:student_user_id/challenges`, this.getStudentChallengeDetails.bind(this))
-        this.router.get(`${this.path}/studentStats/:student_user_id/teamProgress`, this.getTeamProgress.bind(this))
+        this.router.get(`${this.path}/stuCourseStats`, this.getStudentCourse.bind(this));
+        this.router.get(`${this.path}/stuVideoStats`, this.getStudentVideo.bind(this));
+        this.router.get(`${this.path}/stuQuizStats`, this.getStudentQUIZ.bind(this));
+        this.router.get(`${this.path}/stuBadgesStats`, this.getStudentBadges.bind(this));
+        this.router.get(`${this.path}/stuPrePostStats`, this.getStudentPREPOST.bind(this));
+        // this.router.get(`${this.path}/studentStats/:student_user_id`, this.getStudentStats.bind(this))
+        // this.router.get(`${this.path}/studentStats/:student_user_id/challenges`, this.getStudentChallengeDetails.bind(this))
+        // this.router.get(`${this.path}/studentStats/:student_user_id/teamProgress`, this.getTeamProgress.bind(this))
         //team stats..
         this.router.get(`${this.path}/teamStats/:team_id`, this.getTeamStats.bind(this));
         //evaluator stats..
@@ -750,12 +755,12 @@ export default class DashboardController extends BaseController {
             } else if (Object.keys(req.query).length !== 0) {
                 return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
             }
-           const { mentor_id,email } = newREQQuery
+            const { mentor_id, email } = newREQQuery
             if (mentor_id) {
                 const teamList = await db.query(`SELECT teams.team_id,team_name,(SELECT username FROM users WHERE user_id = teams.user_id) AS username FROM teams WHERE mentor_id = ${mentor_id} GROUP BY teams.team_id ORDER BY team_id DESC`, { type: QueryTypes.SELECT });
-                result = await this.authService.triggerteamDeatils(teamList,email);
+                result = await this.authService.triggerteamDeatils(teamList, email);
             }
-           return res.status(200).send(dispatcher(res, result, 'success'));
+            return res.status(200).send(dispatcher(res, result, 'success'));
         }
         catch (err) {
             next(err)
@@ -1122,6 +1127,285 @@ export default class DashboardController extends BaseController {
             }
             res.status(200).send(dispatcher(res, data, "success"))
         } catch (err) {
+            next(err)
+        }
+    }
+    protected async getStudentCourse(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR' && res.locals.role !== 'TEAM' && res.locals.role !== 'STUDENT') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
+        }
+        try {
+            let newREQQuery: any = {}
+            if (req.query.Data) {
+                let newQuery: any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery = JSON.parse(newQuery);
+            } else if (Object.keys(req.query).length !== 0) {
+                return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
+            }
+
+            const userId = newREQQuery.user_id
+            const paramStatus = newREQQuery.status;
+
+            let whereClauseStatusPartLiteral = "1=1";
+            let addWhereClauseStatusPart = false
+            if (paramStatus && (paramStatus in constents.common_status_flags.list)) {
+                whereClauseStatusPartLiteral = `status = "${paramStatus}"`
+                addWhereClauseStatusPart = true;
+            }
+
+            const serviceDashboard = new DashboardService();
+            const studentStatsResul: any = await student.findOne({
+                where: {
+                    user_id: userId
+                },
+                raw: true,
+                attributes: [
+                    [
+                        db.literal(`(
+                            ${serviceDashboard.getDbLieralForAllToipcsCount(addWhereClauseStatusPart,
+                            whereClauseStatusPartLiteral)}
+                            )`),
+                        "all_topics_count"
+                    ],
+                    [
+                        db.literal(`(
+                            ${serviceDashboard.getDbLieralForAllToipcsCompletedCount(addWhereClauseStatusPart,
+                            whereClauseStatusPartLiteral)}
+                            )`),
+                        "topics_completed_count"
+                    ],
+                ]
+            })
+            if (!studentStatsResul) {
+                throw notFound(speeches.USER_NOT_FOUND)
+            }
+            if (studentStatsResul instanceof Error) {
+                throw studentStatsResul
+            }
+            res.status(200).send(dispatcher(res, studentStatsResul, "success"))
+        }
+        catch (err) {
+            next(err)
+        }
+    }
+    protected async getStudentVideo(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR' && res.locals.role !== 'TEAM' && res.locals.role !== 'STUDENT') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
+        }
+        try {
+            let newREQQuery: any = {}
+            if (req.query.Data) {
+                let newQuery: any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery = JSON.parse(newQuery);
+            } else if (Object.keys(req.query).length !== 0) {
+                return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
+            }
+
+            const userId = newREQQuery.user_id
+            const paramStatus = newREQQuery.status;
+
+            let whereClauseStatusPartLiteral = "1=1";
+            let addWhereClauseStatusPart = false
+            if (paramStatus && (paramStatus in constents.common_status_flags.list)) {
+                whereClauseStatusPartLiteral = `status = "${paramStatus}"`
+                addWhereClauseStatusPart = true;
+            }
+
+            const serviceDashboard = new DashboardService();
+            const studentStatsResul: any = await student.findOne({
+                where: {
+                    user_id: userId
+                },
+                raw: true,
+                attributes: [
+                    [
+                        db.literal(`(
+                            ${serviceDashboard.getDbLieralForAllToipcVideosCount(addWhereClauseStatusPart,
+                            whereClauseStatusPartLiteral)}
+                            )`),
+                        "all_videos_count"
+                    ],
+                    [
+                        db.literal(`(
+                            ${serviceDashboard.getDbLieralForVideoToipcsCompletedCount(addWhereClauseStatusPart,
+                            whereClauseStatusPartLiteral)}
+                            )`),
+                        "videos_completed_count"
+                    ]
+                ]
+            })
+            if (!studentStatsResul) {
+                throw notFound(speeches.USER_NOT_FOUND)
+            }
+            if (studentStatsResul instanceof Error) {
+                throw studentStatsResul
+            }
+            res.status(200).send(dispatcher(res, studentStatsResul, "success"))
+        }
+        catch (err) {
+            next(err)
+        }
+    }
+    protected async getStudentQUIZ(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR' && res.locals.role !== 'TEAM' && res.locals.role !== 'STUDENT') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
+        }
+        try {
+            let newREQQuery: any = {}
+            if (req.query.Data) {
+                let newQuery: any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery = JSON.parse(newQuery);
+            } else if (Object.keys(req.query).length !== 0) {
+                return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
+            }
+
+            const userId = newREQQuery.user_id
+            const paramStatus = newREQQuery.status;
+
+            let whereClauseStatusPartLiteral = "1=1";
+            let addWhereClauseStatusPart = false
+            if (paramStatus && (paramStatus in constents.common_status_flags.list)) {
+                whereClauseStatusPartLiteral = `status = "${paramStatus}"`
+                addWhereClauseStatusPart = true;
+            }
+
+            const serviceDashboard = new DashboardService();
+            const studentStatsResul: any = await student.findOne({
+                where: {
+                    user_id: userId
+                },
+                raw: true,
+                attributes: [
+                    [
+                        db.literal(`(
+                            ${serviceDashboard.getDbLieralForAllToipcQuizCount(addWhereClauseStatusPart,
+                            whereClauseStatusPartLiteral)}
+                            )`),
+                        "all_quiz_count"
+                    ],
+                    [
+                        db.literal(`(
+                            ${serviceDashboard.getDbLieralForQuizToipcsCompletedCount(addWhereClauseStatusPart,
+                            whereClauseStatusPartLiteral)}
+                            )`),
+                        "quiz_completed_count"
+                    ]
+                ]
+            })
+            if (!studentStatsResul) {
+                throw notFound(speeches.USER_NOT_FOUND)
+            }
+            if (studentStatsResul instanceof Error) {
+                throw studentStatsResul
+            }
+            res.status(200).send(dispatcher(res, studentStatsResul, "success"))
+        }
+        catch (err) {
+            next(err)
+        }
+    }
+    protected async getStudentBadges(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR' && res.locals.role !== 'TEAM' && res.locals.role !== 'STUDENT') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
+        }
+        try {
+            let newREQQuery: any = {}
+            if (req.query.Data) {
+                let newQuery: any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery = JSON.parse(newQuery);
+            } else if (Object.keys(req.query).length !== 0) {
+                return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
+            }
+
+            const userId = newREQQuery.user_id
+
+            const studentStatsResul: any = await student.findOne({
+                where: {
+                    user_id: userId
+                },
+                raw: true,
+                attributes: [
+                    "badges"
+                ]
+            })
+            const badges = studentStatsResul.badges;
+            let badgesCount = 0
+            if (badges) {
+                const badgesParsed = JSON.parse(badges);
+                if (badgesParsed) {
+                    badgesCount = Object.keys(badgesParsed).length
+                }
+                delete studentStatsResul.badges;
+            }
+            studentStatsResul["badges_earned_count"] = badgesCount;
+
+            if (!studentStatsResul) {
+                throw notFound(speeches.USER_NOT_FOUND)
+            }
+            if (studentStatsResul instanceof Error) {
+                throw studentStatsResul
+            }
+            res.status(200).send(dispatcher(res, studentStatsResul, "success"))
+        }
+        catch (err) {
+            next(err)
+        }
+    }
+    protected async getStudentPREPOST(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR' && res.locals.role !== 'TEAM' && res.locals.role !== 'STUDENT') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
+        }
+        try {
+            let newREQQuery: any = {}
+            if (req.query.Data) {
+                let newQuery: any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery = JSON.parse(newQuery);
+            } else if (Object.keys(req.query).length !== 0) {
+                return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
+            }
+
+            const userId = newREQQuery.user_id
+            const paramStatus = newREQQuery.status;
+
+            let whereClauseStatusPartLiteral = "1=1";
+            let addWhereClauseStatusPart = false
+            if (paramStatus && (paramStatus in constents.common_status_flags.list)) {
+                whereClauseStatusPartLiteral = `status = "${paramStatus}"`
+                addWhereClauseStatusPart = true;
+            }
+
+            const serviceDashboard = new DashboardService();
+            const studentStatsResul: any = await student.findOne({
+                where: {
+                    user_id: userId
+                },
+                raw: true,
+                attributes: [
+                    [
+                        db.literal(`(
+                            ${serviceDashboard.getDbLieralForPreSurveyCreatedAt(addWhereClauseStatusPart,
+                            whereClauseStatusPartLiteral)}
+                            )`),
+                        "pre_survey_completed_date"
+                    ],
+                    [
+                        db.literal(`(
+                            ${serviceDashboard.getDbLieralForPostSurveyCreatedAt(addWhereClauseStatusPart,
+                            whereClauseStatusPartLiteral)}
+                            )`),
+                        "post_survey_completed_date"
+                    ]
+                ]
+            })
+            if (!studentStatsResul) {
+                throw notFound(speeches.USER_NOT_FOUND)
+            }
+            if (studentStatsResul instanceof Error) {
+                throw studentStatsResul
+            }
+            res.status(200).send(dispatcher(res, studentStatsResul, "success"))
+        }
+        catch (err) {
             next(err)
         }
     }
