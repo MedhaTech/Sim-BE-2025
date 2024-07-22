@@ -193,7 +193,7 @@ export default class QuizSurveyController extends BaseController {
             } else if (Object.keys(req.query).length !== 0) {
                 return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
             }
-            let user_id = res.locals.user_id;
+            let user_id = newREQQuery.user_id;
             if (!user_id) {
                 throw unauthorized(speeches.UNAUTHORIZED_ACCESS)
             }
@@ -380,7 +380,7 @@ export default class QuizSurveyController extends BaseController {
         }
         const quiz_survey_id = req.params.id;
         const paramStatus: any = newREQQuery.status;
-        const user_id = res.locals.user_id;
+        const user_id = newREQQuery.user_id;
         if (!quiz_survey_id) {
             throw badRequest(speeches.QUIZ_ID_REQUIRED);
         }
@@ -577,10 +577,16 @@ export default class QuizSurveyController extends BaseController {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
         }
         try {
-
+            let newREQQuery: any = {}
+            if (req.query.Data) {
+                let newQuery: any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery = JSON.parse(newQuery);
+            } else if (Object.keys(req.query).length !== 0) {
+                return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
+            }
             const quiz_survey_id = await this.authService.decryptGlobal(req.params.id);
             const { responses } = req.body;
-            const user_id = res.locals.user_id;
+            const user_id = newREQQuery.user_id;
             if (!quiz_survey_id) {
                 throw badRequest(speeches.QUIZ_ID_REQUIRED);
             }
