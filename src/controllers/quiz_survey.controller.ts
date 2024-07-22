@@ -31,156 +31,156 @@ export default class QuizSurveyController extends BaseController {
         this.validations = new ValidationsHolder(quizSchema, quizUpdateSchema);
     }
     protected initializeRoutes(): void {
-        this.router.get(this.path + "/:id/nextQuestion/", this.getNextQuestion.bind(this));
+        //this.router.get(this.path + "/:id/nextQuestion/", this.getNextQuestion.bind(this));
         this.router.post(this.path + "/:id/responses/", validationMiddleware(quizSubmitResponsesSchema), this.submitResponses.bind(this));
-        this.router.get(this.path + "/:quiz_survey_id/surveyStatus", this.getQuizSurveyStatus.bind(this));
+        //this.router.get(this.path + "/:quiz_survey_id/surveyStatus", this.getQuizSurveyStatus.bind(this));
         super.initializeRoutes();
     }
-    protected async getQuizSurveyStatus(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'TEAM' && res.locals.role !== 'MENTOR') {
-            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
-        }
-        try {
-            let newREQQuery: any = {}
-            if (req.query.Data) {
-                let newQuery: any = await this.authService.decryptGlobal(req.query.Data);
-                newREQQuery = JSON.parse(newQuery);
-            } else if (Object.keys(req.query).length !== 0) {
-                return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
-            }
-            const { quiz_survey_id } = req.params
+    // protected async getQuizSurveyStatus(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+    //     if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'TEAM' && res.locals.role !== 'MENTOR') {
+    //         return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
+    //     }
+    //     try {
+    //         let newREQQuery: any = {}
+    //         if (req.query.Data) {
+    //             let newQuery: any = await this.authService.decryptGlobal(req.query.Data);
+    //             newREQQuery = JSON.parse(newQuery);
+    //         } else if (Object.keys(req.query).length !== 0) {
+    //             return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
+    //         }
+    //         const { quiz_survey_id } = req.params
 
-            const quizSureyResult = await quiz_survey.findOne({
-                where: {
-                    quiz_survey_id: quiz_survey_id
-                }
-            })
-            if (!quizSureyResult) {
-                throw badRequest(speeches.INVALID_DATA)
-            }
-            if (quizSureyResult instanceof Error) {
-                throw quizSureyResult
-            }
-            let quizSurveyStatusParam: any = newREQQuery.quizSurveyStatus;
-            if (!quizSurveyStatusParam || !(quizSurveyStatusParam in constents.quiz_survey_status_flags.list)) {
-                quizSurveyStatusParam = constents.quiz_survey_status_flags.default
-            }
-            let condition = {}
-            const userIdsObjWithQuizCompletedArr = await quiz_survey_response.findAll({
-                attributes: [
-                    "user_id"
-                ],
-                raw: true,
-                where: {
-                    quiz_survey_id: quiz_survey_id,
-                }
-            })
+    //         const quizSureyResult = await quiz_survey.findOne({
+    //             where: {
+    //                 quiz_survey_id: quiz_survey_id
+    //             }
+    //         })
+    //         if (!quizSureyResult) {
+    //             throw badRequest(speeches.INVALID_DATA)
+    //         }
+    //         if (quizSureyResult instanceof Error) {
+    //             throw quizSureyResult
+    //         }
+    //         let quizSurveyStatusParam: any = newREQQuery.quizSurveyStatus;
+    //         if (!quizSurveyStatusParam || !(quizSurveyStatusParam in constents.quiz_survey_status_flags.list)) {
+    //             quizSurveyStatusParam = constents.quiz_survey_status_flags.default
+    //         }
+    //         let condition = {}
+    //         const userIdsObjWithQuizCompletedArr = await quiz_survey_response.findAll({
+    //             attributes: [
+    //                 "user_id"
+    //             ],
+    //             raw: true,
+    //             where: {
+    //                 quiz_survey_id: quiz_survey_id,
+    //             }
+    //         })
 
-            if (userIdsObjWithQuizCompletedArr instanceof Error) {
-                throw userIdsObjWithQuizCompletedArr
-            }
+    //         if (userIdsObjWithQuizCompletedArr instanceof Error) {
+    //             throw userIdsObjWithQuizCompletedArr
+    //         }
 
-            const userIdsWithQuizCompletedArr = userIdsObjWithQuizCompletedArr.map((element) => {
-                return element.user_id
-            });
-            // console.log("userIdsWithQuizCompletedArr",userIdsWithQuizCompletedArr)
-            if (quizSurveyStatusParam == constents.quiz_survey_status_flags.list["COMPLETED"]) {
-                condition = {
-                    user_id: {
-                        [Op.in]: userIdsWithQuizCompletedArr
-                    }
-                }
-            } else if (quizSurveyStatusParam == constents.quiz_survey_status_flags.list["INCOMPLETE"]) {
-                condition = {
-                    user_id: {
-                        [Op.notIn]: userIdsWithQuizCompletedArr
-                    }
-                }
-            }
-            // console.log("condition",condition)
-            let roleParam: any = newREQQuery.role;
-            if (!roleParam || !(roleParam in constents.user_role_flags.list)) {
-                roleParam = constents.user_role_flags.list["MENTOR"]
-            }
-            let roleBasedModelToBeUsed: any = mentor;
-            let roleBasedIncludeArrToBeUsed: any = [
-                { model: organization },
-                { model: user },
-            ];
-            if (roleParam != constents.user_role_flags.list["MENTOR"]) {
-                roleBasedModelToBeUsed = student
-                roleBasedIncludeArrToBeUsed = [
-                    { model: user },
-                ];
-            }
+    //         const userIdsWithQuizCompletedArr = userIdsObjWithQuizCompletedArr.map((element) => {
+    //             return element.user_id
+    //         });
+    //         // console.log("userIdsWithQuizCompletedArr",userIdsWithQuizCompletedArr)
+    //         if (quizSurveyStatusParam == constents.quiz_survey_status_flags.list["COMPLETED"]) {
+    //             condition = {
+    //                 user_id: {
+    //                     [Op.in]: userIdsWithQuizCompletedArr
+    //                 }
+    //             }
+    //         } else if (quizSurveyStatusParam == constents.quiz_survey_status_flags.list["INCOMPLETE"]) {
+    //             condition = {
+    //                 user_id: {
+    //                     [Op.notIn]: userIdsWithQuizCompletedArr
+    //                 }
+    //             }
+    //         }
+    //         // console.log("condition",condition)
+    //         let roleParam: any = newREQQuery.role;
+    //         if (!roleParam || !(roleParam in constents.user_role_flags.list)) {
+    //             roleParam = constents.user_role_flags.list["MENTOR"]
+    //         }
+    //         let roleBasedModelToBeUsed: any = mentor;
+    //         let roleBasedIncludeArrToBeUsed: any = [
+    //             { model: organization },
+    //             { model: user },
+    //         ];
+    //         if (roleParam != constents.user_role_flags.list["MENTOR"]) {
+    //             roleBasedModelToBeUsed = student
+    //             roleBasedIncludeArrToBeUsed = [
+    //                 { model: user },
+    //             ];
+    //         }
 
-            const { page, size, status } = newREQQuery;
+    //         const { page, size, status } = newREQQuery;
 
-            // condition = status ? { status: { [Op.like]: `%${status}%` } } : null;
-            const { limit, offset } = this.getPagination(page, size);
+    //         // condition = status ? { status: { [Op.like]: `%${status}%` } } : null;
+    //         const { limit, offset } = this.getPagination(page, size);
 
-            const paramStatus: any = newREQQuery.status;
-            let whereClauseStatusPart: any = {};
-            let whereClauseStatusPartLiteral = "1=1";
-            let addWhereClauseStatusPart = false
-            if (paramStatus && (paramStatus in constents.common_status_flags.list)) {
-                if (paramStatus === 'ALL') {
-                    whereClauseStatusPart = {};
-                    addWhereClauseStatusPart = false;
-                } else {
-                    whereClauseStatusPart = { "status": paramStatus };
-                    addWhereClauseStatusPart = true;
-                }
-            } else {
-                whereClauseStatusPart = { "status": "ACTIVE" };
-                addWhereClauseStatusPart = true;
-            }
-            // console.log("came here",roleBasedModelToBeUsed)
-            const mentorsResult = await roleBasedModelToBeUsed.findAll({
-                attributes: {
-                    include: [
-                        [
-                            // Note the wrapping parentheses in the call below!
-                            db.literal(`(
-                                SELECT CASE WHEN EXISTS 
-                                    (SELECT user_id 
-                                    FROM quiz_survey_responses as qsp 
-                                    WHERE qsp.user_id = \`${roleBasedModelToBeUsed.name}\`.\`user_id\`
-                                    AND qsp.quiz_survey_id = ${quiz_survey_id}) 
-                                THEN  
-                                    "COMPLETED"
-                                ELSE 
-                                    "INCOMPLETE"
-                                END as quiz_survey_status
-                            )`),
-                            'quiz_survey_status'
-                        ],
-                    ]
-                },
-                where: {
-                    [Op.and]: [
-                        whereClauseStatusPart,
-                        condition
-                    ]
-                },
-                include: roleBasedIncludeArrToBeUsed,
-                limit, offset
-            });
-            // console.log("mentorsResult",mentorsResult)
+    //         const paramStatus: any = newREQQuery.status;
+    //         let whereClauseStatusPart: any = {};
+    //         let whereClauseStatusPartLiteral = "1=1";
+    //         let addWhereClauseStatusPart = false
+    //         if (paramStatus && (paramStatus in constents.common_status_flags.list)) {
+    //             if (paramStatus === 'ALL') {
+    //                 whereClauseStatusPart = {};
+    //                 addWhereClauseStatusPart = false;
+    //             } else {
+    //                 whereClauseStatusPart = { "status": paramStatus };
+    //                 addWhereClauseStatusPart = true;
+    //             }
+    //         } else {
+    //             whereClauseStatusPart = { "status": "ACTIVE" };
+    //             addWhereClauseStatusPart = true;
+    //         }
+    //         // console.log("came here",roleBasedModelToBeUsed)
+    //         const mentorsResult = await roleBasedModelToBeUsed.findAll({
+    //             attributes: {
+    //                 include: [
+    //                     [
+    //                         // Note the wrapping parentheses in the call below!
+    //                         db.literal(`(
+    //                             SELECT CASE WHEN EXISTS 
+    //                                 (SELECT user_id 
+    //                                 FROM quiz_survey_responses as qsp 
+    //                                 WHERE qsp.user_id = \`${roleBasedModelToBeUsed.name}\`.\`user_id\`
+    //                                 AND qsp.quiz_survey_id = ${quiz_survey_id}) 
+    //                             THEN  
+    //                                 "COMPLETED"
+    //                             ELSE 
+    //                                 "INCOMPLETE"
+    //                             END as quiz_survey_status
+    //                         )`),
+    //                         'quiz_survey_status'
+    //                     ],
+    //                 ]
+    //             },
+    //             where: {
+    //                 [Op.and]: [
+    //                     whereClauseStatusPart,
+    //                     condition
+    //                 ]
+    //             },
+    //             include: roleBasedIncludeArrToBeUsed,
+    //             limit, offset
+    //         });
+    //         // console.log("mentorsResult",mentorsResult)
 
-            if (!mentorsResult) {
-                throw notFound(speeches.DATA_NOT_FOUND)
-            }
-            if (mentorsResult instanceof Error) {
-                throw mentorsResult
-            }
-            res.status(200).send(dispatcher(res, mentorsResult, "success"))
-        } catch (err) {
-            console.log(err)
-            next(err)
-        }
+    //         if (!mentorsResult) {
+    //             throw notFound(speeches.DATA_NOT_FOUND)
+    //         }
+    //         if (mentorsResult instanceof Error) {
+    //             throw mentorsResult
+    //         }
+    //         res.status(200).send(dispatcher(res, mentorsResult, "success"))
+    //     } catch (err) {
+    //         console.log(err)
+    //         next(err)
+    //     }
 
-    }
+    // }
     protected async getData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'TEAM' && res.locals.role !== 'MENTOR') {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
@@ -367,131 +367,131 @@ export default class QuizSurveyController extends BaseController {
             next(error);
         }
     }
-    protected async getNextQuestion(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'TEAM' && res.locals.role !== 'MENTOR') {
-            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
-        }
-        let newREQQuery: any = {}
-        if (req.query.Data) {
-            let newQuery: any = await this.authService.decryptGlobal(req.query.Data);
-            newREQQuery = JSON.parse(newQuery);
-        } else if (Object.keys(req.query).length !== 0) {
-            return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
-        }
-        const quiz_survey_id = req.params.id;
-        const paramStatus: any = newREQQuery.status;
-        const user_id = newREQQuery.user_id;
-        if (!quiz_survey_id) {
-            throw badRequest(speeches.QUIZ_ID_REQUIRED);
-        }
-        if (!user_id) {
-            throw unauthorized(speeches.UNAUTHORIZED_ACCESS);
-        }
-        //do not check for course topic in this case .... //check if the given quiz is a valid topic
-        // const curr_topic =  await this.crudService.findOne(course_topic,{where:{"topic_type_id":quiz_id,"topic_type":"QUIZ"}})
-        // if(!curr_topic || curr_topic instanceof Error){
-        //     throw badRequest("INVALID TOPIC");
-        // }
+    // protected async getNextQuestion(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+    //     if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'TEAM' && res.locals.role !== 'MENTOR') {
+    //         return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
+    //     }
+    //     let newREQQuery: any = {}
+    //     if (req.query.Data) {
+    //         let newQuery: any = await this.authService.decryptGlobal(req.query.Data);
+    //         newREQQuery = JSON.parse(newQuery);
+    //     } else if (Object.keys(req.query).length !== 0) {
+    //         return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
+    //     }
+    //     const quiz_survey_id = req.params.id;
+    //     const paramStatus: any = newREQQuery.status;
+    //     const user_id = newREQQuery.user_id;
+    //     if (!quiz_survey_id) {
+    //         throw badRequest(speeches.QUIZ_ID_REQUIRED);
+    //     }
+    //     if (!user_id) {
+    //         throw unauthorized(speeches.UNAUTHORIZED_ACCESS);
+    //     }
+    //     //do not check for course topic in this case .... //check if the given quiz is a valid topic
+    //     // const curr_topic =  await this.crudService.findOne(course_topic,{where:{"topic_type_id":quiz_id,"topic_type":"QUIZ"}})
+    //     // if(!curr_topic || curr_topic instanceof Error){
+    //     //     throw badRequest("INVALID TOPIC");
+    //     // }
 
-        const quizRes = await this.crudService.findOne(quiz_survey_response, { where: { quiz_survey_id: quiz_survey_id, user_id: user_id } });
-        if (quizRes instanceof Error) {
-            throw internal(quizRes.message)
-        }
-        let whereClauseStatusPart: any = {}
-        let boolStatusWhereClauseRequired = false
-        if (paramStatus && (paramStatus in constents.common_status_flags.list)) {
-            whereClauseStatusPart = { "status": paramStatus }
-            boolStatusWhereClauseRequired = true;
-        }
+    //     const quizRes = await this.crudService.findOne(quiz_survey_response, { where: { quiz_survey_id: quiz_survey_id, user_id: user_id } });
+    //     if (quizRes instanceof Error) {
+    //         throw internal(quizRes.message)
+    //     }
+    //     let whereClauseStatusPart: any = {}
+    //     let boolStatusWhereClauseRequired = false
+    //     if (paramStatus && (paramStatus in constents.common_status_flags.list)) {
+    //         whereClauseStatusPart = { "status": paramStatus }
+    //         boolStatusWhereClauseRequired = true;
+    //     }
 
-        let level = "HARD"
-        let question_no = 1
-        let nextQuestion: any = null;
-        // console.log(quizRes)
-        if (quizRes) {
-            //TOOO :: implement checking response and based on that change the 
-            let user_response: any = {}
-            user_response = JSON.parse(quizRes.dataValues.response);
-            // console.log(user_response);
-            let questionNosAsweredArray = Object.keys(user_response);
-            questionNosAsweredArray = questionNosAsweredArray.sort((a, b) => (Number(a) > Number(b) ? -1 : 1));
-            const noOfQuestionsAnswered = Object.keys(user_response).length
-            // console.log(noOfQuestionsAnswered)
-            const lastQuestionAnsewered = user_response[questionNosAsweredArray[0]]//we have assumed that this length will always have atleast 1 item ; this could potentially be a source of bug, but is not since this should always be true based on above checks ..
-            // if(lastQuestionAnsewered.selected_option == lastQuestionAnsewered.correct_answer){
-            //     question_no = lastQuestionAnsewered.question_no+1;
+    //     let level = "HARD"
+    //     let question_no = 1
+    //     let nextQuestion: any = null;
+    //     // console.log(quizRes)
+    //     if (quizRes) {
+    //         //TOOO :: implement checking response and based on that change the 
+    //         let user_response: any = {}
+    //         user_response = JSON.parse(quizRes.dataValues.response);
+    //         // console.log(user_response);
+    //         let questionNosAsweredArray = Object.keys(user_response);
+    //         questionNosAsweredArray = questionNosAsweredArray.sort((a, b) => (Number(a) > Number(b) ? -1 : 1));
+    //         const noOfQuestionsAnswered = Object.keys(user_response).length
+    //         // console.log(noOfQuestionsAnswered)
+    //         const lastQuestionAnsewered = user_response[questionNosAsweredArray[0]]//we have assumed that this length will always have atleast 1 item ; this could potentially be a source of bug, but is not since this should always be true based on above checks ..
+    //         // if(lastQuestionAnsewered.selected_option == lastQuestionAnsewered.correct_answer){
+    //         //     question_no = lastQuestionAnsewered.question_no+1;
 
-            // }else{
-            // question_no = lastQuestionAnsewered.question_no;
-            question_no = lastQuestionAnsewered.question_no + 1;
-            if (lastQuestionAnsewered.level == "HARD") {
-                level = "MEDIUM"
-            } else if (lastQuestionAnsewered.level == "MEDIUM") {
-                level = "EASY"
-            } else if (lastQuestionAnsewered.level == "EASY") {
-                question_no = lastQuestionAnsewered.question_no + 1;
-                level = "HARD"
-            }
-            // }
-        }
+    //         // }else{
+    //         // question_no = lastQuestionAnsewered.question_no;
+    //         question_no = lastQuestionAnsewered.question_no + 1;
+    //         if (lastQuestionAnsewered.level == "HARD") {
+    //             level = "MEDIUM"
+    //         } else if (lastQuestionAnsewered.level == "MEDIUM") {
+    //             level = "EASY"
+    //         } else if (lastQuestionAnsewered.level == "EASY") {
+    //             question_no = lastQuestionAnsewered.question_no + 1;
+    //             level = "HARD"
+    //         }
+    //         // }
+    //     }
 
-        const nextQuestionsToChooseFrom = await this.crudService.findOne(quiz_survey_question, {
-            where: {
-                [Op.and]: [
-                    whereClauseStatusPart,
-                    { quiz_survey_id: quiz_survey_id },
-                    // {level:level},
-                    { question_no: question_no },
-                ]
+    //     const nextQuestionsToChooseFrom = await this.crudService.findOne(quiz_survey_question, {
+    //         where: {
+    //             [Op.and]: [
+    //                 whereClauseStatusPart,
+    //                 { quiz_survey_id: quiz_survey_id },
+    //                 // {level:level},
+    //                 { question_no: question_no },
+    //             ]
 
-            }
-        })
+    //         }
+    //     })
 
-        if (nextQuestionsToChooseFrom instanceof Error) {
-            throw internal(nextQuestionsToChooseFrom.message)
-        }
-        if (nextQuestionsToChooseFrom) {
-            let resultQuestion: any = {}
-            let optionsArr = []
-            if (nextQuestionsToChooseFrom.dataValues.option_a) {
-                optionsArr.push(nextQuestionsToChooseFrom.dataValues.option_a)
-            }
-            if (nextQuestionsToChooseFrom.dataValues.option_b) {
-                optionsArr.push(nextQuestionsToChooseFrom.dataValues.option_b)
-            }
-            if (nextQuestionsToChooseFrom.dataValues.option_c) {
-                optionsArr.push(nextQuestionsToChooseFrom.dataValues.option_c)
-            }
-            if (nextQuestionsToChooseFrom.dataValues.option_d) {
-                optionsArr.push(nextQuestionsToChooseFrom.dataValues.option_d)
-            }
-            if (nextQuestionsToChooseFrom.dataValues.option_e) {
-                optionsArr.push(nextQuestionsToChooseFrom.dataValues.option_e)
-            }
+    //     if (nextQuestionsToChooseFrom instanceof Error) {
+    //         throw internal(nextQuestionsToChooseFrom.message)
+    //     }
+    //     if (nextQuestionsToChooseFrom) {
+    //         let resultQuestion: any = {}
+    //         let optionsArr = []
+    //         if (nextQuestionsToChooseFrom.dataValues.option_a) {
+    //             optionsArr.push(nextQuestionsToChooseFrom.dataValues.option_a)
+    //         }
+    //         if (nextQuestionsToChooseFrom.dataValues.option_b) {
+    //             optionsArr.push(nextQuestionsToChooseFrom.dataValues.option_b)
+    //         }
+    //         if (nextQuestionsToChooseFrom.dataValues.option_c) {
+    //             optionsArr.push(nextQuestionsToChooseFrom.dataValues.option_c)
+    //         }
+    //         if (nextQuestionsToChooseFrom.dataValues.option_d) {
+    //             optionsArr.push(nextQuestionsToChooseFrom.dataValues.option_d)
+    //         }
+    //         if (nextQuestionsToChooseFrom.dataValues.option_e) {
+    //             optionsArr.push(nextQuestionsToChooseFrom.dataValues.option_e)
+    //         }
 
 
-            resultQuestion["quiz_id"] = nextQuestionsToChooseFrom.dataValues.quiz_id;
-            resultQuestion["quiz_question_id"] = nextQuestionsToChooseFrom.dataValues.quiz_question_id;
-            resultQuestion["question_no"] = nextQuestionsToChooseFrom.dataValues.question_no;
-            resultQuestion["question"] = nextQuestionsToChooseFrom.dataValues.question;
-            resultQuestion["question_image"] = nextQuestionsToChooseFrom.dataValues.question_image;
-            resultQuestion["options"] = optionsArr;
-            resultQuestion["level"] = nextQuestionsToChooseFrom.dataValues.level;
-            resultQuestion["type"] = nextQuestionsToChooseFrom.dataValues.type;
+    //         resultQuestion["quiz_id"] = nextQuestionsToChooseFrom.dataValues.quiz_id;
+    //         resultQuestion["quiz_question_id"] = nextQuestionsToChooseFrom.dataValues.quiz_question_id;
+    //         resultQuestion["question_no"] = nextQuestionsToChooseFrom.dataValues.question_no;
+    //         resultQuestion["question"] = nextQuestionsToChooseFrom.dataValues.question;
+    //         resultQuestion["question_image"] = nextQuestionsToChooseFrom.dataValues.question_image;
+    //         resultQuestion["options"] = optionsArr;
+    //         resultQuestion["level"] = nextQuestionsToChooseFrom.dataValues.level;
+    //         resultQuestion["type"] = nextQuestionsToChooseFrom.dataValues.type;
 
-            res.status(200).send(dispatcher(res, resultQuestion))
-        } else {
-            //update worksheet topic progress for this user to completed..!!
-            // if(!boolStatusWhereClauseRequired || 
-            //     (boolStatusWhereClauseRequired && paramStatus == "ACTIVE")){
-            //     const updateProgress =  await this.crudService.create(user_topic_progress,{"user_id":user_id,"course_topic_id":curr_topic.course_topic_id,"status":"COMPLETED"})
-            // }
+    //         res.status(200).send(dispatcher(res, resultQuestion))
+    //     } else {
+    //         //update worksheet topic progress for this user to completed..!!
+    //         // if(!boolStatusWhereClauseRequired || 
+    //         //     (boolStatusWhereClauseRequired && paramStatus == "ACTIVE")){
+    //         //     const updateProgress =  await this.crudService.create(user_topic_progress,{"user_id":user_id,"course_topic_id":curr_topic.course_topic_id,"status":"COMPLETED"})
+    //         // }
 
-            //send response that quiz is completed..!!
-            res.status(200).send(dispatcher(res, "Quiz has been completed no more questions to display"))
-        }
+    //         //send response that quiz is completed..!!
+    //         res.status(200).send(dispatcher(res, "Quiz has been completed no more questions to display"))
+    //     }
 
-    }
+    // }
     protected async insertSingleResponse(user_id: any, quiz_survey_id: any, quiz_survey_question_id: any, selected_option: any) {
         try {
             const questionAnswered = await this.crudService.findOne(quiz_survey_question, { where: { quiz_survey_question_id: quiz_survey_question_id } });
