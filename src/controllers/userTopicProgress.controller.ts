@@ -26,12 +26,19 @@ export default class UserTopicProgress extends BaseController {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
         }
         try {
+            let newREQQuery: any = {}
+            if (req.query.Data) {
+                let newQuery: any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery = JSON.parse(newQuery);
+            } else if (Object.keys(req.query).length !== 0) {
+                return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
+            }
             const { model } = req.params;
             const { course_topic_id } = req.body;
             if (model) {
                 this.model = model;
             };
-            let user_id = res.locals.user_id;
+            let user_id = newREQQuery.user_id;
             if (!user_id) {
                 throw unauthorized(speeches.UNAUTHORIZED_ACCESS)
             }

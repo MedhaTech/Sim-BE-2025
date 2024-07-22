@@ -35,7 +35,7 @@ export default class StudentController extends BaseController {
     }
     protected initializeRoutes(): void {
         this.router.post(`${this.path}/addStudent`, validationMiddleware(studentSchema), this.register.bind(this));
-        this.router.post(`${this.path}/bulkCreateStudent`, validationMiddleware(studentSchema), this.bulkCreateStudent.bind(this));
+        this.router.post(`${this.path}/bulkCreateStudent`, this.bulkCreateStudent.bind(this));
         this.router.get(`${this.path}/:student_user_id/studentCertificate`, this.studentCertificate.bind(this));
         this.router.post(`${this.path}/:student_user_id/badges`, this.addBadgeToStudent.bind(this));
         this.router.get(`${this.path}/:student_user_id/badges`, this.getStudentBadges.bind(this));

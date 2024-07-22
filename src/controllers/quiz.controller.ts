@@ -55,7 +55,7 @@ export default class QuizController extends BaseController {
             const quiz_id = newParamId;
             const attempts = newREQQuery.attempts;
             const paramStatus: any = newREQQuery.status;
-            const user_id = res.locals.user_id;
+            const user_id = newREQQuery.user_id;
             let isMentorCourse = false;
             if (!quiz_id) {
                 throw badRequest(speeches.QUIZ_ID_REQUIRED);
@@ -189,6 +189,13 @@ export default class QuizController extends BaseController {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
         }
         try {
+            let newREQQuery: any = {}
+            if (req.query.Data) {
+                let newQuery: any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery = JSON.parse(newQuery);
+            } else if (Object.keys(req.query).length !== 0) {
+                return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
+            }
             const newParamId = await this.authService.decryptGlobal(req.params.id);
             const quiz_id = newParamId;
 
@@ -196,7 +203,7 @@ export default class QuizController extends BaseController {
             let selected_option = req.body.selected_option;
             selected_option = res.locals.translationService.getTranslationKey(selected_option)
 
-            const user_id = res.locals.user_id;
+            const user_id = newREQQuery.user_id;
             if (!quiz_id) {
                 throw badRequest(speeches.QUIZ_ID_REQUIRED);
             }
