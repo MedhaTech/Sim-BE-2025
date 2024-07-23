@@ -26,6 +26,7 @@ import WorksheetController from "./controllers/worksheet.controller";
 import UserTopicProgress from "./controllers/userTopicProgress.controller";
 import DashboardController from "./controllers/dashboard.controller";
 import MentorAttachmentController from "./controllers/mentorAttachment.controller";
+import ReportController from "./controllers/report.controller";
 
 
 // validating env variables
@@ -57,7 +58,8 @@ try {
         new WorksheetController,
         new UserTopicProgress,
         new DashboardController,
-        new MentorAttachmentController
+        new MentorAttachmentController,
+        new ReportController
 
     ], Number(process.env.APP_PORT));
     // starting app

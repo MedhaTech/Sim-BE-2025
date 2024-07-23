@@ -7,11 +7,15 @@ export class popup extends Model<InferAttributes<popup>, InferCreationAttributes
     declare popup_id: CreationOptional<number>;
     declare on_off: Enumerator;
     declare url: string;
+    declare state: string;
+    declare role: string;
+    declare navigate: string;
     declare status: Enumerator;
     declare created_by: number;
     declare created_at: Date;
     declare updated_by: number;
     declare updated_at: Date;
+
 
     static modelTableName = "popup";
     static structure: any = {
@@ -26,6 +30,18 @@ export class popup extends Model<InferAttributes<popup>, InferCreationAttributes
         },
         url: {
             type: DataTypes.TEXT('long'),
+            allowNull: true
+        },
+        role: {
+            type: DataTypes.STRING,
+            allowNull: true
+        },
+        navigate: {
+            type: DataTypes.STRING,
+            allowNull: true
+        },
+        state: {
+            type: DataTypes.STRING,
             allowNull: true
         },
         status: {
