@@ -2,7 +2,7 @@ import { Op } from "sequelize";
 import { resource } from "../models/resource.model";
 import BaseController from "./base.controller";
 import { Request, Response, NextFunction } from 'express';
-import { notFound } from "boom";
+import { notFound, unauthorized } from "boom";
 import dispatcher from "../utils/dispatch.util";
 import ValidationsHolder from "../validations/validationHolder";
 import { resourceSchema, resourceUpdateSchema } from '../validations/resource.validations';
@@ -21,38 +21,15 @@ export default class ResourceController extends BaseController {
         this.validations = new ValidationsHolder(resourceSchema, resourceUpdateSchema);
     }
     protected initializeRoutes(): void {
-        this.router.get(`${this.path}/list`, this.getMentorResources.bind(this));
         this.router.post(`${this.path}/resourceFileUpload`, this.handleAttachment.bind(this));
         super.initializeRoutes();
     }
-    protected async getData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'TEAM' && res.locals.role !== 'MENTOR') {
-            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
+    protected async getData(req: Request, res: Response, next: NextFunction) {
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR' && res.locals.role !== 'TEAM' && res.locals.role !== 'STATE') {
+            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
         }
         try {
-            let data: any
-            data = await this.crudService.findAll(resource, {
-                order: [['resource_id', 'DESC']]
-            })
-            if (!data || data instanceof Error) {
-                if (data != null) {
-                    throw notFound(data.message)
-                } else {
-                    throw notFound()
-                }
-            }
-            return res.status(200).send(dispatcher(res, data, 'success'));
-        }
-        catch (err) {
-            next(err)
-        }
-    }
-    protected async getMentorResources(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR' && res.locals.role !== 'TEAM') {
-            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
-        }
-        try {
-            let data: any;
+
             let newREQQuery: any = {}
             if (req.query.Data) {
                 let newQuery: any = await this.authService.decryptGlobal(req.query.Data);
@@ -60,26 +37,50 @@ export default class ResourceController extends BaseController {
             } else if (Object.keys(req.query).length !== 0) {
                 return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
             }
-            const paramRole: any = newREQQuery.role;
-            const paramStatus: any = newREQQuery.status;
-            const whereClauseRolePart = { "role": paramRole }
-            data = await this.crudService.findAll(resource, {
-                where: {
-                    [Op.and]: [whereClauseRolePart]
-                },
-                order: [['resource_id', 'DESC']]
-            });
-            if (!data || data instanceof Error) {
-                if (data != null) {
-                    throw notFound(data.message)
-                } else {
-                    throw notFound()
-                }
+            let { role, state } = newREQQuery;
+            let data: any = {}
+            const where: any = {};
+            where[`status`] = "ACTIVE";
+            if (state !== 'All States' && state !== undefined) {
+                where[`state`] = state;
+            }
+            if (role !== 'All roles' && role !== undefined) {
+                where[`role`] = role;
+            }
+            const { id } = req.params;
+            if (id) {
+                const newParamId = await this.authService.decryptGlobal(req.params.id);
+                where[`resource_id`] = newParamId;
+                data = await this.crudService.findOne(resource, {
+                    attributes: [
+                        "resource_id",
+                        "description",
+                        "role",
+                        "type",
+                        "attachments",
+                        "state"
+                    ],
+                    where: [where],
+                    order: [['resource_id', 'DESC']]
+                })
+            }
+            else {
+                data = await this.crudService.findAll(resource, {
+                    attributes: [
+                        "resource_id",
+                        "description",
+                        "role",
+                        "type",
+                        "attachments",
+                        "state"
+                    ],
+                    where: [where],
+                    order: [['resource_id', 'DESC']]
+                })
             }
             return res.status(200).send(dispatcher(res, data, 'success'));
-        }
-        catch (err) {
-            next(err)
+        } catch (error) {
+            next(error);
         }
     }
     protected async handleAttachment(req: Request, res: Response, next: NextFunction) {
