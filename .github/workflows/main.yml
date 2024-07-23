@@ -43,7 +43,7 @@ jobs:
         run: |
           echo "$PRIVATE_KEY" > private_key && chmod 400 private_key
           ssh -o StrictHostKeyChecking=no -i private_key ubuntu@${{secrets.ATL2_STG_HOSTNAME}} '
-            cd /home/ubuntu/aim_be &&
+            cd aim2.0_be &&
             sudo git pull origin testing &&
             npm run build && pm2 stop all && pm2 delete all && npm run start:prod && pm2 save -f'
 
