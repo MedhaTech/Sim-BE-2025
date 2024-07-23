@@ -3,7 +3,7 @@ name: Deployment1
 
 on:
   push:
-    branches: development
+    branches: [development , testing ] 
 jobs:
   
   Build:
@@ -34,6 +34,17 @@ jobs:
           ssh -o StrictHostKeyChecking=no -i private_key ubuntu@${{secrets.ATL2_HOSTNAME}} '
             cd /home/ubuntu/aim_be &&
             sudo git pull origin development &&
+            npm run build && pm2 stop all && pm2 delete all && npm run start:prod && pm2 save -f'
+      - name: Deploy to  Stage Env
+        if: github.ref == 'refs/heads/testing'
+        env:
+          PRIVATE_KEY: ${{ secrets.ATL2_STG_PRIVATE_KEY }}
+          HOSTNAME: ${{ secrets.ATL2_STG_HOSTNAME }}
+        run: |
+          echo "$PRIVATE_KEY" > private_key && chmod 400 private_key
+          ssh -o StrictHostKeyChecking=no -i private_key ubuntu@${{secrets.ATL2_STG_HOSTNAME}} '
+            cd /home/ubuntu/aim_be &&
+            sudo git pull origin testing &&
             npm run build && pm2 stop all && pm2 delete all && npm run start:prod && pm2 save -f'
 
             
