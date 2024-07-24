@@ -48,15 +48,14 @@ export default class UserTopicProgress extends BaseController {
             if (topicProgressAlreadyPresent instanceof Error) {
                 throw topicProgressAlreadyPresent
             }
-
-            let payload = this.autoFillTrackingColumns(req, res, modelLoaded)
-            payload.user_id = user_id;
+            req.body['updated_by'] = user_id;
+            req.body['created_by'] = user_id;
             let data = {}
             let msg = "OK";
             if (topicProgressAlreadyPresent) {
                 const alreadyPresentStatus = topicProgressAlreadyPresent.dataValues.status;
-                if (alreadyPresentStatus.toLowerCase() != payload.status.toLowerCase()) {
-                    data = await this.crudService.updateAndFind(modelLoaded, payload, {
+                if (alreadyPresentStatus.toLowerCase() !=  req.body.status.toLowerCase()) {
+                    data = await this.crudService.updateAndFind(modelLoaded,  req.body, {
                         where: {
                             user_id: user_id,
                             course_topic_id: course_topic_id
@@ -67,7 +66,7 @@ export default class UserTopicProgress extends BaseController {
                     msg = "topic status was already " + alreadyPresentStatus
                 }
             } else {
-                data = await this.crudService.create(modelLoaded, payload);
+                data = await this.crudService.create(modelLoaded, req.body);
             }
 
             if (data instanceof Error) {

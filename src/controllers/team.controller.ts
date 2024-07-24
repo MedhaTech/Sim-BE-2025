@@ -33,7 +33,6 @@ export default class TeamController extends BaseController {
         this.router.get(`${this.path}/list`, this.getTeamsByMenter.bind(this));
         this.router.get(`${this.path}/namebymenterid`, this.getNameByMenter.bind(this));
         this.router.get(`${this.path}/listwithideaStatus`, this.getteamslistwithideastatus.bind(this));
-        this.router.put(`${this.path}/changePassword`, validationMiddleware(teamChangePasswordSchema), this.changePassword.bind(this));
         this.router.post(`${this.path}/login`, validationMiddleware(teamLoginSchema), this.login.bind(this));
         super.initializeRoutes();
     }
@@ -501,22 +500,6 @@ export default class TeamController extends BaseController {
             res.status(200).send(dispatcher(res, result, "success"))
         } catch (error) {
             next(error);
-        }
-    }
-    private async changePassword(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR') {
-            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
-        }
-        const result = await this.authService.changePassword(req.body, res);
-        if (!result) {
-            return res.status(404).send(dispatcher(res, null, 'error', speeches.USER_NOT_FOUND));
-        } else if (result.error) {
-            return res.status(404).send(dispatcher(res, result.error, 'error', result.error));
-        }
-        else if (result.match) {
-            return res.status(404).send(dispatcher(res, null, 'error', speeches.USER_PASSWORD));
-        } else {
-            return res.status(202).send(dispatcher(res, result.data, 'accepted', speeches.USER_PASSWORD_CHANGE, 202));
         }
     }
 }
