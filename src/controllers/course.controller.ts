@@ -136,7 +136,7 @@ export default class CourseController extends BaseController {
             addWhereClauseStatusPart = true;
         }
 
-        let user_id = res.locals.user_id;
+        let user_id = newREQQuery.user_id;
         if (!user_id) {
             throw unauthorized(speeches.UNAUTHORIZED_ACCESS)
         }
