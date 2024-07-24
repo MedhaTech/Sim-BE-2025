@@ -22,6 +22,7 @@ import { student } from '../models/student.model';
 import { constents } from '../configs/constents.config';
 import { organization } from '../models/organization.model';
 import validationMiddleware from '../middlewares/validation.middleware';
+import { badge } from '../models/badge.model';
 
 export default class MentorController extends BaseController {
     model = "mentor";
@@ -46,6 +47,8 @@ export default class MentorController extends BaseController {
         this.router.post(`${this.path}/emailOtp`, this.emailOtp.bind(this));
         this.router.get(`${this.path}/mentorpdfdata`, this.mentorpdfdata.bind(this));
         this.router.post(`${this.path}/triggerWelcomeEmail`, this.triggerWelcomeEmail.bind(this));
+        this.router.post(`${this.path}/:mentor_user_id/badges`, this.addBadgeToMentor.bind(this));
+        this.router.get(`${this.path}/:mentor_user_id/badges`, this.getMentorBadges.bind(this));
         super.initializeRoutes();
     }
     protected async autoFillUserDataForBulkUpload(req: Request, res: Response, modelLoaded: any, reqData: any = null) {
@@ -592,6 +595,156 @@ export default class MentorController extends BaseController {
             return res.status(200).send(dispatcher(res, result, 'success'));
         } catch (error) {
             next(error);
+        }
+    }
+    private async addBadgeToMentor(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
+        }
+        try {
+            //todo: test this api : haven't manually tested this api yet 
+            const mentor_user_id: any = await this.authService.decryptGlobal(req.params.mentor_user_id);
+            const badges_ids: any = req.body.badge_ids;
+            const badges_slugs: any = req.body.badge_slugs;
+            let areSlugsBeingUsed = true;
+            if (!badges_slugs || !badges_slugs.length || badges_slugs.length <= 0) {
+                areSlugsBeingUsed = false;
+            }
+
+            if (!areSlugsBeingUsed && (!badges_ids || !badges_ids.length || badges_ids.length <= 0)) {
+                throw badRequest(speeches.BADGE_IDS_ARRAY_REQUIRED)
+            }
+
+            let mentorBadgesObj: any = await this.authService.getMentorBadges(mentor_user_id);
+            ///do not do empty or null check since badges obj can be null if no badges earned yet hence this is not an error condition 
+            if (mentorBadgesObj instanceof Error) {
+                throw mentorBadgesObj
+            }
+            if (!mentorBadgesObj) {
+                mentorBadgesObj = {};
+            }
+            const errors: any = []
+
+            let forLoopArr = badges_slugs;
+
+            if (!areSlugsBeingUsed) {
+                forLoopArr = badges_ids
+            }
+
+            for (var i = 0; i < forLoopArr.length; i++) {
+                let badgeId = forLoopArr[i];
+                let badgeFindWhereClause: any = {
+                    slug: badgeId
+                }
+                if (!areSlugsBeingUsed) {
+                    badgeFindWhereClause = {
+                        badge_id: badgeId
+                    }
+                }
+                const badgeResultForId = await this.crudService.findOne(badge, { where: badgeFindWhereClause })
+                if (!badgeResultForId) {
+                    errors.push({ id: badgeId, err: badRequest(speeches.DATA_NOT_FOUND) })
+                    continue;
+                }
+                if (badgeResultForId instanceof Error) {
+                    errors.push({ id: badgeId, err: badgeResultForId })
+                    continue;
+                }
+
+                const mentorHasBadgeObjForId = mentorBadgesObj[badgeResultForId.dataValues.slug]
+                if (!mentorHasBadgeObjForId || !mentorHasBadgeObjForId.completed_date) {
+                    mentorBadgesObj[badgeResultForId.dataValues.slug] = {
+                        completed_date: (new Date())
+                    }
+                }
+            }
+            const mentorBadgesObjJson = JSON.stringify(mentorBadgesObj)
+            const result: any = await mentor.update({ badges: mentorBadgesObjJson }, {
+                where: {
+                    user_id: mentor_user_id
+                }
+            })
+            if (result instanceof Error) {
+                throw result;
+            }
+
+            if (!result) {
+                return res.status(404).send(dispatcher(res, null, 'error', speeches.USER_NOT_FOUND));
+            }
+            let dispatchStatus = "updated"
+            let resStatus = 202
+            let dispatchStatusMsg = speeches.USER_BADGES_LINKED
+            if (errors && errors.length > 0) {
+                dispatchStatus = "error"
+                dispatchStatusMsg = "error"
+                resStatus = 400
+            }
+
+            return res.status(resStatus).send(dispatcher(res, { errs: errors, success: mentorBadgesObj }, dispatchStatus, dispatchStatusMsg, resStatus));
+        } catch (err) {
+            next(err)
+        }
+    }
+    private async getMentorBadges(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
+        }
+        try {
+            const mentor_user_id: any = await this.authService.decryptGlobal(req.params.mentor_user_id);
+            let mentorBadgesObj: any = await this.authService.getMentorBadges(mentor_user_id);
+            ///do not do empty or null check since badges obj can be null if no badges earned yet hence this is not an error condition 
+            if (mentorBadgesObj instanceof Error) {
+                throw mentorBadgesObj
+            }
+            if (!mentorBadgesObj) {
+                mentorBadgesObj = {};
+            }
+            let newREQQuery: any = {}
+            if (req.query.Data) {
+                let newQuery: any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery = JSON.parse(newQuery);
+            } else if (Object.keys(req.query).length !== 0) {
+                return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
+            }
+            const paramStatus: any = newREQQuery.status;
+            const where: any = {};
+            let whereClauseStatusPart: any = {};
+            if (paramStatus && (paramStatus in constents.common_status_flags.list)) {
+                whereClauseStatusPart = { "status": paramStatus }
+            }
+            if (paramStatus && (paramStatus in constents.common_status_flags.list)) {
+                whereClauseStatusPart = { "status": paramStatus }
+            }
+            where['role'] = 'mentor';
+            const allBadgesResult = await badge.findAll({
+                where: {
+                    [Op.and]: [
+                        whereClauseStatusPart,
+                        where,
+                    ]
+                },
+                raw: true,
+            });
+
+            if (!allBadgesResult) {
+                throw notFound(speeches.DATA_NOT_FOUND);
+            }
+            if (allBadgesResult instanceof Error) {
+                throw allBadgesResult;
+            }
+            for (var i = 0; i < allBadgesResult.length; i++) {
+                const currBadge: any = allBadgesResult[i];
+                if (mentorBadgesObj.hasOwnProperty("" + currBadge.slug)) {
+                    currBadge["mentor_status"] = mentorBadgesObj[("" + currBadge.slug)].completed_date
+                } else {
+                    currBadge["mentor_status"] = null;
+                }
+                allBadgesResult[i] = currBadge
+            }
+
+            return res.status(200).send(dispatcher(res, allBadgesResult, 'success'));
+        } catch (err) {
+            next(err)
         }
     }
 };

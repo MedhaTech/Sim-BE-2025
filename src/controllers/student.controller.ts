@@ -506,6 +506,7 @@ export default class StudentController extends BaseController {
             if (paramStatus && (paramStatus in constents.common_status_flags.list)) {
                 whereClauseStatusPart = { "status": paramStatus }
             }
+            where['role'] = 'student';
             const allBadgesResult = await badge.findAll({
                 where: {
                     [Op.and]: [
