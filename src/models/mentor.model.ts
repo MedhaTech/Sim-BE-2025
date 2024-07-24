@@ -23,6 +23,7 @@ export class mentor extends Model<InferAttributes<mentor>, InferCreationAttribut
     declare title: string;
     declare gender: string;
     declare whatapp_mobile: string;
+    declare badges: string;
     /**
      * Helper method for defining associations.
      * This method is not a part of Sequelize lifecycle.
@@ -58,6 +59,9 @@ mentor.init(
         mobile: {
             type: DataTypes.STRING,
             unique: true
+        },
+        badges: {
+            type: DataTypes.TEXT('long')
         },
         otp: {
             type: DataTypes.STRING,

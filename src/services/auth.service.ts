@@ -1041,5 +1041,38 @@ export default class authService {
             return result;
         }
     }
+    /**
+     * get badges for specific user
+     * @param mentor_user_id string mentor_id
+     * @returns object
+     */
+    async getMentorBadges(mentor_user_id: any) {
+        try {
 
+            if (!mentor_user_id) {
+                throw badRequest(speeches.USER_NOT_FOUND)
+            }
+            const mentorResult = await mentor.findOne({
+                where: {
+                    user_id: mentor_user_id
+                },
+                attributes: [
+                    'badges',
+                ]
+            })
+            if (!mentorResult) {
+                throw badRequest(speeches.USER_NOT_FOUND)
+            }
+            if (mentorResult instanceof Error) {
+                throw mentorResult
+            }
+
+            //@ts-ignore
+            const mentorBadgesString = mentorResult.dataValues.badges;
+            const mentorBadgesObj: any = JSON.parse(mentorBadgesString);
+            return mentorBadgesObj
+        } catch (err) {
+            return err
+        }
+    }
 }

@@ -29,6 +29,7 @@ export default class AdminController extends BaseController {
         this.router.post(`${this.path}/login`, this.login.bind(this));
         this.router.get(`${this.path}/logout`, this.logout.bind(this));
         this.router.put(`${this.path}/changePassword`, this.changePassword.bind(this));
+        this.router.get(`${this.path}/knowqueryparm`, this.getknowqueryparm.bind(this));
         super.initializeRoutes();
     }
     protected getData(req: Request, res: Response, next: NextFunction) {
@@ -121,6 +122,24 @@ export default class AdminController extends BaseController {
         } else {
             return res.status(200).send(dispatcher(res, speeches.LOGOUT_SUCCESS, 'success'));
         }
+    }
+    private async getknowqueryparm(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if (res.locals.role !== 'ADMIN') {
+            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        }
+        try{
+            let newREQQuery: any = {}
+            if (req.query.Data) {
+                let newQuery: any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery = JSON.parse(newQuery);
+            } else if (Object.keys(req.query).length !== 0) {
+                return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
+            }
+            return res.status(200).send(dispatcher(res, newREQQuery, 'success'));
+        }catch (error) {
+            next(error);
+        }
+        
     }
 
     private async changePassword(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
