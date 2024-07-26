@@ -584,7 +584,7 @@ export default class StudentController extends BaseController {
             let data: any = {}
             const contentText = `
             <body style="border: solid;margin-right: 15%;margin-left: 15%; ">
-        <img src="https://aim-email-images.s3.ap-south-1.amazonaws.com/ATL-Marathon-Banner-1000X450px.jpg" alt="header" style="width: 100%;" />
+        <img src="https://aim-email-images.s3.ap-south-1.amazonaws.com/Email1SIM_2024.png.jpg" alt="header" style="width: 100%;" />
         <div style="padding: 1% 5%;">
         <h3> Dear ${team_name} team,</h3>
 
