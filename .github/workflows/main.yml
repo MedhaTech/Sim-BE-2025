@@ -20,7 +20,9 @@ jobs:
         run: npm run build
 
   Deploy:
+
     needs : Build
+
     runs-on: ubuntu-latest
 
     steps:
@@ -31,6 +33,7 @@ jobs:
           HOSTNAME: ${{ secrets.ATL2_HOSTNAME }}
         run: |
           echo "$PRIVATE_KEY" > private_key && chmod 400 private_key
+
           ssh -o StrictHostKeyChecking=no -i private_key ubuntu@${{secrets.ATL2_HOSTNAME}} '
             cd /home/ubuntu/aim_be &&
             sudo git pull origin development &&
@@ -46,6 +49,9 @@ jobs:
             cd aim2.0_be &&
             sudo git pull origin testing &&
             npm run build && pm2 stop all && pm2 delete all && npm run start:prod && pm2 save -f'
+
+            
+
 
             
 
