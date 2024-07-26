@@ -3,7 +3,7 @@ name: Deployment1
 
 on:
   push:
-    branches: [development , testing ] 
+    branches: [development , main ] 
 jobs:
   
   Build:
@@ -38,8 +38,8 @@ jobs:
             cd /home/ubuntu/aim_be &&
             sudo git pull origin development &&
             npm run build && pm2 stop all && pm2 delete all && npm run start:prod && pm2 save -f'
-      - name: Deploy to  Stage Env
-        if: github.ref == 'refs/heads/testing'
+      - name: Deploy to PROD Env
+        if: github.ref == 'refs/heads/main'
         env:
           PRIVATE_KEY: ${{ secrets.ATL2_STG_PRIVATE_KEY }}
           HOSTNAME: ${{ secrets.ATL2_STG_HOSTNAME }}
@@ -47,7 +47,7 @@ jobs:
           echo "$PRIVATE_KEY" > private_key && chmod 400 private_key
           ssh -o StrictHostKeyChecking=no -i private_key ubuntu@${{secrets.ATL2_STG_HOSTNAME}} '
             cd aim2.0_be &&
-            sudo git pull origin testing &&
+            sudo git pull origin main &&
             npm run build && pm2 stop all && pm2 delete all && npm run start:prod && pm2 save -f'
 
             
