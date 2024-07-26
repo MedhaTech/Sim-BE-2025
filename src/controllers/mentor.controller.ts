@@ -561,15 +561,26 @@ export default class MentorController extends BaseController {
                     "user_id",
                     "full_name",
                     "mobile"],
-                include: {
-                    model: organization,
-                    attributes: [
-                        "organization_code",
-                        "organization_name",
-                        "district",
-                        "category"
-                    ]
-                },
+                include: [
+
+                    {
+                        model: organization,
+                        attributes: [
+                            "organization_code",
+                            "organization_name",
+                            "state",
+                            "district",
+                            "category"
+                        ]
+                    },
+                    {
+                        model: user,
+                        attributes: [
+                            "username"
+                        ]
+                    }
+
+                ],
             });
             const currentProgress = await db.query(`SELECT count(*)as currentValue FROM mentor_topic_progress where user_id = ${user_id}`, { type: QueryTypes.SELECT })
             data['currentProgress'] = Object.values(currentProgress[0]).toString();
