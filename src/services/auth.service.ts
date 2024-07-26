@@ -983,7 +983,8 @@ export default class authService {
         try {
             let allstring: String = ''
             for (let x in requestBody) {
-                requestBody[x].password = requestBody[x].team_name.toLowerCase();
+                let password = requestBody[x].team_name.replace(/\s/g, '');
+                requestBody[x].password = password.toLowerCase();
                 allstring += `<tr><td>${parseInt(x) + 1}</td><td>${requestBody[x].team_name}</td><td>${requestBody[x].username}</td><td>${requestBody[x].team_name.toLowerCase()}</td></tr>`
             }
             const WelcomeTemp = `
