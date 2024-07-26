@@ -49,6 +49,8 @@ export default class MentorController extends BaseController {
         this.router.post(`${this.path}/triggerWelcomeEmail`, this.triggerWelcomeEmail.bind(this));
         this.router.post(`${this.path}/:mentor_user_id/badges`, this.addBadgeToMentor.bind(this));
         this.router.get(`${this.path}/:mentor_user_id/badges`, this.getMentorBadges.bind(this));
+        this.router.get(`${this.path}/teamCredentials/:mentorId`, this.getteamCredentials.bind(this));
+        
         super.initializeRoutes();
     }
     protected async autoFillUserDataForBulkUpload(req: Request, res: Response, modelLoaded: any, reqData: any = null) {
@@ -755,6 +757,22 @@ export default class MentorController extends BaseController {
 
             return res.status(200).send(dispatcher(res, allBadgesResult, 'success'));
         } catch (err) {
+            next(err)
+        }
+    }
+    protected async getteamCredentials(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
+        }
+        try {
+            let result: any = {};
+            const deValue: any = await this.authService.decryptGlobal(req.params.mentorId);
+            if (req.params.mentorId) {
+                result = await db.query(`SELECT teams.team_id,team_name,(SELECT username FROM users WHERE user_id = teams.user_id) AS username FROM teams WHERE mentor_id = ${deValue} GROUP BY teams.team_id ORDER BY team_id DESC`, { type: QueryTypes.SELECT });
+            }
+            return res.status(200).send(dispatcher(res, result, 'success'));
+        }
+        catch (err) {
             next(err)
         }
     }
