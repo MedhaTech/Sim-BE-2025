@@ -38,7 +38,8 @@ export default class DashboardService extends BaseService {
                         ideas: stats.challengeInDistrict.length,
                         state_name: state.state,
                         students: stats.studentsInDistric.length,
-                        schools_with_teams: stats.schoolIdsInDistrictWithTeams.length
+                        schools_with_teams: stats.schoolIdsInDistrictWithTeams.length,
+                        reg_mentors:stats.registerMentor.length
                     })
                 } catch (err) {
                     console.log(err)
@@ -54,9 +55,10 @@ export default class DashboardService extends BaseService {
                 ideas: statsForAllDistrics.challengeInDistrict.length,
                 state_name: "all",
                 students: statsForAllDistrics.studentsInDistric.length,
-                schools_with_teams: statsForAllDistrics.schoolIdsInDistrictWithTeams.length
+                schools_with_teams: statsForAllDistrics.schoolIdsInDistrictWithTeams.length,
+                reg_mentors:statsForAllDistrics.registerMentor.length
             })
-
+            
             await this.crudService.delete(dashboard_map_stat, { where: {}, truncate: true });
             const result = await this.crudService.bulkCreate(dashboard_map_stat, bulkCreateArray);
             return result;
@@ -80,6 +82,7 @@ export default class DashboardService extends BaseService {
             let teamIdInDistrict: any = [];
             let challengeInDistrict: any = [];
             let studentsInDistric: any = [];
+            let registerMentor:any = [];
 
             if (argdistric) {
                 whereClause = {
@@ -102,7 +105,8 @@ export default class DashboardService extends BaseService {
                     teamIdInDistrict: teamIdInDistrict,
                     challengeInDistrict: challengeInDistrict,
                     studentsInDistric: studentsInDistric,
-                    schoolIdsInDistrictWithTeams: schoolIdsInDistrictWithTeams
+                    schoolIdsInDistrictWithTeams: schoolIdsInDistrictWithTeams,
+                    registerMentor:registerMentor
                 }
             }
             schoolIdsInDistrict = overAllSchool.map((Element: any) => Element.dataValues.organization_code);
@@ -119,7 +123,8 @@ export default class DashboardService extends BaseService {
                     teamIdInDistrict: teamIdInDistrict,
                     challengeInDistrict: challengeInDistrict,
                     studentsInDistric: studentsInDistric,
-                    schoolIdsInDistrictWithTeams: schoolIdsInDistrictWithTeams
+                    schoolIdsInDistrictWithTeams: schoolIdsInDistrictWithTeams,
+                    registerMentor:registerMentor
                 }
             }
             mentorIdInDistrict = mentorReg.map((Element: any) => Element.dataValues.mentor_id);//changed this to  user_id from mentor_id, because teams has mentor linked with team via user_id as value in the mentor_id collumn of the teams table
@@ -137,6 +142,18 @@ export default class DashboardService extends BaseService {
                 registeredSchoolIdsInDistrict = schoolRegistered.map((Element: any) => Element.dataValues.organization_code);
             }
 
+            const RegisteredMentor = await this.crudService.findAll(mentor, {
+                where: {
+                    mentor_id: mentorIdInDistrict,
+                    status: 'ACTIVE'
+                },
+            });
+            if (!RegisteredMentor || (!RegisteredMentor.length) || RegisteredMentor.length == 0) {
+                registerMentor = []
+            } else {
+                registerMentor = RegisteredMentor.map((Element: any) => Element.dataValues.organization_code);
+            }
+
 
             const teamReg = await this.crudService.findAll(team, {
                 where: {
@@ -151,7 +168,8 @@ export default class DashboardService extends BaseService {
                     teamIdInDistrict: teamIdInDistrict,
                     challengeInDistrict: challengeInDistrict,
                     studentsInDistric: studentsInDistric,
-                    schoolIdsInDistrictWithTeams: schoolIdsInDistrictWithTeams
+                    schoolIdsInDistrictWithTeams: schoolIdsInDistrictWithTeams,
+                    registerMentor:registerMentor
                 }
             }
             teamIdInDistrict = teamReg.map((Element: any) => Element.dataValues.team_id);
@@ -211,7 +229,8 @@ export default class DashboardService extends BaseService {
                 teamIdInDistrict: teamIdInDistrict,
                 challengeInDistrict: challengeInDistrict,
                 studentsInDistric: studentsInDistric,
-                schoolIdsInDistrictWithTeams: schoolIdsInDistrictWithTeams
+                schoolIdsInDistrictWithTeams: schoolIdsInDistrictWithTeams,
+                registerMentor:registerMentor
             }
         } catch (err) {
             return err
