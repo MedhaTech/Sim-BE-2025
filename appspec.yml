@@ -1,0 +1,23 @@
+version: 0.0
+os: linux
+files:
+  - source: /
+    destination: /aim_be
+    overwrite: yes
+file_exists_behavior: OVERWRITE
+hooks:
+  BeforeInstall:
+    - location: scripts/app_stop.sh
+      timeout: 300
+      runas: ec2-user   # Changed to ec2-user for RHEL or AMI
+  AfterInstall:
+    - location: scripts/app_start.sh
+      timeout: 300
+      runas: ec2-user   # Changed to ec2-user for RHEL or AMI
+permissions:
+  - object: /home/ec2-user  # Changed to ec2-user for RHEL or AMI
+    owner: ec2-user
+    group: ec2-user
+    type:
+      - directory
+      - file

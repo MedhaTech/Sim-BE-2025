@@ -1,9 +1,9 @@
 
-name: Deployment
+name: Deployment1
 
 on:
   push:
-    branches: development
+    branches: [development , testing ] 
 jobs:
   
   Build:
@@ -20,23 +20,38 @@ jobs:
         run: npm run build
 
   Deploy:
-    needs: Build
+
+    needs : Build
+
     runs-on: ubuntu-latest
 
     steps:
-      - name: Deploy to Development
+      - name: Deploy to  Development
         if: github.ref == 'refs/heads/development'
         env:
-          PRIVATE_KEY: ${{ secrets.ATL_PRIVATE_KEY }}
-          HOSTNAME: ${{ secrets.ATL_HOSTNAME }}
+          PRIVATE_KEY: ${{ secrets.ATL2_PRIVATE_KEY }}
+          HOSTNAME: ${{ secrets.ATL2_HOSTNAME }}
         run: |
           echo "$PRIVATE_KEY" > private_key && chmod 400 private_key
-          ssh -o StrictHostKeyChecking=no -i private_key ec2-user@${{secrets.ATL_HOSTNAME}} '
-            cd aim_be &&
-            sudo git fetch origin &&
-            sudo git checkout development &&
+
+          ssh -o StrictHostKeyChecking=no -i private_key ubuntu@${{secrets.ATL2_HOSTNAME}} '
+            cd /home/ubuntu/aim_be &&
             sudo git pull origin development &&
-            npm i -f && NODE_OPTIONS="--max-old-space-size=1024" npm run build && npm run start:prod && pm2 save -f'
+            npm run build && pm2 stop all && pm2 delete all && npm run start:prod && pm2 save -f'
+      - name: Deploy to  Stage Env
+        if: github.ref == 'refs/heads/testing'
+        env:
+          PRIVATE_KEY: ${{ secrets.ATL2_STG_PRIVATE_KEY }}
+          HOSTNAME: ${{ secrets.ATL2_STG_HOSTNAME }}
+        run: |
+          echo "$PRIVATE_KEY" > private_key && chmod 400 private_key
+          ssh -o StrictHostKeyChecking=no -i private_key ubuntu@${{secrets.ATL2_STG_HOSTNAME}} '
+            cd aim2.0_be &&
+            sudo git pull origin testing &&
+            npm run build && pm2 stop all && pm2 delete all && npm run start:prod && pm2 save -f'
+
+            
+
 
             
 
