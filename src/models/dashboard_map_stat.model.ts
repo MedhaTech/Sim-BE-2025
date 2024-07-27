@@ -7,6 +7,7 @@ export class dashboard_map_stat extends Model<InferAttributes<dashboard_map_stat
     declare state_name: string;
     declare overall_schools: string;
     declare reg_schools: string;
+    declare reg_mentors: string;
     declare schools_with_teams: string;
     declare teams: string;
     declare ideas: string;
@@ -30,6 +31,10 @@ dashboard_map_stat.init(
             allowNull: false
         },
         overall_schools: {
+            type: DataTypes.STRING,
+            allowNull: false
+        },
+        reg_mentors: {
             type: DataTypes.STRING,
             allowNull: false
         },
