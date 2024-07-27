@@ -3,7 +3,7 @@ name: Enforce Stage Branch
 on:
   pull_request:
     branches:
-      - main
+      - stage
 
 jobs:
   check-branch:
