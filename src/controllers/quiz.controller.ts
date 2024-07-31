@@ -29,7 +29,7 @@ export default class QuizController extends BaseController {
         this.router.get(this.path + "/:id/nextQuestion/", this.getNextQuestion.bind(this));
         this.router.post(this.path + "/:id/response/", validationMiddleware(quizSubmitResponseSchema), this.submitResponse.bind(this));
         this.router.get(this.path + "/result", this.getResult.bind(this));
-        super.initializeRoutes();
+       // super.initializeRoutes(); 
     }
 
     /**
