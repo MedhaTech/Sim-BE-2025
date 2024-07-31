@@ -39,7 +39,7 @@ export default class StudentController extends BaseController {
         this.router.get(`${this.path}/:student_user_id/studentCertificate`, this.studentCertificate.bind(this));
         this.router.post(`${this.path}/:student_user_id/badges`, this.addBadgeToStudent.bind(this));
         this.router.get(`${this.path}/:student_user_id/badges`, this.getStudentBadges.bind(this));
-        this.router.post(`${this.path}/stuIdeaSubmissionEmail`, this.stuIdeaSubmissionEmail.bind(this));
+        //this.router.post(`${this.path}/stuIdeaSubmissionEmail`, this.stuIdeaSubmissionEmail.bind(this));
         this.router.get(`${this.path}/studentsList/:teamId`, this.getStudentsList.bind(this));
         super.initializeRoutes();
     }
