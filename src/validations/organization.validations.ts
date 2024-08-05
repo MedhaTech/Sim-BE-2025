@@ -30,10 +30,10 @@ export const organizationRawSchema = Joi.object().keys({
     state: Joi.string().required().regex(constents.ALPHA_NUMERIC_PATTERN).messages({
         'string.empty': speeches.STATE_REQ
     }),
-    pin_code: Joi.string().required().regex(constents.ALPHA_NUMERIC_PATTERN).messages({
+    pin_code: Joi.string().regex(constents.ALPHA_NUMERIC_PATTERN).messages({
         'string.empty': speeches.PINCODE_REQ
     }),
-    address: Joi.string().required().messages({
+    address: Joi.string().messages({
         'string.empty': speeches.ADDRESS_REQ
     }),
     principal_name: Joi.any(),
