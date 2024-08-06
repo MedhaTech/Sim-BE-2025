@@ -68,5 +68,5 @@ export const mentorRegSchema = Joi.object().keys({
     role: Joi.string().required().regex(constents.ALPHA_NUMERIC_PATTERN).messages({
         'string.empty': speeches.USER_ROLE_REQUIRED
     }),
-    district: Joi.string().regex(constents.ALPHA_NUMERIC_PATTERN)
+    district: Joi.string().regex(constents.ALPHA_NUMERIC_PLUS_PATTERN)
 });
