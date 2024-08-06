@@ -32,6 +32,17 @@ export default class AdminController extends BaseController {
         this.router.get(`${this.path}/knowqueryparm`, this.getknowqueryparm.bind(this));
         super.initializeRoutes();
     }
+    protected async createData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if (!req.body.username || req.body.username === "") req.body.username = req.body.full_name.replace(/\s/g, '');
+        if (!req.body.password || req.body.password === "") req.body.password = await this.authService.generateCryptEncryption(req.body.username);
+        if (req.body.role == 'ADMIN' || req.body.role == 'EADMIN') {
+            const payload = this.autoFillTrackingColumns(req, res, admin);
+            const result = await this.authService.register(payload);
+            if (result.user_res) return res.status(406).send(dispatcher(res, result.user_res.dataValues, 'error', speeches.ADMIN_EXISTS, 406));
+            return res.status(201).send(dispatcher(res, result.profile.dataValues, 'success', speeches.USER_REGISTERED_SUCCESSFULLY, 201));
+        }
+        return res.status(406).send(dispatcher(res, null, 'error', speeches.USER_ROLE_REQUIRED, 406));
+    }
     protected getData(req: Request, res: Response, next: NextFunction) {
         if (res.locals.role !== 'ADMIN' && res.locals.role !== 'EADMIN') {
             throw unauthorized(speeches.ROLE_ACCES_DECLINE)
