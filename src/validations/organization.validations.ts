@@ -21,7 +21,7 @@ export const organizationRawSchema = Joi.object().keys({
     organization_name: Joi.string().trim().min(1).required().regex(constents.ALPHA_NUMERIC_PATTERN).messages({
         'string.empty': speeches.ORG_NAME_REQUIRED
     }),
-    district: Joi.string().required().messages({
+    district: Joi.string().required().regex(constents.ALPHA_NUMERIC_PLUS_PATTERN).messages({
         'string.empty': speeches.DISTRICT_REQ
     }),
     category: Joi.string().required().regex(constents.ALPHA_NUMERIC_PATTERN).messages({
@@ -30,10 +30,10 @@ export const organizationRawSchema = Joi.object().keys({
     state: Joi.string().required().regex(constents.ALPHA_NUMERIC_PATTERN).messages({
         'string.empty': speeches.STATE_REQ
     }),
-    pin_code: Joi.string().required().regex(constents.ALPHA_NUMERIC_PATTERN).messages({
+    pin_code: Joi.string().regex(constents.ALPHA_NUMERIC_PATTERN).messages({
         'string.empty': speeches.PINCODE_REQ
     }),
-    address: Joi.string().required().messages({
+    address: Joi.string().messages({
         'string.empty': speeches.ADDRESS_REQ
     }),
     principal_name: Joi.any(),
@@ -57,7 +57,7 @@ export const organizationUpdateSchema = Joi.object().keys({
     organization_name: Joi.string().trim().min(1).required().regex(constents.ALPHA_NUMERIC_PATTERN).messages({
         'string.empty': speeches.ORG_NAME_REQUIRED
     }),
-    district: Joi.string().messages({
+    district: Joi.string().regex(constents.ALPHA_NUMERIC_PLUS_PATTERN).messages({
         'string.empty': speeches.DISTRICT_REQ
     }),
     category: Joi.string().regex(constents.ALPHA_NUMERIC_PATTERN).messages({

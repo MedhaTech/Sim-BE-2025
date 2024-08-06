@@ -156,7 +156,7 @@ export default class StudentController extends BaseController {
                         where: {
                             [Op.and]: [
                                 whereClauseStatusPart,
-                                condition,
+                               // condition,
                                 stateFilter.liter
                             ]
                         },
