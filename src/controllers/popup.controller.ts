@@ -6,6 +6,8 @@ import fs from 'fs';
 import { Request, Response, NextFunction } from 'express';
 import dispatcher from "../utils/dispatch.util";
 import { speeches } from "../configs/speeches.config";
+import { unauthorized } from "boom";
+import { popup } from "../models/popup.model";
 
 export default class popupController extends BaseController {
 
@@ -76,6 +78,46 @@ export default class popupController extends BaseController {
             res.status(200).send(dispatcher(res, result));
         } catch (err) {
             next(err)
+        }
+    }
+    protected async getData(req: Request, res: Response, next: NextFunction) {
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR' && res.locals.role !== 'TEAM' && res.locals.role !== 'STATE') {
+            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        }
+        try {
+            let newREQQuery: any = {}
+            if (req.query.Data) {
+                let newQuery: any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery = JSON.parse(newQuery);
+            } else if (Object.keys(req.query).length !== 0) {
+                return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
+            }
+            let { role, state } = newREQQuery;
+            let data: any = {}
+            const where: any = {};
+            where[`status`] = "ACTIVE";
+            if (state !== 'All States' && state !== undefined) {
+                where[`state`] = state;
+            }
+            if (role !== 'All roles' && role !== undefined) {
+                where[`role`] = role;
+            }
+            const { id } = req.params;
+            if (id) {
+                const newParamId = await this.authService.decryptGlobal(req.params.id);
+                where[`popup_id`] = newParamId;
+                data = await this.crudService.findOne(popup, {
+                    where: [where]
+                })
+            }
+            else {
+                data = await this.crudService.findAll(popup, {
+                    where: [where]
+                })
+            }
+            return res.status(200).send(dispatcher(res, data, 'success'));
+        } catch (error) {
+            next(error);
         }
     }
 }
