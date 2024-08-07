@@ -10,6 +10,7 @@ export class popup extends Model<InferAttributes<popup>, InferCreationAttributes
     declare state: string;
     declare role: string;
     declare navigate: string;
+    declare type: string;
     declare status: Enumerator;
     declare created_by: number;
     declare created_at: Date;
@@ -39,6 +40,9 @@ export class popup extends Model<InferAttributes<popup>, InferCreationAttributes
         navigate: {
             type: DataTypes.STRING,
             allowNull: true
+        },
+        type: {
+            type: DataTypes.STRING
         },
         state: {
             type: DataTypes.STRING,

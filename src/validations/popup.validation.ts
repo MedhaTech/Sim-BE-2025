@@ -3,8 +3,12 @@ import { constents } from '../configs/constents.config';
 import { speeches } from '../configs/speeches.config';
 
 export const popupSchema = Joi.object().keys({
-    on_off: Joi.string().trim().min(1),
-    url: Joi.string().trim().min(1)
+    on_off: Joi.string().trim().min(1).required().regex(constents.ALPHA_NUMERIC_PATTERN),
+    url: Joi.string().trim().min(1).required().regex(constents.ALPHA_NUMERIC_PATTERN),
+    role: Joi.string().required().regex(constents.ALPHA_NUMERIC_PATTERN),
+    type: Joi.string().required().regex(constents.ALPHA_NUMERIC_PATTERN),
+    navigate:Joi.string().regex(constents.ALPHA_NUMERIC_PATTERN),
+    state:Joi.string().regex(constents.ALPHA_NUMERIC_PATTERN)
 });
 
 export const popupUpdateSchema = Joi.object().keys({
@@ -12,6 +16,10 @@ export const popupUpdateSchema = Joi.object().keys({
         'any.only': speeches.COMMON_STATUS_INVALID,
         'string.empty': speeches.COMMON_STATUS_REQUIRED
     }),
-    on_off: Joi.string(),
-    url: Joi.string()
+    on_off: Joi.string().regex(constents.ALPHA_NUMERIC_PATTERN),
+    url: Joi.string().regex(constents.ALPHA_NUMERIC_PATTERN),
+    role: Joi.string().regex(constents.ALPHA_NUMERIC_PATTERN),
+    type: Joi.string().regex(constents.ALPHA_NUMERIC_PATTERN),
+    navigate:Joi.string().regex(constents.ALPHA_NUMERIC_PATTERN),
+    state:Joi.string().regex(constents.ALPHA_NUMERIC_PATTERN)
 });

@@ -6,12 +6,12 @@ export const latest_newsSchema = Joi.object().keys({
     details: Joi.string().required().messages({
         'string.empty': speeches.ID_REQUIRED
     }),
-    category: Joi.string().required().messages({
+    category: Joi.string().required().regex(constents.ALPHA_NUMERIC_PATTERN).messages({
         'string.empty': speeches.ID_REQUIRED
     }),
     url: Joi.string(),
     file_name: Joi.string(),
-    new_status: Joi.string()
+    new_status: Joi.string().regex(constents.ALPHA_NUMERIC_PATTERN)
 });
 
 export const latest_newsUpdateSchema = Joi.object().keys({
@@ -19,7 +19,7 @@ export const latest_newsUpdateSchema = Joi.object().keys({
         'any.only': speeches.COMMON_STATUS_INVALID,
         'string.empty': speeches.COMMON_STATUS_REQUIRED
     }),
-    category: Joi.string().required().messages({
+    category: Joi.string().required().regex(constents.ALPHA_NUMERIC_PATTERN).messages({
         'string.empty': speeches.ID_REQUIRED
     }),
     details: Joi.string().required().messages({
@@ -27,5 +27,5 @@ export const latest_newsUpdateSchema = Joi.object().keys({
     }),
     url: Joi.string(),
     file_name: Joi.string(),
-    new_status: Joi.string()
+    new_status: Joi.string().regex(constents.ALPHA_NUMERIC_PATTERN)
 });
