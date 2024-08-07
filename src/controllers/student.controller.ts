@@ -275,7 +275,7 @@ export default class StudentController extends BaseController {
                 const username = `${req.body.team_id}_${req.body.full_name.trim()}`
                 const studentDetails = await this.crudService.findOne(user, { where: { username: username } });
                 if (studentDetails) {
-                    if (studentDetails.dataValues.username == username) throw badRequest(speeches.USER_EMAIL_EXISTED);
+                    if (studentDetails.dataValues.username == username) throw badRequest("Same named student already exists in this team");
                     if (studentDetails instanceof Error) throw studentDetails;
                 };
                 const user_data = await this.crudService.update(user, {
