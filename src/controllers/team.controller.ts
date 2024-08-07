@@ -479,7 +479,7 @@ try {
         return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
     }
     const mentorId = newREQQuery.mentor_id;
-    const result = await db.query(`SELECT teams.team_id, team_name,(select username from users where user_id = teams.user_id) as username, COUNT(students.team_id) as StudentCount FROM teams left JOIN students ON teams.team_id = students.team_id where mentor_id = ${mentorId} GROUP BY teams.team_id order by team_id desc`, { type: QueryTypes.SELECT });
+    const result = await db.query(`SELECT teams.team_id,team_email,team_name,(select username from users where user_id = teams.user_id) as username, COUNT(students.team_id) as StudentCount FROM teams left JOIN students ON teams.team_id = students.team_id where mentor_id = ${mentorId} GROUP BY teams.team_id order by team_id desc`, { type: QueryTypes.SELECT });
     res.status(200).send(dispatcher(res, result, "success"))
 } catch (error) {
     next(error);

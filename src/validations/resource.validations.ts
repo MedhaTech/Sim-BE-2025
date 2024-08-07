@@ -3,10 +3,10 @@ import { constents } from '../configs/constents.config';
 import { speeches } from '../configs/speeches.config';
 
 export const resourceSchema = Joi.object().keys({
-    role: Joi.string().required().messages({
+    role: Joi.string().required().regex(constents.ALPHA_NUMERIC_PATTERN).messages({
         'string.empty': speeches.ID_REQUIRED
     }),
-    type: Joi.string().required().messages({
+    type: Joi.string().required().regex(constents.ALPHA_NUMERIC_PATTERN).messages({
         'string.empty': speeches.ID_REQUIRED
     }),
     description: Joi.string().required().messages({
@@ -22,10 +22,10 @@ export const resourceUpdateSchema = Joi.object().keys({
         'any.only': speeches.COMMON_STATUS_INVALID,
         'string.empty': speeches.COMMON_STATUS_REQUIRED
     }),
-    role: Joi.string().required().messages({
+    role: Joi.string().required().regex(constents.ALPHA_NUMERIC_PATTERN).messages({
         'string.empty': speeches.ID_REQUIRED
     }),
-    type: Joi.string().required().messages({
+    type: Joi.string().required().regex(constents.ALPHA_NUMERIC_PATTERN).messages({
         'string.empty': speeches.ID_REQUIRED
     }),
     description: Joi.string().required().messages({

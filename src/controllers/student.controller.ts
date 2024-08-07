@@ -251,29 +251,36 @@ export default class StudentController extends BaseController {
             where[`${this.model}_id`] = JSON.parse(newParamId);
             const modelLoaded = await this.loadModel(model);
             const payload = this.autoFillTrackingColumns(req, res, modelLoaded);
-            if (req.body.username) {
-                const cryptoEncryptedString = await this.authService.generateCryptEncryption('STUDENT@123');
-                const username = req.body.username;
+            // if (req.body.username) {
+            //     const cryptoEncryptedString = await this.authService.generateCryptEncryption('STUDENT@123');
+            //     const username = req.body.username;
+            //     const studentDetails = await this.crudService.findOne(user, { where: { username: username } });
+            //     if (studentDetails) {
+            //         if (studentDetails.dataValues.username == username) throw badRequest(speeches.USER_EMAIL_EXISTED);
+            //         if (studentDetails instanceof Error) throw studentDetails;
+            //     };
+            //     const user_data = await this.crudService.update(user, {
+            //         full_name: payload.full_name,
+            //         username: username,
+            //         password: await bcrypt.hashSync(cryptoEncryptedString, process.env.SALT || baseConfig.SALT),
+            //     }, { where: { user_id: studentTableDetails.getDataValue("user_id") } });
+            //     if (!user_data) {
+            //         throw internal()
+            //     }
+            //     if (user_data instanceof Error) {
+            //         throw user_data;
+            //     }
+            // }
+            if (req.body.full_name) {
+                const username = `${req.body.team_id}_${req.body.full_name.trim()}`
                 const studentDetails = await this.crudService.findOne(user, { where: { username: username } });
                 if (studentDetails) {
-                    if (studentDetails.dataValues.username == username) throw badRequest(speeches.USER_EMAIL_EXISTED);
+                    if (studentDetails.dataValues.username == username) throw badRequest("Same named student already exists in this team");
                     if (studentDetails instanceof Error) throw studentDetails;
                 };
                 const user_data = await this.crudService.update(user, {
                     full_name: payload.full_name,
                     username: username,
-                    password: await bcrypt.hashSync(cryptoEncryptedString, process.env.SALT || baseConfig.SALT),
-                }, { where: { user_id: studentTableDetails.getDataValue("user_id") } });
-                if (!user_data) {
-                    throw internal()
-                }
-                if (user_data instanceof Error) {
-                    throw user_data;
-                }
-            }
-            if (req.body.full_name) {
-                const user_data = await this.crudService.update(user, {
-                    full_name: payload.full_name
                 }, { where: { user_id: studentTableDetails.getDataValue("user_id") } });
                 if (!user_data) {
                     throw internal()

@@ -155,14 +155,6 @@ export const constents = {
     },
     default: 'VIDEO',
   },
-  gender_flags: {
-    list: {
-      'FEMALE': 'FEMALE',
-      'MALE': 'MALE',
-      'OTHERS': 'OTHERS'
-    },
-    default: 'MALE',
-  },
   res_status: {
     list: {
       '0': '0',

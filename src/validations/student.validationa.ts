@@ -15,7 +15,7 @@ export const studentSchema = Joi.object().keys({
     Age: Joi.string().regex(constents.ALPHA_NUMERIC_PATTERN),
     Grade: Joi.string().regex(constents.ALPHA_NUMERIC_PATTERN),
     disability: Joi.string().regex(constents.ALPHA_NUMERIC_PATTERN),
-    Gender: Joi.string().valid(...Object.values(constents.gender_flags.list))
+    Gender: Joi.string().regex(constents.ALPHA_NUMERIC_PATTERN)
 });
 
 export const studentUpdateSchema = Joi.object().keys({
@@ -25,5 +25,5 @@ export const studentUpdateSchema = Joi.object().keys({
     Grade: Joi.string().regex(constents.ALPHA_NUMERIC_PATTERN),
     team_id: Joi.string().regex(constents.ALPHA_NUMERIC_PATTERN),
     disability: Joi.string().regex(constents.ALPHA_NUMERIC_PATTERN),
-    Gender: Joi.string().valid(...Object.values(constents.gender_flags.list))
+    Gender: Joi.string().regex(constents.ALPHA_NUMERIC_PATTERN)
 });
