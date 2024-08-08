@@ -7,7 +7,7 @@ export const popupSchema = Joi.object().keys({
     url: Joi.string().trim().min(1).required(),
     role: Joi.string().required().regex(constents.ALPHA_NUMERIC_PATTERN),
     type: Joi.string().required().regex(constents.ALPHA_NUMERIC_PATTERN),
-    navigate:Joi.string().regex(constents.ALPHA_NUMERIC_PATTERN),
+    navigate:Joi.string().regex(constents.ALPHA_NUMERIC_PATTERN_PLUS_SLASH),
     state:Joi.string().regex(constents.ALPHA_NUMERIC_PATTERN)
 });
 
@@ -20,6 +20,6 @@ export const popupUpdateSchema = Joi.object().keys({
     url: Joi.string(),
     role: Joi.string().regex(constents.ALPHA_NUMERIC_PATTERN),
     type: Joi.string().regex(constents.ALPHA_NUMERIC_PATTERN),
-    navigate:Joi.string().regex(constents.ALPHA_NUMERIC_PATTERN),
+    navigate:Joi.string().regex(constents.ALPHA_NUMERIC_PATTERN_PLUS_SLASH),
     state:Joi.string().regex(constents.ALPHA_NUMERIC_PATTERN)
 });
