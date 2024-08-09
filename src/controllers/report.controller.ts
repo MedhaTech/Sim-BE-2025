@@ -221,11 +221,11 @@ export default class ReportController extends BaseController {
                 addWhereClauseStatusPart = true;
             }
             let districtFilter: any = {}
-            if (district !== 'All Districts' && category !== 'All Categorys' && state !== 'All States') {
+            if (district !== 'All Districts' && category !== 'All Categories' && state !== 'All States') {
                 districtFilter = { category, district, status, state }
             } else if (district !== 'All Districts') {
                 districtFilter = { district, status }
-            } else if (category !== 'All Categorys') {
+            } else if (category !== 'All Categories') {
                 districtFilter = { category, status }
             } else if (state !== 'All States') {
                 districtFilter = { status, state }
@@ -302,7 +302,7 @@ export default class ReportController extends BaseController {
             let districtFilter: any = ''
             let categoryFilter: any = ''
             let stateFilter: any = ''
-            if (district !== 'All Districts' && category !== 'All Categorys' && state !== 'All States') {
+            if (district !== 'All Districts' && category !== 'All Categories' && state !== 'All States') {
                 districtFilter = `'${district}'`
                 categoryFilter = `'${category}'`
                 stateFilter = `'${state}'`
@@ -310,7 +310,7 @@ export default class ReportController extends BaseController {
                 districtFilter = `'${district}'`
                 categoryFilter = `'%%'`
                 stateFilter = `'%%'`
-            } else if (category !== 'All Categorys') {
+            } else if (category !== 'All Categories') {
                 categoryFilter = `'${category}'`
                 districtFilter = `'%%'`
                 stateFilter = `'%%'`
