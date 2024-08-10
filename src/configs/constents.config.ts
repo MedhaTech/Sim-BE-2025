@@ -155,14 +155,6 @@ export const constents = {
     },
     default: 'VIDEO',
   },
-  gender_flags: {
-    list: {
-      'FEMALE': 'FEMALE',
-      'MALE': 'MALE',
-      'OTHERS': 'OTHERS'
-    },
-    default: 'MALE',
-  },
   res_status: {
     list: {
       '0': '0',
@@ -216,7 +208,8 @@ export const constents = {
   },
   TEAMS_MAX_STUDENTS_ALLOWED: 3,
   ALPHA_NUMERIC_PATTERN: /^[a-zA-Z0-9 ]*$/,
-  ALPHA_NUMERIC_PLUS_PATTERN : /^[a-zA-Z0-9 \-()&.,]*$/, // don't allow Semicolon
+  ALPHA_NUMERIC_PATTERN_PLUS_SLASH: /^[a-zA-Z0-9 /]*$/,
+  ALPHA_NUMERIC_PLUS_PATTERN : /^[a-zA-Z0-9 \-()&.,]*$/, //Don't allow semicolon
   ONLY_DIGIT_PATTERN: /^\d+$/,
   certificate_flags: {
     list: {

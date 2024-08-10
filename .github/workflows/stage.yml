@@ -1,0 +1,39 @@
+name: Deployment to stage
+
+on:
+  push:
+    branches:  stage 
+jobs:
+  
+  Build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install
+        run: npm i -f
+
+      - name: Buid the application
+        run: npm run build
+
+  Deploy:
+
+    needs : Build
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to stage
+        if: github.ref == 'refs/heads/stage'
+        env:
+          PRIVATE_KEY: ${{ secrets.ATL2_stage_PRIVATE_KEY }}
+          HOSTNAME: ${{ secrets.ATL2_stage_HOSTNAME }}
+        run: |
+          echo "$PRIVATE_KEY" > private_key && chmod 400 private_key
+
+          ssh -o StrictHostKeyChecking=no -i private_key ubuntu@${{secrets.ATL2_stage_HOSTNAME}} '
+            cd /home/ubuntu/aim_be-stage &&
+            sudo git pull origin stage &&
+            sudo npm run build && sudo pm2 stop all && sudo pm2 delete all && sudo npm run start:prod && sudo pm2 save -f'

@@ -21,8 +21,8 @@ export default class TranslationController extends BaseController {
     }
     protected initializeRoutes(): void {
         this.router.get(`${this.path}/refresh`, this.refreshTranslation.bind(this));
-        this.router.get(`${this.path}/key`, this.getTrasnlationKey.bind(this));
-        this.router.post(`${this.path}/translate-refresh`, this.translationRefresh.bind(this));
+        //this.router.get(`${this.path}/key`, this.getTrasnlationKey.bind(this));
+        //this.router.post(`${this.path}/translate-refresh`, this.translationRefresh.bind(this));
         super.initializeRoutes();
     }
     protected async getTrasnlationKey(req: Request, res: Response, next: NextFunction) {

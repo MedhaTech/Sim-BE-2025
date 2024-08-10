@@ -50,8 +50,8 @@ student.init(
             allowNull: true
         },
         Gender: {
-            type: DataTypes.ENUM(...Object.values(constents.gender_flags.list)),
-            defaultValue: constents.gender_flags.default
+            type: DataTypes.STRING,
+            allowNull: true
         },
         disability: {
             type: DataTypes.STRING

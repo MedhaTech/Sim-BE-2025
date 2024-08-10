@@ -29,8 +29,6 @@ export default class OrganizationController extends BaseController {
         this.validations = new ValidationsHolder(organizationSchema, organizationUpdateSchema);
     }
     protected initializeRoutes(): void {
-        this.router.get(`${this.path}/districts`, this.getGroupByDistrict.bind(this));
-        this.router.get(`${this.path}/states`, this.getGroupByState.bind(this));
         this.router.post(`${this.path}/checkOrg`, validationMiddleware(organizationCheckSchema), this.checkOrgDetails.bind(this));
         this.router.post(`${this.path}/createOrg`, validationMiddleware(organizationRawSchema), this.createOrg.bind(this));
         // this.router.post(`${this.path}/login`, this.login.bind(this));
@@ -77,7 +75,7 @@ export default class OrganizationController extends BaseController {
     //     } else {
     //         return res.status(202).send(dispatcher(res, result.data, 'accepted', speeches.USER_PASSWORD_CHANGE, 202));
     //     }
-    // }
+    // } 
 
     protected async getData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if (res.locals.role !== 'ADMIN') {
@@ -176,103 +174,12 @@ export default class OrganizationController extends BaseController {
             next(error);
         }
     }
-
     private async checkOrgDetails(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         const org = await this.authService.checkOrgDetails(req.body.organization_code);
         if (!org) {
             res.status(400).send(dispatcher(res, null, 'error', speeches.BAD_REQUEST))
         } else {
             res.status(200).send(dispatcher(res, org, 'success', speeches.FETCH_FILE));
-        }
-    }
-    private async getGroupByDistrict(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        try {
-            let response: any = [];
-            let newREQQuery: any = {}
-            if (req.query.Data) {
-                let newQuery: any = await this.authService.decryptGlobal(req.query.Data);
-                newREQQuery = JSON.parse(newQuery);
-            } else if (Object.keys(req.query).length !== 0) {
-                return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
-            }
-            const { state } = newREQQuery;
-            const { model } = req.params;
-            if (model) {
-                this.model = model;
-            };
-            const modelClass = await this.loadModel(model).catch(error => {
-                next(error)
-            });
-            let objWhereClauseStatusPart = this.getWhereClauseStatsPart(req);
-            let result: any = [];
-            if (state) {
-                result = await this.crudService.findAll(modelClass, {
-                    attributes: [
-                        'district'
-                    ],
-                    where: {
-                        [Op.and]: [
-                            objWhereClauseStatusPart.whereClauseStatusPart, { 'state': state }
-                        ]
-                    },
-                    group: ['district']
-                });
-
-            } else {
-                result = await this.crudService.findAll(modelClass, {
-                    attributes: [
-                        'district'
-                    ],
-                    where: {
-                        [Op.and]: [
-                            objWhereClauseStatusPart.whereClauseStatusPart
-                        ]
-                    },
-                    group: ['district']
-                });
-                response.push('All Districts');
-            }
-
-            result.forEach((obj: any) => {
-                response.push(obj.dataValues.district)
-            });
-            return res.status(200).send(dispatcher(res, response, 'success'));
-        } catch (error) {
-            console.log(error)
-            next(error);
-        }
-    }
-    private async getGroupByState(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        try {
-            let response: any = [];
-            const { model } = req.params;
-            if (model) {
-                this.model = model;
-            };
-            const modelClass = await this.loadModel(model).catch(error => {
-                next(error)
-            });
-            let objWhereClauseStatusPart = this.getWhereClauseStatsPart(req);
-            const result = await this.crudService.findAll(modelClass, {
-                attributes: [
-                    'state'
-                ],
-                where: {
-                    [Op.and]: [
-                        objWhereClauseStatusPart.whereClauseStatusPart
-                    ]
-                },
-                group: ['state'],
-                order: ['state']
-            });
-            response.push('All States');
-            result.forEach((obj: any) => {
-                response.push(obj.dataValues.state)
-            });
-            return res.status(200).send(dispatcher(res, response, 'success'));
-        } catch (error) {
-            console.log(error)
-            next(error);
         }
     }
     private async createOrg(req: Request, res: Response, next: NextFunction): Promise<Response | void> {

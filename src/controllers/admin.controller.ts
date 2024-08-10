@@ -1,5 +1,4 @@
 import { Request, Response, NextFunction } from 'express';
-
 import { speeches } from '../configs/speeches.config';
 import dispatcher from '../utils/dispatch.util';
 import authService from '../services/auth.service';
@@ -9,9 +8,6 @@ import { user } from '../models/user.model';
 import { admin } from '../models/admin.model';
 import { adminSchema, adminUpdateSchema } from '../validations/admins.validationa';
 import { badRequest, notFound, unauthorized } from 'boom';
-import db from "../utils/dbconnection.util"
-import { QueryTypes } from 'sequelize';
-import validationMiddleware from '../middlewares/validation.middleware';
 
 export default class AdminController extends BaseController {
     model = "admin";
@@ -32,23 +28,42 @@ export default class AdminController extends BaseController {
         this.router.get(`${this.path}/knowqueryparm`, this.getknowqueryparm.bind(this));
         super.initializeRoutes();
     }
-    protected getData(req: Request, res: Response, next: NextFunction) {
+    protected async createData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if (!req.body.username || req.body.username === "") req.body.username = req.body.full_name.replace(/\s/g, '');
+        if (!req.body.password || req.body.password === "") req.body.password = await this.authService.generateCryptEncryption(req.body.username);
+        if (req.body.role == 'ADMIN' || req.body.role == 'EADMIN') {
+            const payload = this.autoFillTrackingColumns(req, res, admin);
+            const result = await this.authService.register(payload);
+            if (result.user_res) return res.status(406).send(dispatcher(res, result.user_res.dataValues, 'error', speeches.ADMIN_EXISTS, 406));
+            return res.status(201).send(dispatcher(res, result.profile.dataValues, 'success', speeches.USER_REGISTERED_SUCCESSFULLY, 201));
+        }
+        return res.status(406).send(dispatcher(res, null, 'error', speeches.USER_ROLE_REQUIRED, 406));
+    }
+    protected async getData(req: Request, res: Response, next: NextFunction) {
         if (res.locals.role !== 'ADMIN' && res.locals.role !== 'EADMIN') {
             throw unauthorized(speeches.ROLE_ACCES_DECLINE)
         }
-        return super.getData(req, res, next, [],
-            [
-                "admin_id",
-                "status"
-            ], {
-            attributes: [
-                "user_id",
-                "username",
-                "full_name",
-                "role"
-            ], model: user, required: false
+        try {
+            const result = await this.crudService.findAll(admin, {
+                attributes: [
+                    "admin_id",
+                    "status"
+                ],
+                include: {
+                    model: user,
+                    attributes: [
+                        "user_id",
+                        "username",
+                        "full_name",
+                        "role"
+                    ]
+                }
+            })
+            return res.status(200).send(dispatcher(res, result, 'success'));
+        } catch (error) {
+            next(error);
         }
-        );
+
     }
 
     protected async updateData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
@@ -127,7 +142,7 @@ export default class AdminController extends BaseController {
         if (res.locals.role !== 'ADMIN') {
             throw unauthorized(speeches.ROLE_ACCES_DECLINE)
         }
-        try{
+        try {
             let newREQQuery: any = {}
             if (req.query.Data) {
                 let newQuery: any = await this.authService.decryptGlobal(req.query.Data);
@@ -136,10 +151,10 @@ export default class AdminController extends BaseController {
                 return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
             }
             return res.status(200).send(dispatcher(res, newREQQuery, 'success'));
-        }catch (error) {
+        } catch (error) {
             next(error);
         }
-        
+
     }
 
     private async changePassword(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
