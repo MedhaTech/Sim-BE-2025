@@ -173,6 +173,7 @@ export default class TeamController extends BaseController {
                 attributesNeeded = [
                     'team_name',
                     'team_id',
+                    'team_email',
                     'mentor_id',
                     'status',
                     'created_at',
@@ -246,102 +247,111 @@ export default class TeamController extends BaseController {
                                 stateFilter.liter
                             ]
                         },
-                        include: {
-                            model: mentor,
-                            attributes: [
-                                'mentor_id',
-                                'full_name'
-                            ],
-                            include: {
-                                where: stateFilter.whereClause,
-                                required: false,
-                                model: organization,
+                        include: [
+                            {
+                                model: mentor,
                                 attributes: [
-                                    "organization_name",
-                                    'organization_code',
-                                    "unique_code",
-                                    "pin_code",
-                                    "category",
-                                    "city",
-                                    "district",
-                                    "state",
-                                    'address'
+                                    'mentor_id',
+                                    'full_name'
+                                ],
+                                include: {
+                                    where: stateFilter.whereClause,
+                                    required: false,
+                                    model: organization,
+                                    attributes: [
+                                        "organization_name",
+                                        'organization_code',
+                                        "unique_code",
+                                        "pin_code",
+                                        "category",
+                                        "city",
+                                        "district",
+                                        "state",
+                                        'address'
+                                    ]
+                                }
+
+                            },
+                            {
+                                model: user,
+                                attributes: [
+                                    'username'
                                 ]
                             }
-                    }, limit, offset,
+                        ], limit, offset,
                         order: [["created_at", "DESC"]],
                     })
-                const result = this.getPagingData(responseOfFindAndCountAll, page, limit);
-                data = result;
-            } catch (error: any) {
-                return res.status(500).send(dispatcher(res, data, 'error'))
-            }
+                    const result = this.getPagingData(responseOfFindAndCountAll, page, limit);
+                    data = result;
+                } catch (error: any) {
+                    return res.status(500).send(dispatcher(res, data, 'error'))
+                }
 
-        }
+            }
             // if (!data) {
             //     return res.status(404).send(dispatcher(res,data, 'error'));
             // }
             if (!data || data instanceof Error) {
-            if (data != null) {
-                throw notFound(data.message)
-            } else {
-                throw notFound()
+                if (data != null) {
+                    throw notFound(data.message)
+                } else {
+                    throw notFound()
+                }
+                res.status(200).send(dispatcher(res, null, "error", speeches.DATA_NOT_FOUND));
+                // if(data!=null){
+                //     throw 
+                (data.message)
+                // }else{
+                //     throw notFound()
+                // }
             }
-            res.status(200).send(dispatcher(res, null, "error", speeches.DATA_NOT_FOUND));
-            // if(data!=null){
-            //     throw 
-            (data.message)
-            // }else{
-            //     throw notFound()
-            // }
-        }
 
-        return res.status(200).send(dispatcher(res, data, 'success'));
-    } catch(error) {
-        next(error);
-    }
-};
+            return res.status(200).send(dispatcher(res, data, 'success'));
+        } catch (error) {
+            next(error);
+        }
+    };
     protected async getTeamMembers(req: Request, res: Response, next: NextFunction) {
-    if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'TEAM' && res.locals.role !== 'MENTOR') {
-        return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
-    }
-    // accept the team_id from the params and find the students details, user_id
-    const newParamId: any = await this.authService.decryptGlobal(req.params.id);
-    const team_id = JSON.parse(newParamId);
-    if (!team_id || team_id === "") {
-        return res.status(400).send(dispatcher(res, null, 'error', speeches.TEAM_NAME_ID));
-    }
-    const team_res = await this.crudService.findOne(team, { where: { team_id } });
-    if (!team_res) {
-        return res.status(400).send(dispatcher(res, null, 'error', speeches.TEAM_NOT_FOUND));
-    }
-    const where: any = { team_id };
-    let whereClauseStatusPart: any = {};
-    let newREQQuery: any = {}
-    if (req.query.Data) {
-        let newQuery: any = await this.authService.decryptGlobal(req.query.Data);
-        newREQQuery = JSON.parse(newQuery);
-    } else if (Object.keys(req.query).length !== 0) {
-        return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
-    }
-    const paramStatus: any = newREQQuery.status;
-    if (paramStatus && (paramStatus in constents.common_status_flags.list)) {
-        whereClauseStatusPart = { "status": paramStatus }
-    }
-    const student_res = await this.crudService.findAll(student, {
-        where: {
-            [Op.and]: [
-                whereClauseStatusPart,
-                where
-            ],
-        }, include: [{
-            required: false,
-            model: user,
-            attributes: ["username"]
-        }]
-    });
-    return res.status(200).send(dispatcher(res, student_res, 'success'));
-};
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'TEAM' && res.locals.role !== 'MENTOR') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
+        }
+        // accept the team_id from the params and find the students details, user_id
+        const newParamId: any = await this.authService.decryptGlobal(req.params.id);
+        const team_id = JSON.parse(newParamId);
+        if (!team_id || team_id === "") {
+            return res.status(400).send(dispatcher(res, null, 'error', speeches.TEAM_NAME_ID));
+        }
+        const team_res = await this.crudService.findOne(team, { where: { team_id } });
+        if (!team_res) {
+            return res.status(400).send(dispatcher(res, null, 'error', speeches.TEAM_NOT_FOUND));
+        }
+        const where: any = { team_id };
+        let whereClauseStatusPart: any = {};
+        let newREQQuery: any = {}
+        if (req.query.Data) {
+            let newQuery: any = await this.authService.decryptGlobal(req.query.Data);
+            newREQQuery = JSON.parse(newQuery);
+        } else if (Object.keys(req.query).length !== 0) {
+            return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
+        }
+        const paramStatus: any = newREQQuery.status;
+        if (paramStatus && (paramStatus in constents.common_status_flags.list)) {
+            whereClauseStatusPart = { "status": paramStatus }
+        }
+        const student_res = await this.crudService.findAll(student, {
+            where: {
+                [Op.and]: [
+                    whereClauseStatusPart,
+                    where
+                ],
+            }, include: [{
+                required: false,
+                model: user,
+                attributes: ["username"]
+            }]
+        });
+        return res.status(200).send(dispatcher(res, student_res, 'success'));
+    };
     /**
      * 
      * Add check to see if team with same name and same mentor doesnt exits only then creeate a team 
@@ -350,174 +360,174 @@ export default class TeamController extends BaseController {
      * @param next 
      * @returns 
      */
-    protected async createData(req: Request, res: Response, next: NextFunction): Promise < Response | void> {
-    if(res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR') {
-    return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
-}
-try {
-    const { model } = req.params;
-    if (model) {
-        this.model = model;
-    };
-    const current_user = res.locals.user_id;
-    const modelLoaded = await this.loadModel(model);
-    const getUserIdFromMentorId = await mentor.findOne({
-        attributes: ["user_id", "created_by"], where: { mentor_id: req.body.mentor_id }
-    });
-
-    if (!getUserIdFromMentorId) throw badRequest(speeches.MENTOR_NOT_EXISTS);
-    if (getUserIdFromMentorId instanceof Error) throw getUserIdFromMentorId;
-    if (current_user !== getUserIdFromMentorId.getDataValue("user_id")) {
-        throw forbidden();
-    };
-    const payload = this.autoFillTrackingColumns(req, res, modelLoaded);
-
-    const teamNameCheck: any = await team.findOne({
-        where: {
-            mentor_id: payload.mentor_id,
-            team_name: payload.team_name
+    protected async createData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
         }
-    });
-    if (teamNameCheck) {
-        throw badRequest('code unique');
-    }
+        try {
+            const { model } = req.params;
+            if (model) {
+                this.model = model;
+            };
+            const current_user = res.locals.user_id;
+            const modelLoaded = await this.loadModel(model);
+            const getUserIdFromMentorId = await mentor.findOne({
+                attributes: ["user_id", "created_by"], where: { mentor_id: req.body.mentor_id }
+            });
 
-    // add check if teamNameCheck is not an error and has data then return and err
-    const findOrgCode = await db.query(`SELECT COALESCE(MAX(team_id), 0) AS team_id FROM Aim_db.teams;`, { type: QueryTypes.SELECT });
-    const countINcrement = parseInt(Object.values(findOrgCode[0]).toString(), 10) + 1;
-    const paddingvalue = countINcrement.toString().padStart(5, '0')
-    let password = payload.team_name.replace(/\s/g, '');
-    const cryptoEncryptedString = await this.authService.generateCryptEncryption(password.toLowerCase());
-    payload['username'] = `SIM${paddingvalue}`
-    payload['full_name'] = payload.team_name
-    payload['password'] = cryptoEncryptedString
-    payload['role'] = "TEAM"
-    const data = await this.authService.register(payload);
-    if (!data) {
-        return res.status(404).send(dispatcher(res, data, 'error'));
-    }
-    if (!data) {
-        throw badRequest()
-    }
-    if (data instanceof Error) {
-        throw data;
-    }
-    return res.status(201).send(dispatcher(res, data, 'created'));
+            if (!getUserIdFromMentorId) throw badRequest(speeches.MENTOR_NOT_EXISTS);
+            if (getUserIdFromMentorId instanceof Error) throw getUserIdFromMentorId;
+            if (current_user !== getUserIdFromMentorId.getDataValue("user_id")) {
+                throw forbidden();
+            };
+            const payload = this.autoFillTrackingColumns(req, res, modelLoaded);
 
-} catch (error) {
-    next(error);
-}
-    }
-    protected async deleteData(req: Request, res: Response, next: NextFunction): Promise < Response | void> {
-    if(res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR') {
-    return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
-}
-try {
-    let deletingTeamDetails: any;
-    let deletingChallengeDetails: any;
-    let deletingTeamuserDetails: any;
-    let deleteTeam: any = 1;
-    const { model, id } = req.params;
-    if (model) {
-        this.model = model;
-    };
-    const where: any = {};
-    const newParamId = await this.authService.decryptGlobal(req.params.id);
-    where[`${this.model}_id`] = newParamId;
-    const getTeamDetails = await this.crudService.findOne(await this.loadModel(model), {
-        attributes: ["team_id", "mentor_id", "user_id"],
-        where
-    });
-    if (getTeamDetails instanceof Error) throw getTeamDetails;
-    if (!getTeamDetails) throw notFound(speeches.TEAM_NOT_FOUND);
-    const getStudentDetails = await this.crudService.findAll(student, {
-        attributes: ["student_id", "user_id"],
-        where: { team_id: getTeamDetails.dataValues.team_id }
-    });
-    if (getStudentDetails instanceof Error) throw getTeamDetails;
-    if (getStudentDetails) {
-        for (let student of getStudentDetails) {
-            const deleteUserStudentAndRemoveAllResponses = await this.authService.deleteStudentAndStudentResponse(student.dataValues.user_id);
-            deleteTeam++;
-            // deletingTeamDetails = await this.crudService.delete(await this.loadModel(model), { where: where });
+            const teamNameCheck: any = await team.findOne({
+                where: {
+                    mentor_id: payload.mentor_id,
+                    team_name: payload.team_name
+                }
+            });
+            if (teamNameCheck) {
+                throw badRequest('code unique');
+            }
+
+            // add check if teamNameCheck is not an error and has data then return and err
+            const findOrgCode = await db.query(`SELECT COALESCE(MAX(team_id), 0) AS team_id FROM Aim_db.teams;`, { type: QueryTypes.SELECT });
+            const countINcrement = parseInt(Object.values(findOrgCode[0]).toString(), 10) + 1;
+            const paddingvalue = countINcrement.toString().padStart(5, '0')
+            let password = payload.team_name.replace(/\s/g, '');
+            const cryptoEncryptedString = await this.authService.generateCryptEncryption(password.toLowerCase());
+            payload['username'] = `SIM${paddingvalue}`
+            payload['full_name'] = payload.team_name
+            payload['password'] = cryptoEncryptedString
+            payload['role'] = "TEAM"
+            const data = await this.authService.register(payload);
+            if (!data) {
+                return res.status(404).send(dispatcher(res, data, 'error'));
+            }
+            if (!data) {
+                throw badRequest()
+            }
+            if (data instanceof Error) {
+                throw data;
+            }
+            return res.status(201).send(dispatcher(res, data, 'created'));
+
+        } catch (error) {
+            next(error);
         }
-    };
-    if (deleteTeam >= 1) {
-        deletingChallengeDetails = await this.crudService.delete(challenge_response, { where: { team_id: getTeamDetails.dataValues.team_id } });
-        deletingTeamDetails = await this.crudService.delete(await this.loadModel(model), { where: where });
-        deletingTeamuserDetails = await this.crudService.delete(user, { where: { user_id: getTeamDetails.dataValues.user_id } })
     }
-    return res.status(200).send(dispatcher(res, deletingTeamDetails, 'deleted'));
-    //         if (exist(team_id))
-    //             if (check students)
-    // 		bulk delete
-    // Delete teams
-    // 	else
-    // 		Delete teams
-    // else
-    //    No action
-    // if (!data) {
-    //     throw badRequest()
-    // }
-    // if (data instanceof Error) {
-    //     throw data
-    // }
-} catch (error) {
-    next(error);
-}
+    protected async deleteData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
+        }
+        try {
+            let deletingTeamDetails: any;
+            let deletingChallengeDetails: any;
+            let deletingTeamuserDetails: any;
+            let deleteTeam: any = 1;
+            const { model, id } = req.params;
+            if (model) {
+                this.model = model;
+            };
+            const where: any = {};
+            const newParamId = await this.authService.decryptGlobal(req.params.id);
+            where[`${this.model}_id`] = newParamId;
+            const getTeamDetails = await this.crudService.findOne(await this.loadModel(model), {
+                attributes: ["team_id", "mentor_id", "user_id"],
+                where
+            });
+            if (getTeamDetails instanceof Error) throw getTeamDetails;
+            if (!getTeamDetails) throw notFound(speeches.TEAM_NOT_FOUND);
+            const getStudentDetails = await this.crudService.findAll(student, {
+                attributes: ["student_id", "user_id"],
+                where: { team_id: getTeamDetails.dataValues.team_id }
+            });
+            if (getStudentDetails instanceof Error) throw getTeamDetails;
+            if (getStudentDetails) {
+                for (let student of getStudentDetails) {
+                    const deleteUserStudentAndRemoveAllResponses = await this.authService.deleteStudentAndStudentResponse(student.dataValues.user_id);
+                    deleteTeam++;
+                    // deletingTeamDetails = await this.crudService.delete(await this.loadModel(model), { where: where });
+                }
+            };
+            if (deleteTeam >= 1) {
+                deletingChallengeDetails = await this.crudService.delete(challenge_response, { where: { team_id: getTeamDetails.dataValues.team_id } });
+                deletingTeamDetails = await this.crudService.delete(await this.loadModel(model), { where: where });
+                deletingTeamuserDetails = await this.crudService.delete(user, { where: { user_id: getTeamDetails.dataValues.user_id } })
+            }
+            return res.status(200).send(dispatcher(res, deletingTeamDetails, 'deleted'));
+            //         if (exist(team_id))
+            //             if (check students)
+            // 		bulk delete
+            // Delete teams
+            // 	else
+            // 		Delete teams
+            // else
+            //    No action
+            // if (!data) {
+            //     throw badRequest()
+            // }
+            // if (data instanceof Error) {
+            //     throw data
+            // }
+        } catch (error) {
+            next(error);
+        }
     }
-    protected async getTeamsByMenter(req: Request, res: Response, next: NextFunction): Promise < Response | void> {
-    if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'TEAM' && res.locals.role !== 'MENTOR') {
-    return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
-}
-try {
-    let newREQQuery: any = {}
-    if (req.query.Data) {
-        let newQuery: any = await this.authService.decryptGlobal(req.query.Data);
-        newREQQuery = JSON.parse(newQuery);
-    } else if (Object.keys(req.query).length !== 0) {
-        return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
+    protected async getTeamsByMenter(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'TEAM' && res.locals.role !== 'MENTOR') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
+        }
+        try {
+            let newREQQuery: any = {}
+            if (req.query.Data) {
+                let newQuery: any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery = JSON.parse(newQuery);
+            } else if (Object.keys(req.query).length !== 0) {
+                return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
+            }
+            const mentorId = newREQQuery.mentor_id;
+            const result = await db.query(`SELECT teams.team_id,team_email,team_name,(select username from users where user_id = teams.user_id) as username, COUNT(students.team_id) as StudentCount FROM teams left JOIN students ON teams.team_id = students.team_id where mentor_id = ${mentorId} GROUP BY teams.team_id order by team_id desc`, { type: QueryTypes.SELECT });
+            res.status(200).send(dispatcher(res, result, "success"))
+        } catch (error) {
+            next(error);
+        }
     }
-    const mentorId = newREQQuery.mentor_id;
-    const result = await db.query(`SELECT teams.team_id,team_email,team_name,(select username from users where user_id = teams.user_id) as username, COUNT(students.team_id) as StudentCount FROM teams left JOIN students ON teams.team_id = students.team_id where mentor_id = ${mentorId} GROUP BY teams.team_id order by team_id desc`, { type: QueryTypes.SELECT });
-    res.status(200).send(dispatcher(res, result, "success"))
-} catch (error) {
-    next(error);
-}
+    protected async getNameByMenter(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'TEAM' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STATE') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
+        }
+        try {
+            let newREQQuery: any = {}
+            if (req.query.Data) {
+                let newQuery: any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery = JSON.parse(newQuery);
+            } else if (Object.keys(req.query).length !== 0) {
+                return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
+            }
+            const mentorId = newREQQuery.mentor_id;
+            const result = await db.query(`SELECT team_id,team_name FROM teams where mentor_id = ${mentorId} order by team_id desc;`, { type: QueryTypes.SELECT });
+            res.status(200).send(dispatcher(res, result, "success"))
+        } catch (error) {
+            next(error);
+        }
     }
-    protected async getNameByMenter(req: Request, res: Response, next: NextFunction): Promise < Response | void> {
-    if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'TEAM' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STATE') {
-    return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
-}
-try {
-    let newREQQuery: any = {}
-    if (req.query.Data) {
-        let newQuery: any = await this.authService.decryptGlobal(req.query.Data);
-        newREQQuery = JSON.parse(newQuery);
-    } else if (Object.keys(req.query).length !== 0) {
-        return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
-    }
-    const mentorId = newREQQuery.mentor_id;
-    const result = await db.query(`SELECT team_id,team_name FROM teams where mentor_id = ${mentorId} order by team_id desc;`, { type: QueryTypes.SELECT });
-    res.status(200).send(dispatcher(res, result, "success"))
-} catch (error) {
-    next(error);
-}
-    }
-    protected async getteamslistwithideastatus(req: Request, res: Response, next: NextFunction): Promise < Response | void> {
-    if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'TEAM' && res.locals.role !== 'MENTOR') {
-    return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
-}
-try {
-    let newREQQuery: any = {}
-    if (req.query.Data) {
-        let newQuery: any = await this.authService.decryptGlobal(req.query.Data);
-        newREQQuery = JSON.parse(newQuery);
-    } else if (Object.keys(req.query).length !== 0) {
-        return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
-    }
-    const mentorId = newREQQuery.mentor_id;
-    const result = await db.query(`SELECT teams.team_id,team_name,COUNT(teams.team_id) AS StudentCount,challenge_responses.status AS ideaStatus
+    protected async getteamslistwithideastatus(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'TEAM' && res.locals.role !== 'MENTOR') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
+        }
+        try {
+            let newREQQuery: any = {}
+            if (req.query.Data) {
+                let newQuery: any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery = JSON.parse(newQuery);
+            } else if (Object.keys(req.query).length !== 0) {
+                return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
+            }
+            const mentorId = newREQQuery.mentor_id;
+            const result = await db.query(`SELECT teams.team_id,team_name,COUNT(teams.team_id) AS StudentCount,challenge_responses.status AS ideaStatus
             FROM
                 teams
                     LEFT JOIN
@@ -527,9 +537,9 @@ try {
             WHERE
                 mentor_id = ${mentorId}
             GROUP BY teams.team_id;`, { type: QueryTypes.SELECT });
-    res.status(200).send(dispatcher(res, result, "success"))
-} catch (error) {
-    next(error);
-}
+            res.status(200).send(dispatcher(res, result, "success"))
+        } catch (error) {
+            next(error);
+        }
     }
 }
