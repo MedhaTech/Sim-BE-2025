@@ -590,10 +590,31 @@ export default class ReportController extends BaseController {
             } else if (Object.keys(req.query).length !== 0) {
                 return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
             }
-            const state = newREQQuery.state;
-            let wherefilter = '';
-            if (state) {
-                wherefilter = `&& og.state= '${state}'`;
+            const { category, district, state } = newREQQuery;
+            let districtFilter: any = ''
+            let categoryFilter: any = ''
+            let stateFilter: any = ''
+            if (district !== 'All Districts' && category !== 'All Categories' && state !== 'All States') {
+                districtFilter = `'${district}'`
+                categoryFilter = `'${category}'`
+                stateFilter = `'${state}'`
+            } else if (district !== 'All Districts') {
+                districtFilter = `'${district}'`
+                categoryFilter = `'%%'`
+                stateFilter = `'%%'`
+            } else if (category !== 'All Categories') {
+                categoryFilter = `'${category}'`
+                districtFilter = `'%%'`
+                stateFilter = `'%%'`
+            } else if (state !== 'All States') {
+                stateFilter = `'${state}'`
+                districtFilter = `'%%'`
+                categoryFilter = `'%%'`
+            }
+            else {
+                districtFilter = `'%%'`
+                categoryFilter = `'%%'`
+                stateFilter = `'%%'`
             }
             const summary = await db.query(`SELECT 
     mn.mentor_id,
@@ -616,7 +637,8 @@ FROM
         LEFT JOIN
     organizations AS og ON mn.organization_code = og.organization_code
 WHERE
-    og.status = 'ACTIVE';`, { type: QueryTypes.SELECT });
+    og.status = 'ACTIVE' && og.state LIKE ${stateFilter} && og.district LIKE ${districtFilter} && og.category LIKE ${categoryFilter}
+            ORDER BY og.district,mn.full_name;`, { type: QueryTypes.SELECT });
             const preSurvey = await db.query(`SELECT 
         CASE
             WHEN status = 'ACTIVE' THEN 'Completed'
@@ -715,7 +737,6 @@ WHERE
             data['StuIdeaSubCount'] = StuIdeaSubCount;
             data['StuIdeaDraftCount'] = StuIdeaDraftCount;
             data['Username'] = Username;
-
             if (!data) {
                 throw notFound(speeches.DATA_NOT_FOUND)
             }
@@ -740,24 +761,53 @@ WHERE
             } else if (Object.keys(req.query).length !== 0) {
                 return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
             }
-            const state = newREQQuery.state;
-            let wherefilter = '';
-            if (state) {
-                wherefilter = `&& og.state= '${state}'`;
+            const { category, district, state } = newREQQuery;
+            let districtFilter: any = ''
+            let categoryFilter: any = ''
+            let stateFilter: any = ''
+            if (district !== 'All Districts' && category !== 'All Categories' && state !== 'All States') {
+                districtFilter = `'${district}'`
+                categoryFilter = `'${category}'`
+                stateFilter = `'${state}'`
+            } else if (district !== 'All Districts') {
+                districtFilter = `'${district}'`
+                categoryFilter = `'%%'`
+                stateFilter = `'%%'`
+            } else if (category !== 'All Categories') {
+                categoryFilter = `'${category}'`
+                districtFilter = `'%%'`
+                stateFilter = `'%%'`
+            } else if (state !== 'All States') {
+                stateFilter = `'${state}'`
+                districtFilter = `'%%'`
+                categoryFilter = `'%%'`
+            }
+            else {
+                districtFilter = `'%%'`
+                categoryFilter = `'%%'`
+                stateFilter = `'%%'`
             }
             const summary = await db.query(`SELECT 
     student_id,
-    full_name,
+    students.full_name,
     Age,
-    gender,
-    Grade,
-    team_id,
-    user_id,
+    students.gender,
+    students.Grade,
+    students.team_id,
+    students.user_id,
     disability
 FROM
-    students;`, { type: QueryTypes.SELECT });
-            const teamData = await db.query(`SELECT 
-    team_id, team_name, mentor_id
+    students
+        JOIN
+    teams ON students.team_id = teams.team_id
+        JOIN
+    mentors ON teams.mentor_id = mentors.mentor_id
+        JOIN
+    organizations AS og ON mentors.organization_code = og.organization_code
+WHERE
+    og.status = 'ACTIVE' && og.state LIKE ${stateFilter} && og.district LIKE ${districtFilter} && og.category LIKE ${categoryFilter} order by og.district`, { type: QueryTypes.SELECT });   
+    const teamData = await db.query(`SELECT 
+    team_id, team_name,team_email, mentor_id
 FROM
     teams`, { type: QueryTypes.SELECT });
             const mentorData = await db.query(`SELECT 
@@ -837,21 +887,21 @@ GROUP BY user_id`, { type: QueryTypes.SELECT });
         }
     }
     protected async getstudentATLnonATLcount(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT' && res.locals.role !== 'STATE'){
-            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT' && res.locals.role !== 'STATE') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
         }
         try {
             let data: any = {}
-            let newREQQuery : any = {}
-            if(req.query.Data){
-                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
-                newREQQuery  = JSON.parse(newQuery);
-            }else if(Object.keys(req.query).length !== 0){
-                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
+            let newREQQuery: any = {}
+            if (req.query.Data) {
+                let newQuery: any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery = JSON.parse(newQuery);
+            } else if (Object.keys(req.query).length !== 0) {
+                return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
             }
             const state = newREQQuery.state;
             let wherefilter = '';
-            if(state){
+            if (state) {
                 wherefilter = `WHERE org.state= '${state}'`;
             }
             const summary = await db.query(`SELECT 
@@ -877,7 +927,7 @@ GROUP BY user_id`, { type: QueryTypes.SELECT });
             GROUP BY o.state) AS t2 ON org.state = t2.state
             ${wherefilter}
         GROUP BY org.state;`, { type: QueryTypes.SELECT });
-            data=summary;
+            data = summary;
             if (!data) {
                 throw notFound(speeches.DATA_NOT_FOUND)
             }
