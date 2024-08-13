@@ -58,6 +58,7 @@ export default class DashboardController extends BaseController {
         this.router.get(`${this.path}/schoolCount`, this.getSchoolCount.bind(this));
         this.router.get(`${this.path}/mentorCourseCount`, this.getmentorCourseCount.bind(this));
         this.router.get(`${this.path}/ATLNonATLRegCount`, this.getATLNonATLRegCount.bind(this));
+        this.router.get(`${this.path}/totalQuizSurveys`, this.getTotalQuizSurveys.bind(this));
         //State DashBoard stats
         this.router.get(`${this.path}/StateDashboard`, this.getStateDashboard.bind(this));
     }
@@ -1165,6 +1166,37 @@ export default class DashboardController extends BaseController {
                 throw studentStatsResul
             }
             res.status(200).send(dispatcher(res, studentStatsResul, "success"))
+        }
+        catch (err) {
+            next(err)
+        }
+    }
+    protected async getTotalQuizSurveys(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
+        }
+        try {
+            let result: any = {};
+            result = await db.query(`SELECT 
+    SUM(CASE
+        WHEN qsr.quiz_survey_id = 1 THEN 1
+        ELSE 0
+    END) AS mentorpre,
+    SUM(CASE
+        WHEN qsr.quiz_survey_id = 2 THEN 1
+        ELSE 0
+    END) AS studentpre,
+    SUM(CASE
+        WHEN qsr.quiz_survey_id = 3 THEN 1
+        ELSE 0
+    END) AS mentorpost,
+    SUM(CASE
+        WHEN qsr.quiz_survey_id = 4 THEN 1
+        ELSE 0
+    END) AS studentpost
+FROM
+    quiz_survey_responses AS qsr`, { type: QueryTypes.SELECT })
+            res.status(200).send(dispatcher(res, result, 'done'))
         }
         catch (err) {
             next(err)

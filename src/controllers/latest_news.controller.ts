@@ -77,6 +77,21 @@ export default class LatestNewsController extends BaseController {
                     ],
                     where: [where]
                 })
+                if (data.length <= 0) {
+                    where[`state`] = "All States"
+                    data = await this.crudService.findAll(latest_news, {
+                        attributes: [
+                            "latest_news_id",
+                            "details",
+                            "category",
+                            "url",
+                            "file_name",
+                            "new_status",
+                            "state"
+                        ],
+                        where: [where]
+                    })
+                }
             }
             return res.status(200).send(dispatcher(res, data, 'success'));
         } catch (error) {
