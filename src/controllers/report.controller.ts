@@ -789,9 +789,9 @@ WHERE
             }
             const summary = await db.query(`SELECT 
     student_id,
-    students.full_name,
+    students.full_name as studentfullname,
     Age,
-    students.gender,
+    students.gender as studentgender,
     students.Grade,
     students.team_id,
     students.user_id,
@@ -812,7 +812,7 @@ FROM
     teams`, { type: QueryTypes.SELECT });
             const mentorData = await db.query(`SELECT 
     mn.mentor_id,
-    mn.user_id,
+    mn.user_id as mentorUserId,
     og.organization_code,
     og.organization_name,
     og.district,
