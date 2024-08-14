@@ -7,8 +7,6 @@ export class challenge_response extends Model<InferAttributes<challenge_response
     declare challenge_id: ForeignKey<number>;
     declare team_id: ForeignKey<number>;
     declare others: String;
-    declare sdg: String;
-    declare response: string;
     declare initiated_by: String;
     declare submitted_at: String;
     declare evaluated_by: String;
@@ -24,7 +22,24 @@ export class challenge_response extends Model<InferAttributes<challenge_response
     declare created_at: Date;
     declare updated_by: number;
     declare updated_at: Date;
-    declare sub_category: String;
+    declare theme: String;
+    declare focus_area : String;
+    declare title: String;
+    declare problem_statement: String;
+    declare causes: String;
+    declare effects: String;
+    declare community: String;
+    declare facing: String;
+    declare solution: String;
+    declare stakeholders: String;
+    declare problem_solving: String;
+    declare feedback: String;
+    declare prototype_image: String;
+    declare prototype_link: String;
+    declare workbook: Enumerator;
+    declare verified_status: Enumerator;
+    declare verified_at: Date;
+    declare mentor_rejected_reason: String;
 }
 
 challenge_response.init(
@@ -55,20 +70,65 @@ challenge_response.init(
             type: DataTypes.STRING,
             allowNull: true
         },
-        sdg: {
+        theme: {
             type: DataTypes.STRING,
             allowNull: true
         },
-        sub_category: {
+        focus_area: {
             type: DataTypes.STRING,
             allowNull: true
+        },
+        title: {
+            type: DataTypes.STRING
+        },
+        problem_statement: {
+            type: DataTypes.STRING
+        },
+        causes: {
+            type: DataTypes.STRING
+        },
+        effects: {
+            type: DataTypes.STRING
+        },
+        community: {
+            type: DataTypes.STRING
+        },
+        facing: {
+            type: DataTypes.STRING
+        },
+        solution: {
+            type: DataTypes.STRING
+        },
+        stakeholders: {
+            type: DataTypes.STRING
+        },
+        problem_solving: {
+            type: DataTypes.STRING
+        },
+        feedback: {
+            type: DataTypes.STRING
+        },
+        prototype_image: {
+            type: DataTypes.STRING
+        },
+        prototype_link: {
+            type: DataTypes.STRING
+        },
+        workbook: {
+            type: DataTypes.ENUM(...Object.values(constents.common_yes_no_flags.list))
+        },
+        verified_status: {
+            type: DataTypes.ENUM(...Object.values(constents.verified_status_flags.list)),
+            defaultValue: constents.verified_status_flags.default
+        },
+        verified_at: {
+            type: DataTypes.STRING
+        },
+        mentor_rejected_reason: {
+            type: DataTypes.STRING
         },
         team_id: {
             type: DataTypes.INTEGER,
-            allowNull: false
-        },
-        response: {
-            type: DataTypes.TEXT('long'),
             allowNull: false
         },
         initiated_by: {
