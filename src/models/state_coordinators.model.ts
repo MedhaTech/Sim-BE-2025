@@ -16,6 +16,8 @@ export class state_coordinators extends Model<InferAttributes<state_coordinators
     declare is_loggedin: Enumerator;
     declare last_login: Date;
     declare role: string;
+    declare whatapp_link: string;
+    declare ideaSubmission: number;
 }
 
 state_coordinators.init({
@@ -38,6 +40,12 @@ state_coordinators.init({
     },
     role: {
         type: DataTypes.STRING
+    },
+    whatapp_link: {
+        type: DataTypes.STRING
+    },
+    ideaSubmission: {
+        type: DataTypes.INTEGER
     },
     is_loggedin: {
         type: DataTypes.ENUM(...Object.values(constents.common_yes_no_flags.list)),
