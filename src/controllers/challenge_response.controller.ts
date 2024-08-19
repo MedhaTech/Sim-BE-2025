@@ -365,7 +365,7 @@ export default class ChallengeResponsesController extends BaseController {
                                         db.literal(`(SELECT team_name FROM teams As t WHERE t.team_id =  \`challenge_response\`.\`team_id\` )`), 'team_name'
                                     ],
                                     [
-                                        db.literal(`(SELECT JSON_ARRAYAGG(full_name) FROM unisolve_db.students  AS s LEFT OUTER JOIN unisolve_db.teams AS t ON s.team_id = t.team_id WHERE t.team_id = \`challenge_response\`.\`team_id\` )`), 'team_members'
+                                        db.literal(`(SELECT JSON_ARRAYAGG(full_name) FROM  students  AS s LEFT OUTER JOIN  teams AS t ON s.team_id = t.team_id WHERE t.team_id = \`challenge_response\`.\`team_id\` )`), 'team_members'
                                     ],
                                     [
                                         db.literal(`(SELECT mentorTeamOrg.organization_name FROM challenge_responses AS challenge_responses LEFT OUTER JOIN teams AS team ON challenge_response.team_id = team.team_id LEFT OUTER JOIN mentors AS mentorTeam ON team.mentor_id = mentorTeam.mentor_id LEFT OUTER JOIN organizations AS mentorTeamOrg ON mentorTeam.organization_code = mentorTeamOrg.organization_code WHERE challenge_responses.team_id =  \`challenge_responses\`.\`team_id\` GROUP BY challenge_response.team_id)`), 'organization_name'
@@ -449,7 +449,7 @@ export default class ChallengeResponsesController extends BaseController {
                                         db.literal(`(SELECT team_name FROM teams As t WHERE t.team_id =  \`challenge_response\`.\`team_id\` )`), 'team_name'
                                     ],
                                     [
-                                        db.literal(`(SELECT JSON_ARRAYAGG(full_name) FROM unisolve_db.students  AS s LEFT OUTER JOIN unisolve_db.teams AS t ON s.team_id = t.team_id WHERE t.team_id = \`challenge_response\`.\`team_id\` )`), 'team_members'
+                                        db.literal(`(SELECT JSON_ARRAYAGG(full_name) FROM  students  AS s LEFT OUTER JOIN  teams AS t ON s.team_id = t.team_id WHERE t.team_id = \`challenge_response\`.\`team_id\` )`), 'team_members'
                                     ],
                                     [
                                         db.literal(`(SELECT mentorTeamOrg.organization_name FROM challenge_responses AS challenge_responses LEFT OUTER JOIN teams AS team ON challenge_response.team_id = team.team_id LEFT OUTER JOIN mentors AS mentorTeam ON team.mentor_id = mentorTeam.mentor_id LEFT OUTER JOIN organizations AS mentorTeamOrg ON mentorTeam.organization_code = mentorTeamOrg.organization_code WHERE challenge_responses.team_id =  \`challenge_response\`.\`team_id\` GROUP BY challenge_response.team_id)`), 'organization_name'
@@ -477,34 +477,34 @@ export default class ChallengeResponsesController extends BaseController {
                                     required: false,
                                     attributes: [
                                         [
-                                            db.literal(`(SELECT  JSON_ARRAYAGG(param_1) FROM unisolve_db.evaluator_ratings as rating WHERE rating.challenge_response_id = \`challenge_response\`.\`challenge_response_id\`)`), 'param_1'
+                                            db.literal(`(SELECT  JSON_ARRAYAGG(param_1) FROM  evaluator_ratings as rating WHERE rating.challenge_response_id = \`challenge_response\`.\`challenge_response_id\`)`), 'param_1'
                                         ],
                                         [
-                                            db.literal(`(SELECT  JSON_ARRAYAGG(param_2) FROM unisolve_db.evaluator_ratings as rating WHERE rating.challenge_response_id = \`challenge_response\`.\`challenge_response_id\`)`), 'param_2'
+                                            db.literal(`(SELECT  JSON_ARRAYAGG(param_2) FROM  evaluator_ratings as rating WHERE rating.challenge_response_id = \`challenge_response\`.\`challenge_response_id\`)`), 'param_2'
                                         ],
                                         [
-                                            db.literal(`(SELECT  JSON_ARRAYAGG(param_3) FROM unisolve_db.evaluator_ratings as rating WHERE rating.challenge_response_id = \`challenge_response\`.\`challenge_response_id\`)`), 'param_3'
+                                            db.literal(`(SELECT  JSON_ARRAYAGG(param_3) FROM  evaluator_ratings as rating WHERE rating.challenge_response_id = \`challenge_response\`.\`challenge_response_id\`)`), 'param_3'
                                         ],
                                         [
-                                            db.literal(`(SELECT  JSON_ARRAYAGG(param_4) FROM unisolve_db.evaluator_ratings as rating WHERE rating.challenge_response_id = \`challenge_response\`.\`challenge_response_id\`)`), 'param_4'
+                                            db.literal(`(SELECT  JSON_ARRAYAGG(param_4) FROM  evaluator_ratings as rating WHERE rating.challenge_response_id = \`challenge_response\`.\`challenge_response_id\`)`), 'param_4'
                                         ],
                                         [
-                                            db.literal(`(SELECT  JSON_ARRAYAGG(param_5) FROM unisolve_db.evaluator_ratings as rating WHERE rating.challenge_response_id = \`challenge_response\`.\`challenge_response_id\`)`), 'param_5'
+                                            db.literal(`(SELECT  JSON_ARRAYAGG(param_5) FROM  evaluator_ratings as rating WHERE rating.challenge_response_id = \`challenge_response\`.\`challenge_response_id\`)`), 'param_5'
                                         ],
                                         [
-                                            db.literal(`(SELECT  JSON_ARRAYAGG(comments) FROM unisolve_db.evaluator_ratings as rating WHERE rating.challenge_response_id = \`challenge_response\`.\`challenge_response_id\`)`), 'comments'
+                                            db.literal(`(SELECT  JSON_ARRAYAGG(comments) FROM  evaluator_ratings as rating WHERE rating.challenge_response_id = \`challenge_response\`.\`challenge_response_id\`)`), 'comments'
                                         ],
                                         [
-                                            db.literal(`(SELECT  JSON_ARRAYAGG(overall) FROM unisolve_db.evaluator_ratings as rating WHERE rating.challenge_response_id = \`challenge_response\`.\`challenge_response_id\`)`), 'overall'
+                                            db.literal(`(SELECT  JSON_ARRAYAGG(overall) FROM  evaluator_ratings as rating WHERE rating.challenge_response_id = \`challenge_response\`.\`challenge_response_id\`)`), 'overall'
                                         ],
                                         [
-                                            db.literal(`(SELECT ROUND(AVG(CAST(overall AS FLOAT)), 2) FROM unisolve_db.evaluator_ratings as rating WHERE rating.challenge_response_id = \`challenge_response\`.\`challenge_response_id\`)`), 'overall_avg'
+                                            db.literal(`(SELECT ROUND(AVG(CAST(overall AS FLOAT)), 2) FROM  evaluator_ratings as rating WHERE rating.challenge_response_id = \`challenge_response\`.\`challenge_response_id\`)`), 'overall_avg'
                                         ],
                                         [
-                                            db.literal(`(SELECT  JSON_ARRAYAGG(created_at) FROM unisolve_db.evaluator_ratings as rating WHERE rating.challenge_response_id = \`challenge_response\`.\`challenge_response_id\`)`), 'created_at'
+                                            db.literal(`(SELECT  JSON_ARRAYAGG(created_at) FROM  evaluator_ratings as rating WHERE rating.challenge_response_id = \`challenge_response\`.\`challenge_response_id\`)`), 'created_at'
                                         ],
                                         [
-                                            db.literal(`(SELECT  JSON_ARRAYAGG(evaluator_id) FROM unisolve_db.evaluator_ratings as rating WHERE rating.challenge_response_id = \`challenge_response\`.\`challenge_response_id\`)`), 'evaluator_id'
+                                            db.literal(`(SELECT  JSON_ARRAYAGG(evaluator_id) FROM  evaluator_ratings as rating WHERE rating.challenge_response_id = \`challenge_response\`.\`challenge_response_id\`)`), 'evaluator_id'
                                         ],
                                         [
                                             db.literal(`(SELECT full_name FROM users As s WHERE s.user_id = evaluator_ratings.created_by)`), 'rated_evaluated_name'
@@ -563,7 +563,7 @@ export default class ChallengeResponsesController extends BaseController {
                                 db.literal(`(SELECT team_name FROM teams As t WHERE t.team_id =  \`challenge_response\`.\`team_id\` )`), 'team_name'
                             ],
                             [
-                                db.literal(`(SELECT JSON_ARRAYAGG(full_name) FROM unisolve_db.students  AS s LEFT OUTER JOIN unisolve_db.teams AS t ON s.team_id = t.team_id WHERE t.team_id = \`challenge_response\`.\`team_id\` )`), 'team_members'
+                                db.literal(`(SELECT JSON_ARRAYAGG(full_name) FROM  students  AS s LEFT OUTER JOIN  teams AS t ON s.team_id = t.team_id WHERE t.team_id = \`challenge_response\`.\`team_id\` )`), 'team_members'
                             ],
                             [
                                 db.literal(`(SELECT mentorTeamOrg.organization_name FROM challenge_responses AS challenge_responses LEFT OUTER JOIN teams AS team ON challenge_response.team_id = team.team_id LEFT OUTER JOIN mentors AS mentorTeam ON team.mentor_id = mentorTeam.mentor_id LEFT OUTER JOIN organizations AS mentorTeamOrg ON mentorTeam.organization_code = mentorTeamOrg.organization_code WHERE challenge_responses.team_id =  \`challenge_response\`.\`team_id\` GROUP BY challenge_response.team_id)`), 'organization_name'
@@ -650,7 +650,7 @@ export default class ChallengeResponsesController extends BaseController {
                 return res.status(406).send(dispatcher(res, challengeRes, 'error', speeches.DATA_EXIST))
             }
             req.body.challenge_id = challenge_id,
-                req.body.team_id = team_id
+            req.body.team_id = team_id
             req.body.initiated_by = user_id
             req.body.created_by = user_id
             let result: any = await this.crudService.create(challenge_response, req.body);
@@ -808,7 +808,7 @@ export default class ChallengeResponsesController extends BaseController {
                         db.literal(`(SELECT team_name FROM teams As t WHERE t.team_id =  \`challenge_response\`.\`team_id\` )`), 'team_name'
                     ],
                     [
-                        db.literal(`(SELECT JSON_ARRAYAGG(full_name) FROM unisolve_db.students  AS s LEFT OUTER JOIN unisolve_db.teams AS t ON s.team_id = t.team_id WHERE t.team_id = \`challenge_response\`.\`team_id\` )`), 'team_members'
+                        db.literal(`(SELECT JSON_ARRAYAGG(full_name) FROM  students  AS s LEFT OUTER JOIN  teams AS t ON s.team_id = t.team_id WHERE t.team_id = \`challenge_response\`.\`team_id\` )`), 'team_members'
                     ],
                     [
                         db.literal(`(SELECT mentorTeamOrg.organization_name FROM challenge_responses AS challenge_responses LEFT OUTER JOIN teams AS team ON challenge_response.team_id = team.team_id LEFT OUTER JOIN mentors AS mentorTeam ON team.mentor_id = mentorTeam.mentor_id LEFT OUTER JOIN organizations AS mentorTeamOrg ON mentorTeam.organization_code = mentorTeamOrg.organization_code WHERE challenge_responses.team_id =  \`challenge_response\`.\`team_id\` GROUP BY challenge_response.team_id)`), 'organization_name'
@@ -1098,7 +1098,7 @@ export default class ChallengeResponsesController extends BaseController {
                                     db.literal(`(SELECT team_name FROM teams As t WHERE t.team_id =  \`challenge_response\`.\`team_id\` )`), 'team_name'
                                 ],
                                 [
-                                    db.literal(`(SELECT JSON_ARRAYAGG(full_name) FROM unisolve_db.students  AS s LEFT OUTER JOIN unisolve_db.teams AS t ON s.team_id = t.team_id WHERE t.team_id = \`challenge_response\`.\`team_id\` )`), 'team_members'
+                                    db.literal(`(SELECT JSON_ARRAYAGG(full_name) FROM  students  AS s LEFT OUTER JOIN  teams AS t ON s.team_id = t.team_id WHERE t.team_id = \`challenge_response\`.\`team_id\` )`), 'team_members'
                                 ],
                                 [
                                     db.literal(`(SELECT mentorTeamOrg.organization_name FROM challenge_responses AS challenge_responses LEFT OUTER JOIN teams AS team ON challenge_response.team_id = team.team_id LEFT OUTER JOIN mentors AS mentorTeam ON team.mentor_id = mentorTeam.mentor_id LEFT OUTER JOIN organizations AS mentorTeamOrg ON mentorTeam.organization_code = mentorTeamOrg.organization_code WHERE challenge_responses.team_id =  \`challenge_response\`.\`team_id\` GROUP BY challenge_response.team_id)`), 'organization_name'
@@ -1161,7 +1161,7 @@ export default class ChallengeResponsesController extends BaseController {
                                     db.literal(`(SELECT team_name FROM teams As t WHERE t.team_id =  \`challenge_response\`.\`team_id\` )`), 'team_name'
                                 ],
                                 [
-                                    db.literal(`(SELECT JSON_ARRAYAGG(full_name) FROM unisolve_db.students  AS s LEFT OUTER JOIN unisolve_db.teams AS t ON s.team_id = t.team_id WHERE t.team_id = \`challenge_response\`.\`team_id\` )`), 'team_members'
+                                    db.literal(`(SELECT JSON_ARRAYAGG(full_name) FROM  students  AS s LEFT OUTER JOIN  teams AS t ON s.team_id = t.team_id WHERE t.team_id = \`challenge_response\`.\`team_id\` )`), 'team_members'
                                 ],
                                 [
                                     db.literal(`(SELECT mentorTeamOrg.organization_name FROM challenge_responses AS challenge_responses LEFT OUTER JOIN teams AS team ON challenge_response.team_id = team.team_id LEFT OUTER JOIN mentors AS mentorTeam ON team.mentor_id = mentorTeam.mentor_id LEFT OUTER JOIN organizations AS mentorTeamOrg ON mentorTeam.organization_code = mentorTeamOrg.organization_code WHERE challenge_responses.team_id =  \`challenge_response\`.\`team_id\` GROUP BY challenge_response.team_id)`), 'organization_name'
@@ -1310,7 +1310,7 @@ export default class ChallengeResponsesController extends BaseController {
                         db.literal(`(SELECT team_name FROM teams As t WHERE t.team_id =  \`challenge_response\`.\`team_id\` )`), 'team_name'
                     ],
                     [
-                        db.literal(`(SELECT JSON_ARRAYAGG(full_name) FROM unisolve_db.students  AS s LEFT OUTER JOIN unisolve_db.teams AS t ON s.team_id = t.team_id WHERE t.team_id = \`challenge_response\`.\`team_id\` )`), 'team_members'
+                        db.literal(`(SELECT JSON_ARRAYAGG(full_name) FROM  students  AS s LEFT OUTER JOIN  teams AS t ON s.team_id = t.team_id WHERE t.team_id = \`challenge_response\`.\`team_id\` )`), 'team_members'
                     ],
                     [
                         db.literal(`(SELECT mentorTeamOrg.organization_name FROM challenge_responses AS challenge_responses LEFT OUTER JOIN teams AS team ON challenge_response.team_id = team.team_id LEFT OUTER JOIN mentors AS mentorTeam ON team.mentor_id = mentorTeam.mentor_id LEFT OUTER JOIN organizations AS mentorTeamOrg ON mentorTeam.organization_code = mentorTeamOrg.organization_code WHERE challenge_responses.team_id =  \`challenge_response\`.\`team_id\` GROUP BY challenge_response.team_id)`), 'organization_name'
@@ -1337,50 +1337,50 @@ export default class ChallengeResponsesController extends BaseController {
                     required: false,
                     attributes: [
                         [
-                            db.literal(`(SELECT  JSON_ARRAYAGG(param_1) FROM unisolve_db.evaluator_ratings as rating WHERE rating.challenge_response_id = \`challenge_response\`.\`challenge_response_id\`)`), 'param_1'
+                            db.literal(`(SELECT  JSON_ARRAYAGG(param_1) FROM  evaluator_ratings as rating WHERE rating.challenge_response_id = \`challenge_response\`.\`challenge_response_id\`)`), 'param_1'
                         ],
                         [
-                            db.literal(`(SELECT ROUND(AVG(CAST(param_1 AS FLOAT)), 2) FROM unisolve_db.evaluator_ratings as rating WHERE rating.challenge_response_id = \`challenge_response\`.\`challenge_response_id\`)`), 'param_1_avg'
+                            db.literal(`(SELECT ROUND(AVG(CAST(param_1 AS FLOAT)), 2) FROM  evaluator_ratings as rating WHERE rating.challenge_response_id = \`challenge_response\`.\`challenge_response_id\`)`), 'param_1_avg'
                         ],
                         [
-                            db.literal(`(SELECT  JSON_ARRAYAGG(param_2) FROM unisolve_db.evaluator_ratings as rating WHERE rating.challenge_response_id = \`challenge_response\`.\`challenge_response_id\`)`), 'param_2'
+                            db.literal(`(SELECT  JSON_ARRAYAGG(param_2) FROM  evaluator_ratings as rating WHERE rating.challenge_response_id = \`challenge_response\`.\`challenge_response_id\`)`), 'param_2'
                         ],
                         [
-                            db.literal(`(SELECT ROUND(AVG(CAST(param_2 AS FLOAT)), 2) FROM unisolve_db.evaluator_ratings as rating WHERE rating.challenge_response_id = \`challenge_response\`.\`challenge_response_id\`)`), 'param_2_avg'
+                            db.literal(`(SELECT ROUND(AVG(CAST(param_2 AS FLOAT)), 2) FROM  evaluator_ratings as rating WHERE rating.challenge_response_id = \`challenge_response\`.\`challenge_response_id\`)`), 'param_2_avg'
                         ],
                         [
-                            db.literal(`(SELECT  JSON_ARRAYAGG(param_3) FROM unisolve_db.evaluator_ratings as rating WHERE rating.challenge_response_id = \`challenge_response\`.\`challenge_response_id\`)`), 'param_3'
+                            db.literal(`(SELECT  JSON_ARRAYAGG(param_3) FROM  evaluator_ratings as rating WHERE rating.challenge_response_id = \`challenge_response\`.\`challenge_response_id\`)`), 'param_3'
                         ],
                         [
-                            db.literal(`(SELECT ROUND(AVG(CAST(param_3 AS FLOAT)), 2) FROM unisolve_db.evaluator_ratings as rating WHERE rating.challenge_response_id = \`challenge_response\`.\`challenge_response_id\`)`), 'param_3_avg'
+                            db.literal(`(SELECT ROUND(AVG(CAST(param_3 AS FLOAT)), 2) FROM  evaluator_ratings as rating WHERE rating.challenge_response_id = \`challenge_response\`.\`challenge_response_id\`)`), 'param_3_avg'
                         ],
 
                         [
-                            db.literal(`(SELECT  JSON_ARRAYAGG(param_4) FROM unisolve_db.evaluator_ratings as rating WHERE rating.challenge_response_id = \`challenge_response\`.\`challenge_response_id\`)`), 'param_4'
+                            db.literal(`(SELECT  JSON_ARRAYAGG(param_4) FROM  evaluator_ratings as rating WHERE rating.challenge_response_id = \`challenge_response\`.\`challenge_response_id\`)`), 'param_4'
                         ],
                         [
-                            db.literal(`(SELECT ROUND(AVG(CAST(param_4 AS FLOAT)), 2) FROM unisolve_db.evaluator_ratings as rating WHERE rating.challenge_response_id = \`challenge_response\`.\`challenge_response_id\`)`), 'param_4_avg'
+                            db.literal(`(SELECT ROUND(AVG(CAST(param_4 AS FLOAT)), 2) FROM  evaluator_ratings as rating WHERE rating.challenge_response_id = \`challenge_response\`.\`challenge_response_id\`)`), 'param_4_avg'
                         ],
                         [
-                            db.literal(`(SELECT  JSON_ARRAYAGG(param_5) FROM unisolve_db.evaluator_ratings as rating WHERE rating.challenge_response_id = \`challenge_response\`.\`challenge_response_id\`)`), 'param_5'
+                            db.literal(`(SELECT  JSON_ARRAYAGG(param_5) FROM  evaluator_ratings as rating WHERE rating.challenge_response_id = \`challenge_response\`.\`challenge_response_id\`)`), 'param_5'
                         ],
                         [
-                            db.literal(`(SELECT ROUND(AVG(CAST(param_5 AS FLOAT)), 2) FROM unisolve_db.evaluator_ratings as rating WHERE rating.challenge_response_id = \`challenge_response\`.\`challenge_response_id\`)`), 'param_5_avg'
+                            db.literal(`(SELECT ROUND(AVG(CAST(param_5 AS FLOAT)), 2) FROM  evaluator_ratings as rating WHERE rating.challenge_response_id = \`challenge_response\`.\`challenge_response_id\`)`), 'param_5_avg'
                         ],
                         [
-                            db.literal(`(SELECT  JSON_ARRAYAGG(comments) FROM unisolve_db.evaluator_ratings as rating WHERE rating.challenge_response_id = \`challenge_response\`.\`challenge_response_id\`)`), 'comments'
+                            db.literal(`(SELECT  JSON_ARRAYAGG(comments) FROM  evaluator_ratings as rating WHERE rating.challenge_response_id = \`challenge_response\`.\`challenge_response_id\`)`), 'comments'
                         ],
                         [
-                            db.literal(`(SELECT  JSON_ARRAYAGG(overall) FROM unisolve_db.evaluator_ratings as rating WHERE rating.challenge_response_id = \`challenge_response\`.\`challenge_response_id\`)`), 'overall'
+                            db.literal(`(SELECT  JSON_ARRAYAGG(overall) FROM  evaluator_ratings as rating WHERE rating.challenge_response_id = \`challenge_response\`.\`challenge_response_id\`)`), 'overall'
                         ],
                         [
-                            db.literal(`(SELECT ROUND(AVG(CAST(overall AS FLOAT)), 2) FROM unisolve_db.evaluator_ratings as rating WHERE rating.challenge_response_id = \`challenge_response\`.\`challenge_response_id\`)`), 'overall_avg'
+                            db.literal(`(SELECT ROUND(AVG(CAST(overall AS FLOAT)), 2) FROM  evaluator_ratings as rating WHERE rating.challenge_response_id = \`challenge_response\`.\`challenge_response_id\`)`), 'overall_avg'
                         ],
                         [
-                            db.literal(`(SELECT  JSON_ARRAYAGG(created_at) FROM unisolve_db.evaluator_ratings as rating WHERE rating.challenge_response_id = \`challenge_response\`.\`challenge_response_id\`)`), 'created_at'
+                            db.literal(`(SELECT  JSON_ARRAYAGG(created_at) FROM  evaluator_ratings as rating WHERE rating.challenge_response_id = \`challenge_response\`.\`challenge_response_id\`)`), 'created_at'
                         ],
                         [
-                            db.literal(`(SELECT  JSON_ARRAYAGG(evaluator_id) FROM unisolve_db.evaluator_ratings as rating WHERE rating.challenge_response_id = \`challenge_response\`.\`challenge_response_id\`)`), 'evaluator_id'
+                            db.literal(`(SELECT  JSON_ARRAYAGG(evaluator_id) FROM  evaluator_ratings as rating WHERE rating.challenge_response_id = \`challenge_response\`.\`challenge_response_id\`)`), 'evaluator_id'
                         ],
                         // [
                         //     db.literal(`(SELECT full_name FROM users As s WHERE s.user_id = evaluator_ratings.created_by)`), 'rated_evaluated_name'
