@@ -178,6 +178,13 @@ export const constents = {
     },
     default: null
   },
+  verified_status_flags: {
+    list: {
+      "ACCEPTED": "ACCEPTED",
+      "REJECTED": "REJECTED"
+    },
+    default: null
+  },
   evaluation_status: {
     list: {
       "SELECTEDROUND1": "SELECTEDROUND1",
