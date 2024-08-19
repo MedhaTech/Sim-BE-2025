@@ -726,11 +726,35 @@ FROM
     users
 WHERE
     role = 'MENTOR'`, { type: QueryTypes.SELECT });
+            const studentpresurvey = await db.query(`SELECT 
+    COUNT(*) AS preSur_cmp, mentor_id
+FROM
+    teams
+        JOIN
+    students ON teams.team_id = students.team_id
+        JOIN
+    quiz_survey_responses ON students.user_id = quiz_survey_responses.user_id
+        AND quiz_survey_id = 2
+GROUP BY mentor_id
+`, { type: QueryTypes.SELECT });
+            const studentpostsurvey = await db.query(`SELECT 
+    COUNT(*) AS preSur_cmp, mentor_id
+FROM
+    teams
+        JOIN
+    students ON teams.team_id = students.team_id
+        JOIN
+    quiz_survey_responses ON students.user_id = quiz_survey_responses.user_id
+        AND quiz_survey_id = 4
+GROUP BY mentor_id
+`, { type: QueryTypes.SELECT });
             data['summary'] = summary;
             data['preSurvey'] = preSurvey;
             data['postSurvey'] = postSurvey;
             data['Course'] = Course;
             data['teamCount'] = teamCount;
+            data['studentpresurvey'] = studentpresurvey;
+            data['studentpostsurvey'] = studentpostsurvey;
             data['studentCount'] = studentCount;
             data['StudentCourseCmp'] = StudentCourseCmp;
             data['StudentCourseINpro'] = StudentCourseINpro;
@@ -805,9 +829,9 @@ FROM
         JOIN
     organizations AS og ON mentors.organization_code = og.organization_code
 WHERE
-    og.status = 'ACTIVE' && og.state LIKE ${stateFilter} && og.district LIKE ${districtFilter} && og.category LIKE ${categoryFilter} order by og.district`, { type: QueryTypes.SELECT });   
-    const teamData = await db.query(`SELECT 
-    team_id, team_name,team_email, mentor_id
+    og.status = 'ACTIVE' && og.state LIKE ${stateFilter} && og.district LIKE ${districtFilter} && og.category LIKE ${categoryFilter} order by og.district`, { type: QueryTypes.SELECT });
+            const teamData = await db.query(`SELECT 
+    team_id, team_name,team_email, mentor_id,user_id as teamuserId
 FROM
     teams`, { type: QueryTypes.SELECT });
             const mentorData = await db.query(`SELECT 
@@ -838,6 +862,12 @@ WHERE
                users
            WHERE
                role = 'MENTOR'`, { type: QueryTypes.SELECT });
+            const teamUsername = await db.query(`SELECT 
+                user_id as teamuserId, username as teamUsername
+            FROM
+                users
+            WHERE
+                role = 'TEAM'`, { type: QueryTypes.SELECT });
             const preSurvey = await db.query(`SELECT 
                 CASE
                     WHEN status = 'ACTIVE' THEN 'Completed'
@@ -868,6 +898,7 @@ GROUP BY user_id`, { type: QueryTypes.SELECT });
 
             data['summary'] = summary;
             data['teamData'] = teamData;
+            data['teamUsername'] = teamUsername;
             data['mentorData'] = mentorData;
             data['mentorUsername'] = mentorUsername;
             data['preSurvey'] = preSurvey;
