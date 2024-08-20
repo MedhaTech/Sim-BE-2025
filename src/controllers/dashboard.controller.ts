@@ -63,7 +63,7 @@ export default class DashboardController extends BaseController {
         this.router.get(`${this.path}/StateDashboard`, this.getStateDashboard.bind(this));
     }
 
-    
+
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     ///////// TEAM STATS
     ///////// PS: this assumes that there is only course in the systems and hence alll topics inside topics table are taken for over counts
@@ -228,7 +228,7 @@ export default class DashboardController extends BaseController {
                 [
                     [db.fn('DISTINCT', db.col('state_name')), 'state_name'],
                     `dashboard_map_stat_id`,
-                    `overall_schools`, `reg_schools`,  `reg_mentors`,`schools_with_teams`, `teams`, `ideas`, `students`, `status`, `created_by`, `created_at`, `updated_by`, `updated_at`
+                    `overall_schools`, `reg_schools`, `reg_mentors`, `schools_with_teams`, `teams`, `ideas`, `students`, `status`, `created_by`, `created_at`, `updated_by`, `updated_at`
                 ]
             )
         } catch (error) {
@@ -481,7 +481,7 @@ export default class DashboardController extends BaseController {
         }
     }
     protected async getWhatappLink(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR') {
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STUDENT' && res.locals.role !== 'TEAM') {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
         }
         try {
@@ -495,8 +495,7 @@ export default class DashboardController extends BaseController {
             }
             const { state_name } = newREQQuery
             if (state_name) {
-                const preSurvey = await db.query(`SELECT whatapp_link FROM Aim_db.state_coordinators where state_name like "${state_name}";`, { type: QueryTypes.SELECT });
-                result = Object.values(preSurvey[0]).toString()
+                result = await db.query(`SELECT whatapp_link,mentor_note,student_note FROM Aim_db.state_coordinators where state_name like "${state_name}";`, { type: QueryTypes.SELECT });
             }
             res.status(200).send(dispatcher(res, result, 'done'))
         }
@@ -1046,9 +1045,10 @@ export default class DashboardController extends BaseController {
                         "all_quiz_count"
                     ],
                     [
-                        db.literal(`(
-                            ${serviceDashboard.getDbLieralForQuizToipcsCompletedCount(addWhereClauseStatusPart,
-                            whereClauseStatusPartLiteral)}
+                        db.literal(`(SELECT COUNT(DISTINCT quiz_id) as quizCount
+                        FROM quiz_responses 
+                        WHERE user_id = ${userId}
+                          AND score >= 6
                             )`),
                         "quiz_completed_count"
                     ]
