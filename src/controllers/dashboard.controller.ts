@@ -495,8 +495,7 @@ export default class DashboardController extends BaseController {
             }
             const { state_name } = newREQQuery
             if (state_name) {
-                const preSurvey = await db.query(`SELECT whatapp_link FROM Aim_db.state_coordinators where state_name like "${state_name}";`, { type: QueryTypes.SELECT });
-                result = Object.values(preSurvey[0]).toString()
+                result = await db.query(`SELECT whatapp_link,mentor_note,student_note FROM Aim_db.state_coordinators where state_name like "${state_name}";`, { type: QueryTypes.SELECT });
             }
             res.status(200).send(dispatcher(res, result, 'done'))
         }
@@ -1030,7 +1029,7 @@ export default class DashboardController extends BaseController {
                 whereClauseStatusPartLiteral = `status = "${paramStatus}"`
                 addWhereClauseStatusPart = true;
             }
-            
+
             const serviceDashboard = new DashboardService();
             const studentStatsResul: any = await student.findOne({
                 where: {
