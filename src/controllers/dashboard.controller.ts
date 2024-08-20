@@ -63,7 +63,7 @@ export default class DashboardController extends BaseController {
         this.router.get(`${this.path}/StateDashboard`, this.getStateDashboard.bind(this));
     }
 
-    
+
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     ///////// TEAM STATS
     ///////// PS: this assumes that there is only course in the systems and hence alll topics inside topics table are taken for over counts
@@ -228,7 +228,7 @@ export default class DashboardController extends BaseController {
                 [
                     [db.fn('DISTINCT', db.col('state_name')), 'state_name'],
                     `dashboard_map_stat_id`,
-                    `overall_schools`, `reg_schools`,  `reg_mentors`,`schools_with_teams`, `teams`, `ideas`, `students`, `status`, `created_by`, `created_at`, `updated_by`, `updated_at`
+                    `overall_schools`, `reg_schools`, `reg_mentors`, `schools_with_teams`, `teams`, `ideas`, `students`, `status`, `created_by`, `created_at`, `updated_by`, `updated_at`
                 ]
             )
         } catch (error) {
@@ -1030,7 +1030,7 @@ export default class DashboardController extends BaseController {
                 whereClauseStatusPartLiteral = `status = "${paramStatus}"`
                 addWhereClauseStatusPart = true;
             }
-
+            
             const serviceDashboard = new DashboardService();
             const studentStatsResul: any = await student.findOne({
                 where: {
@@ -1046,9 +1046,10 @@ export default class DashboardController extends BaseController {
                         "all_quiz_count"
                     ],
                     [
-                        db.literal(`(
-                            ${serviceDashboard.getDbLieralForQuizToipcsCompletedCount(addWhereClauseStatusPart,
-                            whereClauseStatusPartLiteral)}
+                        db.literal(`(SELECT COUNT(DISTINCT quiz_id) as quizCount
+                        FROM quiz_responses 
+                        WHERE user_id = ${userId}
+                          AND score >= 6
                             )`),
                         "quiz_completed_count"
                     ]

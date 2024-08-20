@@ -609,7 +609,7 @@ export default class ChallengeResponsesController extends BaseController {
         return res.status(200).send(dispatcher(res, data, 'success'));
     };
     protected async initiateIdea(req: Request, res: Response, next: NextFunction) {
-        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT') {
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'TEAM') {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
         }
         try {
@@ -666,7 +666,7 @@ export default class ChallengeResponsesController extends BaseController {
         }
     }
     protected async handleAttachment(req: Request, res: Response, next: NextFunction) {
-        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT') {
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'TEAM') {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
         }
         try {
@@ -736,7 +736,7 @@ export default class ChallengeResponsesController extends BaseController {
         }
     }
     protected async updateAnyFields(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STATE') {
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'TEAM' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STATE') {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
         }
         try {
@@ -781,7 +781,7 @@ export default class ChallengeResponsesController extends BaseController {
         }
     }
     protected async getResponse(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STATE') {
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'TEAM' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STATE') {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
         }
         try {
