@@ -6,7 +6,7 @@ export default class DashboardMapStatsJob extends BaseJobs {
     service: DashboardService = new DashboardService;
     protected init() {
         this.name = 'dashboard_map_stats';
-        // this.period = "* * * * *"// every night 12 am 
+        // this.period = "* * * * *"// once per minute
         // this.period = "0 0 * * *" every night 12 am 
         this.period = "0 */6 * * *" // every 6 hours 
         // this.period = "0 * * * *" // every hour 

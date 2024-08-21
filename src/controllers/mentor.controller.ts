@@ -50,7 +50,7 @@ export default class MentorController extends BaseController {
         this.router.post(`${this.path}/:mentor_user_id/badges`, this.addBadgeToMentor.bind(this));
         this.router.get(`${this.path}/:mentor_user_id/badges`, this.getMentorBadges.bind(this));
         this.router.get(`${this.path}/teamCredentials/:mentorId`, this.getteamCredentials.bind(this));
-        
+
         super.initializeRoutes();
     }
     protected async autoFillUserDataForBulkUpload(req: Request, res: Response, modelLoaded: any, reqData: any = null) {
@@ -748,7 +748,7 @@ export default class MentorController extends BaseController {
             for (var i = 0; i < allBadgesResult.length; i++) {
                 const currBadge: any = allBadgesResult[i];
                 if (mentorBadgesObj.hasOwnProperty("" + currBadge.slug)) {
-                    currBadge["mentor_status"] = mentorBadgesObj[("" + currBadge.slug)].completed_date
+                    currBadge["mentor_status"] = mentorBadgesObj[("" + currBadge.slug)].completed
                 } else {
                     currBadge["mentor_status"] = null;
                 }
