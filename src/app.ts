@@ -21,6 +21,7 @@ import { translationMiddleware } from "./middlewares/translation.middleware";
 import TranslationService from "./services/translation.service";
 import DashboardMapStatsJob from "./jobs/dashboardMapStats.jobs";
 import BadgesJob from "./jobs/badges.jobs";
+import DashboardStateMapStatsJob from "./jobs/dashboardStateMapStats.jobs";
 
 /**
  * Application Class is responsible to call internal validation middleware and establish the database connection.
@@ -96,6 +97,7 @@ export default class App {
         const cronManager = CronManager.getInstance()
         cronManager.addJob(new DashboardMapStatsJob())
         cronManager.addJob(new BadgesJob())
+        cronManager.addJob(new DashboardStateMapStatsJob())
         cronManager.startAll();
     }
 
