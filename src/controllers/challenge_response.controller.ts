@@ -849,6 +849,7 @@ export default class ChallengeResponsesController extends BaseController {
                     "verified_status",
                     "verified_at",
                     "mentor_rejected_reason",
+                    "challenge_response_id"
                 ],
                 where: {
                     [Op.and]: [
