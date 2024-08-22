@@ -112,6 +112,7 @@ export const speeches = {
     CSV_SEND_ERROR: "Failed to reading the file date",
     CSV_SEND_INTERNAL_ERROR: 'Something went wrong while create contact admin',
     CSV_DATA_EXIST: 'Data existing',
+    USERNAME_EXIST:'Username existed',
     DATA_EXIST: 'Data existed',
     FAQ_ID: 'faq ID is required.',
     FAQ_CATEGORY: "Category is required.",

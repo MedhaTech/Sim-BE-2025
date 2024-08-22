@@ -7,12 +7,14 @@ import db from "../utils/dbconnection.util";
 import { QueryTypes } from 'sequelize';
 import { dashboard_map_stat } from '../models/dashboard_map_stat.model';
 import DashboardService from '../services/dashboard.service';
+import DashboardStateService from '../services/dashboardstatewise.service';
 import { constents } from '../configs/constents.config';
 import { badData, notFound } from 'boom';
 import { student } from '../models/student.model';
 import { challenge_response } from '../models/challenge_response.model';
 import StudentService from '../services/students.service';
 import { baseConfig } from "../configs/base.config";
+import { dashboard_statemap_stat } from '../models/dashboard_statemap_stat.model';
 
 
 export default class DashboardController extends BaseController {
@@ -29,6 +31,9 @@ export default class DashboardController extends BaseController {
         ///map stats
         this.router.get(`${this.path}/mapStats`, this.getMapStats.bind(this))
         this.router.get(`${this.path}/refreshMapStats`, this.refreshMapStats.bind(this))
+        /// state map stats
+        this.router.get(`${this.path}/stateMapStats`, this.getStateMapStats.bind(this))
+        this.router.get(`${this.path}/refreshStateMapStats`, this.refreshStateMapStats.bind(this))
         //student Stats...
         this.router.get(`${this.path}/stuCourseStats`, this.getStudentCourse.bind(this));
         this.router.get(`${this.path}/stuVideoStats`, this.getStudentVideo.bind(this));
@@ -228,6 +233,41 @@ export default class DashboardController extends BaseController {
                 [
                     [db.fn('DISTINCT', db.col('state_name')), 'state_name'],
                     `dashboard_map_stat_id`,
+                    `overall_schools`, `reg_schools`, `reg_mentors`, `schools_with_teams`, `teams`, `ideas`, `students`, `status`, `created_by`, `created_at`, `updated_by`, `updated_at`
+                ]
+            )
+        } catch (error) {
+            next(error);
+        }
+    };
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    ///////// STATE WISE MAPP STATS
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    private async refreshStateMapStats(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        try {
+            const service = new DashboardStateService()
+            const result = await service.resetStateMapStats()
+            res.status(200).json(dispatcher(res, result, "success"))
+        } catch (err) {
+            next(err);
+        }
+    }
+    private async getStateMapStats(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        try {
+            let newREQQuery: any = {}
+            if (req.query.Data) {
+                let newQuery: any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery = JSON.parse(newQuery);
+            } else if (Object.keys(req.query).length !== 0) {
+                return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
+            }
+            this.model = dashboard_statemap_stat.name
+            return await this.getData(req, res, next, [{state:newREQQuery.state}],
+                [
+                    [db.fn('DISTINCT', db.col('district_name')), 'district_name'],
+                    `dashboard_statemap_stat_id`,
                     `overall_schools`, `reg_schools`, `reg_mentors`, `schools_with_teams`, `teams`, `ideas`, `students`, `status`, `created_by`, `created_at`, `updated_by`, `updated_at`
                 ]
             )
