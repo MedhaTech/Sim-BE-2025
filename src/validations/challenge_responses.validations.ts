@@ -50,7 +50,18 @@ export const initiateIdeaSchema = Joi.object().keys({
     }),
     focus_area: Joi.string().required(),
     title: Joi.string().required(),
-    problem_statement: Joi.string().required()
+    problem_statement: Joi.string().required(),
+    causes: Joi.string(),
+    effects: Joi.string(),
+    community: Joi.string(),
+    facing: Joi.string(),
+    Solution: Joi.string(),
+    stakeholders: Joi.string(),
+    problem_solving: Joi.string(),
+    feedback: Joi.string(),
+    prototype_image: Joi.string(),
+    prototype_link: Joi.string(),
+    workbook: Joi.string(),
 });
 export const challengeResponsesSchema = Joi.object().keys({
     status: Joi.string().valid(...Object.values(constents.challenges_flags.list)).required().messages({
