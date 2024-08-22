@@ -365,6 +365,7 @@ export default class TeamController extends BaseController {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
         }
         try {
+            const data : any = {}
             const { model } = req.params;
             if (model) {
                 this.model = model;
@@ -393,7 +394,7 @@ export default class TeamController extends BaseController {
             }
 
             // add check if teamNameCheck is not an error and has data then return and err
-            const findOrgCode = await db.query(`SELECT COALESCE(MAX(team_id), 0) AS team_id FROM Aim_db.teams;`, { type: QueryTypes.SELECT });
+            const findOrgCode = await db.query(`SELECT COALESCE(MAX(CAST(SUBSTRING(username, 4) AS UNSIGNED)),0) AS number FROM users WHERE role = 'TEAM';`, { type: QueryTypes.SELECT });
             const countINcrement = parseInt(Object.values(findOrgCode[0]).toString(), 10) + 1;
             const paddingvalue = countINcrement.toString().padStart(5, '0')
             let password = payload.team_name.replace(/\s/g, '');
@@ -402,15 +403,43 @@ export default class TeamController extends BaseController {
             payload['full_name'] = payload.team_name
             payload['password'] = cryptoEncryptedString
             payload['role'] = "TEAM"
-            const data = await this.authService.register(payload);
+
+            const user_res = await this.crudService.findOne(user, { where: { username: payload.username } });
+            if (user_res) {
+                throw badRequest(speeches.DATA_EXIST);
+            }
+
+            const result = await this.crudService.create(user, payload);
+
+            data['user'] = result;
+            let whereClass = { ...payload, user_id: result.dataValues.user_id };
+
+            data['team'] = await this.crudService.create(team, whereClass);
+            
             if (!data) {
                 return res.status(404).send(dispatcher(res, data, 'error'));
             }
             if (!data) {
                 throw badRequest()
             }
-            if (data instanceof Error) {
-                throw data;
+            if (data.user instanceof Error) {
+                throw data.user;
+            }
+            if (data.team instanceof Error) {
+                throw data.team;
+            }
+            
+            const totalnumber = await this.crudService.findAndCountAll(team,{
+                where: {
+                    mentor_id: payload.mentor_id
+                }
+            })
+
+            if(totalnumber.count > 4){
+                await this.authService.addbadgesformentor(res.locals.user_id,['active_mentor'])
+            }
+            if(totalnumber.count > 9){
+                await this.authService.addbadgesformentor(res.locals.user_id,['inspirational_mentor'])
             }
             return res.status(201).send(dispatcher(res, data, 'created'));
 
