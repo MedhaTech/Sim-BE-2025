@@ -394,12 +394,13 @@ export default class TeamController extends BaseController {
             }
 
             // add check if teamNameCheck is not an error and has data then return and err
-            const findOrgCode = await db.query(`SELECT COALESCE(MAX(CAST(SUBSTRING(username, 4) AS UNSIGNED)),0) AS number FROM users WHERE role = 'TEAM';`, { type: QueryTypes.SELECT });
-            const countINcrement = parseInt(Object.values(findOrgCode[0]).toString(), 10) + 1;
-            const paddingvalue = countINcrement.toString().padStart(5, '0')
+            // const findOrgCode = await db.query(`SELECT COALESCE(MAX(CAST(SUBSTRING(username, 4) AS UNSIGNED)),0) AS number FROM users WHERE role = 'TEAM';`, { type: QueryTypes.SELECT });
+            // const countINcrement = parseInt(Object.values(findOrgCode[0]).toString(), 10) + 1;
+            // const paddingvalue = countINcrement.toString().padStart(5, '0')
+
             let password = payload.team_name.replace(/\s/g, '');
             const cryptoEncryptedString = await this.authService.generateCryptEncryption(password.toLowerCase());
-            payload['username'] = `SIM${paddingvalue}`
+            payload['username'] = `SIM${Math.floor(Math.random() * 5000)}`
             payload['full_name'] = payload.team_name
             payload['password'] = cryptoEncryptedString
             payload['role'] = "TEAM"
