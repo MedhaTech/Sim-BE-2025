@@ -406,7 +406,7 @@ export default class TeamController extends BaseController {
 
             const user_res = await this.crudService.findOne(user, { where: { username: payload.username } });
             if (user_res) {
-                throw badRequest(speeches.DATA_EXIST);
+                throw badRequest(speeches.USERNAME_EXIST);
             }
 
             const result = await this.crudService.create(user, payload);
@@ -414,7 +414,7 @@ export default class TeamController extends BaseController {
             data['user'] = result;
             let whereClass = { ...payload, user_id: result.dataValues.user_id };
 
-            data['team'] = await this.crudService.create(team, whereClass);
+            data['profile'] = await this.crudService.create(team, whereClass);
             
             if (!data) {
                 return res.status(404).send(dispatcher(res, data, 'error'));
