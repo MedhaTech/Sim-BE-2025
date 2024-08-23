@@ -365,7 +365,7 @@ export default class TeamController extends BaseController {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
         }
         try {
-            const data : any = {}
+            const data: any = {}
             const { model } = req.params;
             if (model) {
                 this.model = model;
@@ -393,53 +393,58 @@ export default class TeamController extends BaseController {
                 throw badRequest('code unique');
             }
 
-            // add check if teamNameCheck is not an error and has data then return and err
-            const findOrgCode = await db.query(`SELECT COALESCE(MAX(CAST(SUBSTRING(username, 4) AS UNSIGNED)),0) AS number FROM users WHERE role = 'TEAM';`, { type: QueryTypes.SELECT });
-            const countINcrement = parseInt(Object.values(findOrgCode[0]).toString(), 10) + 1;
-            const paddingvalue = countINcrement.toString().padStart(5, '0')
             let password = payload.team_name.replace(/\s/g, '');
             const cryptoEncryptedString = await this.authService.generateCryptEncryption(password.toLowerCase());
-            payload['username'] = `SIM${paddingvalue}`
-            payload['full_name'] = payload.team_name
-            payload['password'] = cryptoEncryptedString
-            payload['role'] = "TEAM"
+            payload['user_id'] = 0
 
-            const user_res = await this.crudService.findOne(user, { where: { username: payload.username } });
-            if (user_res) {
-                throw badRequest(speeches.USERNAME_EXIST);
+            const result = await this.crudService.create(team, payload);
+            data['profile'] = result
+
+            const paddingvalue = result.dataValues.team_id.toString().padStart(5, '0')
+            const userplayload = {
+                username: `SIM${paddingvalue}`,
+                password: cryptoEncryptedString,
+                role: "TEAM",
+                full_name: payload.team_name
             }
 
-            const result = await this.crudService.create(user, payload);
+            data['user'] = await this.crudService.create(user, userplayload);
 
-            data['user'] = result;
-            let whereClass = { ...payload, user_id: result.dataValues.user_id };
-
-            data['profile'] = await this.crudService.create(team, whereClass);
-            
+            data['update_user'] = await this.crudService.update(team, {
+                user_id: data.user.dataValues.user_id
+            }, {
+                where: {
+                    team_id: result.dataValues.team_id
+                }
+            })
             if (!data) {
                 return res.status(404).send(dispatcher(res, data, 'error'));
             }
             if (!data) {
                 throw badRequest()
             }
-            if (data.user instanceof Error) {
-                throw data.user;
-            }
             if (data.team instanceof Error) {
                 throw data.team;
             }
-            
-            const totalnumber = await this.crudService.findAndCountAll(team,{
+            if (data.user instanceof Error) {
+                throw data.user;
+            }
+            if (data.update_user instanceof Error) {
+                throw data.update_user;
+            }
+
+
+            const totalnumber = await this.crudService.findAndCountAll(team, {
                 where: {
                     mentor_id: payload.mentor_id
                 }
             })
 
-            if(totalnumber.count > 4){
-                await this.authService.addbadgesformentor(res.locals.user_id,['active_mentor'])
+            if (totalnumber.count > 4) {
+                await this.authService.addbadgesformentor(res.locals.user_id, ['active_mentor'])
             }
-            if(totalnumber.count > 9){
-                await this.authService.addbadgesformentor(res.locals.user_id,['inspirational_mentor'])
+            if (totalnumber.count > 9) {
+                await this.authService.addbadgesformentor(res.locals.user_id, ['inspirational_mentor'])
             }
             return res.status(201).send(dispatcher(res, data, 'created'));
 
