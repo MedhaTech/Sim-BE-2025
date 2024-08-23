@@ -414,7 +414,7 @@ export default class TeamController extends BaseController {
             data['user'] = result;
             let whereClass = { ...payload, user_id: result.dataValues.user_id };
 
-            data['team'] = await this.crudService.create(team, whereClass);
+            data['profile'] = await this.crudService.create(team, whereClass);
             
             if (!data) {
                 return res.status(404).send(dispatcher(res, data, 'error'));
