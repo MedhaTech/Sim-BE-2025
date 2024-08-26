@@ -744,7 +744,7 @@ export default class ChallengeResponsesController extends BaseController {
             if (model) {
                 this.model = model;
             };
-            const { status } = req.body;
+            const { status,verified_status } = req.body;
 
             const newParamId: any = await this.authService.decryptGlobal(req.params.id);
             let newREQQuery: any = {}
@@ -761,6 +761,9 @@ export default class ChallengeResponsesController extends BaseController {
                 req.body['submitted_at'] = newFormat.trim()
             } else if (!nameChange) {
                 req.body['submitted_at'] = ''
+            }
+            if (verified_status){
+                req.body['verified_at'] = newFormat.trim()
             }
 
             const where: any = {};
