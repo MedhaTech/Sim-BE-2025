@@ -651,7 +651,6 @@ export default class ChallengeResponsesController extends BaseController {
             }
             req.body.challenge_id = challenge_id,
             req.body.team_id = team_id
-            req.body.initiated_by = user_id
             req.body.created_by = user_id
             let result: any = await this.crudService.create(challenge_response, req.body);
             if (!result) {
