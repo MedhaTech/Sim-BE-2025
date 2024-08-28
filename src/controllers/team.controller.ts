@@ -65,6 +65,8 @@ export default class TeamController extends BaseController {
                 return res.status(404).send(dispatcher(res, null, 'error', speeches.USER_REG_STATUS));
             }
             result.data['Teacher_name'] = mentorData.dataValues.full_name;
+            result.data['Teacher_mobile'] = mentorData.dataValues.mobile;
+            result.data['organization_code'] = mentorData.dataValues.organization.organization_code;
             result.data['organization_name'] = mentorData.dataValues.organization.organization_name;
             result.data['district'] = mentorData.dataValues.organization.district;
             result.data['state'] = mentorData.dataValues.organization.state;
