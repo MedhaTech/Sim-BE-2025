@@ -442,12 +442,13 @@ export default class TeamController extends BaseController {
                 }
             })
 
-            if (totalnumber.count > 4) {
-                await this.authService.addbadgesformentor(res.locals.user_id, ['active_mentor'])
-            }
-            if (totalnumber.count > 9) {
-                await this.authService.addbadgesformentor(res.locals.user_id, ['inspirational_mentor'])
-            }
+            // if (totalnumber.count > 4) {
+            //     await this.authService.addbadgesformentor(res.locals.user_id, ['active_mentor'])
+            // }
+            // if (totalnumber.count > 9) {
+            //     await this.authService.addbadgesformentor(res.locals.user_id, ['inspirational_mentor'])
+            // }
+            
             return res.status(201).send(dispatcher(res, data, 'created'));
 
         } catch (error) {
