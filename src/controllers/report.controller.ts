@@ -29,6 +29,9 @@ export default class ReportController extends BaseController {
         this.router.get(`${this.path}/mentordetailsreport`, this.getmentorDetailsreport.bind(this));
         this.router.get(`${this.path}/studentdetailstable`, this.getstudentDetailstable.bind(this));
         this.router.get(`${this.path}/studentdetailsreport`, this.getstudentDetailsreport.bind(this));
+        this.router.get(`${this.path}/studentATLnonATLcount`, this.getstudentATLnonATLcount.bind(this));
+        this.router.get(`${this.path}/ideadeatilreport`, this.getideaReport.bind(this));
+        this.router.get(`${this.path}/ideaReportTable`, this.getideaReportTable.bind(this));
     }
     protected async mentorsummary(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if (res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT' && res.locals.role !== 'STATE') {
@@ -589,10 +592,31 @@ export default class ReportController extends BaseController {
             } else if (Object.keys(req.query).length !== 0) {
                 return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
             }
-            const state = newREQQuery.state;
-            let wherefilter = '';
-            if (state) {
-                wherefilter = `&& og.state= '${state}'`;
+            const { category, district, state } = newREQQuery;
+            let districtFilter: any = ''
+            let categoryFilter: any = ''
+            let stateFilter: any = ''
+            if (district !== 'All Districts' && category !== 'All Categories' && state !== 'All States') {
+                districtFilter = `'${district}'`
+                categoryFilter = `'${category}'`
+                stateFilter = `'${state}'`
+            } else if (district !== 'All Districts') {
+                districtFilter = `'${district}'`
+                categoryFilter = `'%%'`
+                stateFilter = `'%%'`
+            } else if (category !== 'All Categories') {
+                categoryFilter = `'${category}'`
+                districtFilter = `'%%'`
+                stateFilter = `'%%'`
+            } else if (state !== 'All States') {
+                stateFilter = `'${state}'`
+                districtFilter = `'%%'`
+                categoryFilter = `'%%'`
+            }
+            else {
+                districtFilter = `'%%'`
+                categoryFilter = `'%%'`
+                stateFilter = `'%%'`
             }
             const summary = await db.query(`SELECT 
     mn.mentor_id,
@@ -615,7 +639,8 @@ FROM
         LEFT JOIN
     organizations AS og ON mn.organization_code = og.organization_code
 WHERE
-    og.status = 'ACTIVE';`, { type: QueryTypes.SELECT });
+    og.status = 'ACTIVE' && og.state LIKE ${stateFilter} && og.district LIKE ${districtFilter} && og.category LIKE ${categoryFilter}
+            ORDER BY og.district,mn.full_name;`, { type: QueryTypes.SELECT });
             const preSurvey = await db.query(`SELECT 
         CASE
             WHEN status = 'ACTIVE' THEN 'Completed'
@@ -703,18 +728,41 @@ FROM
     users
 WHERE
     role = 'MENTOR'`, { type: QueryTypes.SELECT });
+            const studentpresurvey = await db.query(`SELECT 
+    COUNT(*) AS preSur_cmp, mentor_id
+FROM
+    teams
+        JOIN
+    students ON teams.team_id = students.team_id
+        JOIN
+    quiz_survey_responses ON students.user_id = quiz_survey_responses.user_id
+        AND quiz_survey_id = 2
+GROUP BY mentor_id
+`, { type: QueryTypes.SELECT });
+            const studentpostsurvey = await db.query(`SELECT 
+    COUNT(*) AS preSur_cmp, mentor_id
+FROM
+    teams
+        JOIN
+    students ON teams.team_id = students.team_id
+        JOIN
+    quiz_survey_responses ON students.user_id = quiz_survey_responses.user_id
+        AND quiz_survey_id = 4
+GROUP BY mentor_id
+`, { type: QueryTypes.SELECT });
             data['summary'] = summary;
             data['preSurvey'] = preSurvey;
             data['postSurvey'] = postSurvey;
             data['Course'] = Course;
             data['teamCount'] = teamCount;
+            data['studentpresurvey'] = studentpresurvey;
+            data['studentpostsurvey'] = studentpostsurvey;
             data['studentCount'] = studentCount;
             data['StudentCourseCmp'] = StudentCourseCmp;
             data['StudentCourseINpro'] = StudentCourseINpro;
             data['StuIdeaSubCount'] = StuIdeaSubCount;
             data['StuIdeaDraftCount'] = StuIdeaDraftCount;
             data['Username'] = Username;
-
             if (!data) {
                 throw notFound(speeches.DATA_NOT_FOUND)
             }
@@ -739,29 +787,58 @@ WHERE
             } else if (Object.keys(req.query).length !== 0) {
                 return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
             }
-            const state = newREQQuery.state;
-            let wherefilter = '';
-            if (state) {
-                wherefilter = `&& og.state= '${state}'`;
+            const { category, district, state } = newREQQuery;
+            let districtFilter: any = ''
+            let categoryFilter: any = ''
+            let stateFilter: any = ''
+            if (district !== 'All Districts' && category !== 'All Categories' && state !== 'All States') {
+                districtFilter = `'${district}'`
+                categoryFilter = `'${category}'`
+                stateFilter = `'${state}'`
+            } else if (district !== 'All Districts') {
+                districtFilter = `'${district}'`
+                categoryFilter = `'%%'`
+                stateFilter = `'%%'`
+            } else if (category !== 'All Categories') {
+                categoryFilter = `'${category}'`
+                districtFilter = `'%%'`
+                stateFilter = `'%%'`
+            } else if (state !== 'All States') {
+                stateFilter = `'${state}'`
+                districtFilter = `'%%'`
+                categoryFilter = `'%%'`
+            }
+            else {
+                districtFilter = `'%%'`
+                categoryFilter = `'%%'`
+                stateFilter = `'%%'`
             }
             const summary = await db.query(`SELECT 
     student_id,
-    full_name,
+    students.full_name as studentfullname,
     Age,
-    gender,
-    Grade,
-    team_id,
-    user_id,
+    students.gender as studentgender,
+    students.Grade,
+    students.team_id,
+    students.user_id,
     disability
 FROM
-    students;`, { type: QueryTypes.SELECT });
+    students
+        JOIN
+    teams ON students.team_id = teams.team_id
+        JOIN
+    mentors ON teams.mentor_id = mentors.mentor_id
+        JOIN
+    organizations AS og ON mentors.organization_code = og.organization_code
+WHERE
+    og.status = 'ACTIVE' && og.state LIKE ${stateFilter} && og.district LIKE ${districtFilter} && og.category LIKE ${categoryFilter} order by og.district`, { type: QueryTypes.SELECT });
             const teamData = await db.query(`SELECT 
-    team_id, team_name, mentor_id
+    team_id, team_name,team_email, mentor_id,user_id as teamuserId
 FROM
     teams`, { type: QueryTypes.SELECT });
             const mentorData = await db.query(`SELECT 
     mn.mentor_id,
-    mn.user_id,
+    mn.user_id as mentorUserId,
     og.organization_code,
     og.organization_name,
     og.district,
@@ -787,6 +864,12 @@ WHERE
                users
            WHERE
                role = 'MENTOR'`, { type: QueryTypes.SELECT });
+            const teamUsername = await db.query(`SELECT 
+                user_id as teamuserId, username as teamUsername
+            FROM
+                users
+            WHERE
+                role = 'TEAM'`, { type: QueryTypes.SELECT });
             const preSurvey = await db.query(`SELECT 
                 CASE
                     WHEN status = 'ACTIVE' THEN 'Completed'
@@ -817,6 +900,7 @@ GROUP BY user_id`, { type: QueryTypes.SELECT });
 
             data['summary'] = summary;
             data['teamData'] = teamData;
+            data['teamUsername'] = teamUsername;
             data['mentorData'] = mentorData;
             data['mentorUsername'] = mentorUsername;
             data['preSurvey'] = preSurvey;
@@ -835,5 +919,251 @@ GROUP BY user_id`, { type: QueryTypes.SELECT });
             next(err)
         }
     }
+    protected async getstudentATLnonATLcount(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT' && res.locals.role !== 'STATE') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
+        }
+        try {
+            let data: any = {}
+            let newREQQuery: any = {}
+            if (req.query.Data) {
+                let newQuery: any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery = JSON.parse(newQuery);
+            } else if (Object.keys(req.query).length !== 0) {
+                return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
+            }
+            const state = newREQQuery.state;
+            let wherefilter = '';
+            if (state) {
+                wherefilter = `WHERE org.state= '${state}'`;
+            }
+            const summary = await db.query(`SELECT 
+            org.state, COALESCE(ATL_Student_Count, 0) as ATL_Student_Count, COALESCE(NONATL_Student_Count, 0) as NONATL_Student_Count
+        FROM
+            organizations AS org
+               left JOIN
+            (SELECT 
+                o.state,
+                    COUNT(CASE
+                        WHEN o.category = 'ATL' THEN 1
+                    END) AS ATL_Student_Count,
+                    COUNT(CASE
+                        WHEN o.category = 'Non ATL' THEN 1
+                    END) AS NONATL_Student_Count
+            FROM
+                students AS s
+            JOIN teams AS t ON s.team_id = t.team_id
+            JOIN mentors AS m ON t.mentor_id = m.mentor_id
+            JOIN organizations AS o ON m.organization_code = o.organization_code
+            WHERE
+                o.status = 'ACTIVE'
+            GROUP BY o.state) AS t2 ON org.state = t2.state
+            ${wherefilter}
+        GROUP BY org.state;`, { type: QueryTypes.SELECT });
+            data = summary;
+            if (!data) {
+                throw notFound(speeches.DATA_NOT_FOUND)
+            }
+            if (data instanceof Error) {
+                throw data
+            }
+            res.status(200).send(dispatcher(res, data, "success"))
+        } catch (err) {
+            next(err)
+        }
+    }
+    protected async getideaReport(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
+        }
+        try {
+            let data: any = {}
+            let newREQQuery: any = {}
+            if (req.query.Data) {
+                let newQuery: any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery = JSON.parse(newQuery);
+            } else if (Object.keys(req.query).length !== 0) {
+                return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
+            }
+            const { state, district, theme, category } = newREQQuery;
+            let districtFilter: any = `'%%'`
+            let categoryFilter: any = `'%%'`
+            let stateFilter: any = `'%%'`
+            let themesFilter: any = `'%%'`
+            if (district !== 'All Districts' && district !== undefined) {
+                districtFilter = `'${district}'`
+            }
+            if (category !== 'All Categories' && category !== undefined) {
+                categoryFilter = `'${category}'`
+            }
+            if (state !== 'All States' && state !== undefined) {
+                stateFilter = `'${state}'`
+            }
+            if (theme !== 'All Themes' && theme !== undefined) {
+                themesFilter = `'${theme}'`
+            }
+            const summary = await db.query(`SELECT 
+    challenge_response_id,
+    cr.team_id,
+    cr.status,
+    theme,
+    focus_area,
+    cr.title,
+    problem_statement,
+    causes,
+    effects,
+    community,
+    facing,
+    Solution,
+    stakeholders,
+    problem_solving,
+    feedback,
+    prototype_image,
+    prototype_link,
+    workbook
+FROM
+    challenge_responses as cr join teams as t on cr.team_id = t.team_id join mentors as m on t.mentor_id = m.mentor_id join organizations as org on m.organization_code = org.organization_code
+WHERE
+   org.status = 'ACTIVE' && cr.status = 'SUBMITTED' && org.state LIKE ${stateFilter} && org.district LIKE ${districtFilter} && org.category LIKE ${categoryFilter} && cr.theme LIKE ${themesFilter};`, { type: QueryTypes.SELECT });
+            const teamData = await db.query(`SELECT 
+    team_id, team_name,team_email, mentor_id,user_id as teamuserId
+FROM
+    teams`, { type: QueryTypes.SELECT });
+            const mentorData = await db.query(`SELECT 
+        mn.mentor_id,
+        mn.user_id as mentorUserId,
+        og.organization_code,
+        og.organization_name,
+        og.district,
+        og.category,
+        og.pin_code,
+        og.address,
+        mn.full_name,
+        mn.mobile,
+        og.state,
+        og.unique_code
+    FROM
+        (mentors AS mn)
+            LEFT JOIN
+        organizations AS og ON mn.organization_code = og.organization_code
+    WHERE
+        og.status = 'ACTIVE';`, { type: QueryTypes.SELECT });
+            const mentorUsername = await db.query(`SELECT 
+                   user_id, username
+               FROM
+                   users
+               WHERE
+                   role = 'MENTOR'`, { type: QueryTypes.SELECT });
+            const teamUsername = await db.query(`SELECT 
+                    user_id as teamuserId, username as teamUsername
+                FROM
+                    users
+                WHERE
+                    role = 'TEAM'`, { type: QueryTypes.SELECT });
+            const student_names = await db.query(`SELECT 
+          GROUP_CONCAT(full_name
+                  SEPARATOR ', ') AS names,
+              team_id
+      FROM
+          students
+      GROUP BY team_id`, { type: QueryTypes.SELECT });
+            data['summary'] = summary;
+            data['teamData'] = teamData;
+            data['teamUsername'] = teamUsername;
+            data['mentorData'] = mentorData;
+            data['mentorUsername'] = mentorUsername;
+            data['student_names'] = student_names;
 
+            if (!data) {
+                throw notFound(speeches.DATA_NOT_FOUND)
+            }
+            if (data instanceof Error) {
+                throw data
+            }
+            res.status(200).send(dispatcher(res, data, "success"))
+        } catch (err) {
+            next(err)
+        }
+    }
+    protected async getideaReportTable(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
+        }
+        try {
+            let data: any = {}
+            let newREQQuery: any = {}
+            if (req.query.Data) {
+                let newQuery: any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery = JSON.parse(newQuery);
+            } else if (Object.keys(req.query).length !== 0) {
+                return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
+            }
+            const state = newREQQuery.state;
+            let wherefilter = '';
+            if (state) {
+                wherefilter = `WHERE org.state= '${state}'`;
+            }
+            const summary = await db.query(`SELECT 
+    org.state,
+    COALESCE(totalSubmited, 0) AS totalSubmited,
+    COALESCE(SustainableDevelopmentandEnvironment, 0) AS SustainableDevelopmentandEnvironment,
+    COALESCE(DigitalTransformation, 0) AS DigitalTransformation,
+    COALESCE(HealthandWellbeing, 0) AS HealthandWellbeing,
+    COALESCE(QualityEducation, 0) AS QualityEducation,
+    COALESCE(EconomicEmpowerment, 0) AS EconomicEmpowerment,
+    COALESCE(SmartandResilientCommunities, 0) AS SmartandResilientCommunities,
+    COALESCE(AgricultureandRuralDevelopment, 0) AS AgricultureandRuralDevelopment,
+    COALESCE(OTHERS, 0) AS OTHERS
+FROM
+    organizations AS org
+        LEFT JOIN
+    (SELECT 
+        COUNT(*) AS totalSubmited,
+            COUNT(CASE
+                WHEN cal.theme = 'Sustainable Development and Environment' THEN 1
+            END) AS SustainableDevelopmentandEnvironment,
+            COUNT(CASE
+                WHEN cal.theme = 'Digital Transformation' THEN 1
+            END) AS DigitalTransformation,
+            COUNT(CASE
+                WHEN cal.theme = 'Health and Well being' THEN 1
+            END) AS HealthandWellbeing,
+            COUNT(CASE
+                WHEN cal.theme = 'Quality Education' THEN 1
+            END) AS QualityEducation,
+            COUNT(CASE
+                WHEN cal.theme = 'Economic Empowerment' THEN 1
+            END) AS EconomicEmpowerment,
+            COUNT(CASE
+                WHEN cal.theme = 'Smart and Resilient Communities' THEN 1
+            END) AS SmartandResilientCommunities,
+            COUNT(CASE
+                WHEN cal.theme = 'Agriculture and Rural Development' THEN 1
+            END) AS AgricultureandRuralDevelopment,
+            COUNT(CASE
+                WHEN cal.theme = 'Others' THEN 1
+            END) AS OTHERS,
+            org.state
+    FROM
+        challenge_responses AS cal
+    JOIN teams AS t ON cal.team_id = t.team_id
+    JOIN mentors AS m ON t.mentor_id = m.mentor_id
+    JOIN organizations AS org ON m.organization_code = org.organization_code
+    WHERE
+        cal.status = 'SUBMITTED'
+    GROUP BY org.state) AS t2 ON org.state = t2.state
+    ${wherefilter}
+GROUP BY org.state`, { type: QueryTypes.SELECT });
+            data = summary;
+            if (!data) {
+                throw notFound(speeches.DATA_NOT_FOUND)
+            }
+            if (data instanceof Error) {
+                throw data
+            }
+            res.status(200).send(dispatcher(res, data, "success"))
+        } catch (err) {
+            next(err)
+        }
+    }
 }

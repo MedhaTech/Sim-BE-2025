@@ -7,12 +7,14 @@ import db from "../utils/dbconnection.util";
 import { QueryTypes } from 'sequelize';
 import { dashboard_map_stat } from '../models/dashboard_map_stat.model';
 import DashboardService from '../services/dashboard.service';
+import DashboardStateService from '../services/dashboardstatewise.service';
 import { constents } from '../configs/constents.config';
 import { badData, notFound } from 'boom';
 import { student } from '../models/student.model';
 import { challenge_response } from '../models/challenge_response.model';
 import StudentService from '../services/students.service';
 import { baseConfig } from "../configs/base.config";
+import { dashboard_statemap_stat } from '../models/dashboard_statemap_stat.model';
 
 
 export default class DashboardController extends BaseController {
@@ -29,6 +31,9 @@ export default class DashboardController extends BaseController {
         ///map stats
         this.router.get(`${this.path}/mapStats`, this.getMapStats.bind(this))
         this.router.get(`${this.path}/refreshMapStats`, this.refreshMapStats.bind(this))
+        /// state map stats
+        this.router.get(`${this.path}/stateMapStats`, this.getStateMapStats.bind(this))
+        this.router.get(`${this.path}/refreshStateMapStats`, this.refreshStateMapStats.bind(this))
         //student Stats...
         this.router.get(`${this.path}/stuCourseStats`, this.getStudentCourse.bind(this));
         this.router.get(`${this.path}/stuVideoStats`, this.getStudentVideo.bind(this));
@@ -58,11 +63,12 @@ export default class DashboardController extends BaseController {
         this.router.get(`${this.path}/schoolCount`, this.getSchoolCount.bind(this));
         this.router.get(`${this.path}/mentorCourseCount`, this.getmentorCourseCount.bind(this));
         this.router.get(`${this.path}/ATLNonATLRegCount`, this.getATLNonATLRegCount.bind(this));
+        this.router.get(`${this.path}/totalQuizSurveys`, this.getTotalQuizSurveys.bind(this));
         //State DashBoard stats
         this.router.get(`${this.path}/StateDashboard`, this.getStateDashboard.bind(this));
     }
 
-    
+
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     ///////// TEAM STATS
     ///////// PS: this assumes that there is only course in the systems and hence alll topics inside topics table are taken for over counts
@@ -227,9 +233,53 @@ export default class DashboardController extends BaseController {
                 [
                     [db.fn('DISTINCT', db.col('state_name')), 'state_name'],
                     `dashboard_map_stat_id`,
-                    `overall_schools`, `reg_schools`,  `reg_mentors`,`schools_with_teams`, `teams`, `ideas`, `students`, `status`, `created_by`, `created_at`, `updated_by`, `updated_at`
+                    `overall_schools`, `reg_schools`, `reg_mentors`, `schools_with_teams`, `teams`, `ideas`, `students`, `status`, `created_by`, `created_at`, `updated_by`, `updated_at`
                 ]
             )
+        } catch (error) {
+            next(error);
+        }
+    };
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    ///////// STATE WISE MAPP STATS
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    private async refreshStateMapStats(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        try {
+            const service = new DashboardStateService()
+            const result = await service.resetStateMapStats()
+            res.status(200).json(dispatcher(res, result, "success"))
+        } catch (err) {
+            next(err);
+        }
+    }
+    private async getStateMapStats(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        try {
+            let newREQQuery: any = {}
+            if (req.query.Data) {
+                let newQuery: any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery = JSON.parse(newQuery);
+            } else if (Object.keys(req.query).length !== 0) {
+                return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
+            }
+            const mapsdata = await db.query(`SELECT 
+    district_name,
+    overall_schools,
+    reg_schools,
+    teams,
+    students,
+    ideas,
+    reg_mentors,
+    schools_with_teams
+FROM
+    dashboard_statemap_stats
+WHERE
+    state = '${newREQQuery.state}'`, { type: QueryTypes.SELECT })
+            let final: any = {}
+            final['dataValues'] = await this.authService.findalldistrict(mapsdata);
+            res.status(200).send(dispatcher(res, final, 'done'))
+
         } catch (error) {
             next(error);
         }
@@ -480,7 +530,7 @@ export default class DashboardController extends BaseController {
         }
     }
     protected async getWhatappLink(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR') {
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STUDENT' && res.locals.role !== 'TEAM') {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
         }
         try {
@@ -494,8 +544,7 @@ export default class DashboardController extends BaseController {
             }
             const { state_name } = newREQQuery
             if (state_name) {
-                const preSurvey = await db.query(`SELECT whatapp_link FROM Aim_db.state_coordinators where state_name like "${state_name}";`, { type: QueryTypes.SELECT });
-                result = Object.values(preSurvey[0]).toString()
+                result = await db.query(`SELECT whatapp_link,mentor_note,student_note FROM Aim_db.state_coordinators where state_name like "${state_name}";`, { type: QueryTypes.SELECT });
             }
             res.status(200).send(dispatcher(res, result, 'done'))
         }
@@ -1045,9 +1094,10 @@ export default class DashboardController extends BaseController {
                         "all_quiz_count"
                     ],
                     [
-                        db.literal(`(
-                            ${serviceDashboard.getDbLieralForQuizToipcsCompletedCount(addWhereClauseStatusPart,
-                            whereClauseStatusPartLiteral)}
+                        db.literal(`(SELECT COUNT(DISTINCT quiz_id) as quizCount
+                        FROM quiz_responses 
+                        WHERE user_id = ${userId}
+                          AND score >= 6
                             )`),
                         "quiz_completed_count"
                     ]
@@ -1165,6 +1215,37 @@ export default class DashboardController extends BaseController {
                 throw studentStatsResul
             }
             res.status(200).send(dispatcher(res, studentStatsResul, "success"))
+        }
+        catch (err) {
+            next(err)
+        }
+    }
+    protected async getTotalQuizSurveys(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
+        }
+        try {
+            let result: any = {};
+            result = await db.query(`SELECT 
+    SUM(CASE
+        WHEN qsr.quiz_survey_id = 1 THEN 1
+        ELSE 0
+    END) AS mentorpre,
+    SUM(CASE
+        WHEN qsr.quiz_survey_id = 2 THEN 1
+        ELSE 0
+    END) AS studentpre,
+    SUM(CASE
+        WHEN qsr.quiz_survey_id = 3 THEN 1
+        ELSE 0
+    END) AS mentorpost,
+    SUM(CASE
+        WHEN qsr.quiz_survey_id = 4 THEN 1
+        ELSE 0
+    END) AS studentpost
+FROM
+    quiz_survey_responses AS qsr`, { type: QueryTypes.SELECT })
+            res.status(200).send(dispatcher(res, result, 'done'))
         }
         catch (err) {
             next(err)

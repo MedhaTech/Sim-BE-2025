@@ -77,6 +77,21 @@ export default class ResourceController extends BaseController {
                     where: [where],
                     order: [['resource_id', 'DESC']]
                 })
+                if (data.length <= 0) {
+                    where[`state`] = "All States"
+                    data = await this.crudService.findAll(resource, {
+                        attributes: [
+                            "resource_id",
+                            "description",
+                            "role",
+                            "type",
+                            "attachments",
+                            "state"
+                        ],
+                        where: [where],
+                        order: [['resource_id', 'DESC']]
+                    })
+                }
             }
             return res.status(200).send(dispatcher(res, data, 'success'));
         } catch (error) {

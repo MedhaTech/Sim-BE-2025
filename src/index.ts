@@ -27,6 +27,7 @@ import UserTopicProgress from "./controllers/userTopicProgress.controller";
 import DashboardController from "./controllers/dashboard.controller";
 import MentorAttachmentController from "./controllers/mentorAttachment.controller";
 import ReportController from "./controllers/report.controller";
+import ChallengeResponsesController from "./controllers/challenge_response.controller";
 
 
 // validating env variables
@@ -59,7 +60,8 @@ try {
         new UserTopicProgress,
         new DashboardController,
         new MentorAttachmentController,
-        new ReportController
+        new ReportController,
+        new ChallengeResponsesController
 
     ], Number(process.env.APP_PORT));
     // starting app

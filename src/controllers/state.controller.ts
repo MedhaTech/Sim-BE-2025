@@ -4,6 +4,7 @@ import dispatcher from "../utils/dispatch.util";
 import BaseController from "./base.controller";
 import authService from "../services/auth.service";
 import { badRequest } from "boom";
+import { state_coordinators } from "../models/state_coordinators.model";
 
 export default class StateController extends BaseController {
 
@@ -39,7 +40,6 @@ export default class StateController extends BaseController {
             return res.status(401).send(dispatcher(res, error, 'error', speeches.USER_RISTRICTED, 401));
         }
     }
-
     private async logout(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         const result = await this.authService.statelogout(req.body, res);
         if (result.error) {
@@ -48,7 +48,6 @@ export default class StateController extends BaseController {
             return res.status(200).send(dispatcher(res, speeches.LOGOUT_SUCCESS, 'success'));
         }
     }
-
     private async changePassword(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STATE') {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
@@ -82,6 +81,36 @@ export default class StateController extends BaseController {
             }
         } catch (error) {
             next(error)
+        }
+    }
+    protected async getData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STATE') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
+        }
+        try {
+            let data: any = {}
+            const where: any = {};
+            const { id } = req.params;
+            if (id) {
+                const newParamId = await this.authService.decryptGlobal(req.params.id);
+                where[`state_coordinators_id`] = newParamId;
+                data = await this.crudService.findOne(state_coordinators, {
+                    where: [where]
+                })
+            }
+            else {
+                data = await this.crudService.findAll(state_coordinators, {
+                    attributes: [
+                        "state_coordinators_id",
+                        "state_name",
+                        "whatapp_link",
+                        "ideaSubmission"
+                    ]
+                })
+            }
+            return res.status(200).send(dispatcher(res, data, 'success'));
+        } catch (error) {
+            next(error);
         }
     }
 }

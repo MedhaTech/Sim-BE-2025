@@ -114,6 +114,12 @@ export default class popupController extends BaseController {
                 data = await this.crudService.findAll(popup, {
                     where: [where]
                 })
+                if (data.length <= 0){
+                    where[`state`] = "All States" 
+                    data = await this.crudService.findAll(popup, {
+                        where: [where]
+                    })
+                }
             }
             return res.status(200).send(dispatcher(res, data, 'success'));
         } catch (error) {

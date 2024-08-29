@@ -50,7 +50,7 @@ export default class MentorController extends BaseController {
         this.router.post(`${this.path}/:mentor_user_id/badges`, this.addBadgeToMentor.bind(this));
         this.router.get(`${this.path}/:mentor_user_id/badges`, this.getMentorBadges.bind(this));
         this.router.get(`${this.path}/teamCredentials/:mentorId`, this.getteamCredentials.bind(this));
-        
+
         super.initializeRoutes();
     }
     protected async autoFillUserDataForBulkUpload(req: Request, res: Response, modelLoaded: any, reqData: any = null) {
@@ -589,7 +589,7 @@ export default class MentorController extends BaseController {
             data['totalProgress'] = baseConfig.MENTOR_COURSE
             data['teamsCount'] = await db.query(`SELECT count(*) as teams_count FROM teams where mentor_id = ${id}`, { type: QueryTypes.SELECT });
             data['studentCount'] = await db.query(`SELECT count(*) as student_count FROM students join teams on students.team_id = teams.team_id  where mentor_id = ${id};`, { type: QueryTypes.SELECT });
-            //data['IdeaCount'] = await db.query(`SELECT count(*) as idea_count FROM challenge_responses join teams on challenge_responses.team_id = teams.team_id where mentor_id = ${id} && challenge_responses.status = 'SUBMITTED';`, { type: QueryTypes.SELECT });
+            data['IdeaCount'] = await db.query(`SELECT count(*) as idea_count FROM challenge_responses join teams on challenge_responses.team_id = teams.team_id where mentor_id = ${id} && challenge_responses.status = 'SUBMITTED';`, { type: QueryTypes.SELECT });
             if (!data || data instanceof Error) {
                 if (data != null) {
                     throw notFound(data.message)
@@ -703,7 +703,28 @@ export default class MentorController extends BaseController {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
         }
         try {
+            let newREQQuery: any = {}
+            if (req.query.Data) {
+                let newQuery: any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery = JSON.parse(newQuery);
+            } else if (Object.keys(req.query).length !== 0) {
+                return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
+            }
+
+            const totalnumber = await this.crudService.findAndCountAll(team, {
+                where: {
+                    mentor_id: newREQQuery.mentor_id
+                }
+            })
             const mentor_user_id: any = await this.authService.decryptGlobal(req.params.mentor_user_id);
+            
+            if (totalnumber.count > 4) {
+                await this.authService.addbadgesformentor(mentor_user_id, ['active_mentor'])
+            }
+            if (totalnumber.count > 9) {
+                await this.authService.addbadgesformentor(mentor_user_id, ['inspirational_mentor'])
+            }
+
             let mentorBadgesObj: any = await this.authService.getMentorBadges(mentor_user_id);
             ///do not do empty or null check since badges obj can be null if no badges earned yet hence this is not an error condition 
             if (mentorBadgesObj instanceof Error) {
@@ -712,13 +733,7 @@ export default class MentorController extends BaseController {
             if (!mentorBadgesObj) {
                 mentorBadgesObj = {};
             }
-            let newREQQuery: any = {}
-            if (req.query.Data) {
-                let newQuery: any = await this.authService.decryptGlobal(req.query.Data);
-                newREQQuery = JSON.parse(newQuery);
-            } else if (Object.keys(req.query).length !== 0) {
-                return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
-            }
+
             const paramStatus: any = newREQQuery.status;
             const where: any = {};
             let whereClauseStatusPart: any = {};
@@ -748,7 +763,7 @@ export default class MentorController extends BaseController {
             for (var i = 0; i < allBadgesResult.length; i++) {
                 const currBadge: any = allBadgesResult[i];
                 if (mentorBadgesObj.hasOwnProperty("" + currBadge.slug)) {
-                    currBadge["mentor_status"] = mentorBadgesObj[("" + currBadge.slug)].completed_date
+                    currBadge["mentor_status"] = mentorBadgesObj[("" + currBadge.slug)].completed
                 } else {
                     currBadge["mentor_status"] = null;
                 }

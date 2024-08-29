@@ -22,6 +22,7 @@ import { quiz_survey_response } from '../models/quiz_survey_response.model';
 import { user_topic_progress } from '../models/user_topic_progress.model';
 import { evaluator } from '../models/evaluator.model';
 import { team } from '../models/team.model';
+import { badge } from '../models/badge.model';
 export default class authService {
     crudService: CRUDService = new CRUDService;
     private otp = '112233';
@@ -1075,5 +1076,98 @@ export default class authService {
         } catch (err) {
             return err
         }
+    }
+    async addbadgesformentor(id: any, data: any) {
+        try {
+            //todo: test this api : haven't manually tested this api yet 
+            const mentor_user_id: any = id;
+            const badges_slugs: any = data;
+            if (!badges_slugs || !badges_slugs.length || badges_slugs.length <= 0) {
+                throw badRequest(speeches.BADGE_IDS_ARRAY_REQUIRED)
+            }
+
+            let mentorBadgesObj: any = await this.getMentorBadges(mentor_user_id);
+            ///do not do empty or null check since badges obj can be null if no badges earned yet hence this is not an error condition 
+            if (mentorBadgesObj instanceof Error) {
+                throw mentorBadgesObj
+            }
+            if (!mentorBadgesObj) {
+                mentorBadgesObj = {};
+            }
+            const errors: any = []
+
+            let forLoopArr = badges_slugs;
+
+            for (var i = 0; i < forLoopArr.length; i++) {
+                let badgeId = forLoopArr[i];
+                let badgeFindWhereClause: any = {
+                    slug: badgeId
+                }
+                const badgeResultForId = await this.crudService.findOne(badge, { where: badgeFindWhereClause })
+                if (!badgeResultForId) {
+                    errors.push({ id: badgeId, err: badRequest(speeches.DATA_NOT_FOUND) })
+                    continue;
+                }
+                if (badgeResultForId instanceof Error) {
+                    errors.push({ id: badgeId, err: badgeResultForId })
+                    continue;
+                }
+
+                const mentorHasBadgeObjForId = mentorBadgesObj[badgeResultForId.dataValues.slug]
+                if (!mentorHasBadgeObjForId || !mentorHasBadgeObjForId.completed_date) {
+                    mentorBadgesObj[badgeResultForId.dataValues.slug] = {
+                        completed: 'YES'
+                    }
+                }
+            }
+            const mentorBadgesObjJson = JSON.stringify(mentorBadgesObj)
+            const result: any = await mentor.update({ badges: mentorBadgesObjJson }, {
+                where: {
+                    user_id: mentor_user_id
+                }
+            })
+            if (result instanceof Error) {
+                throw result;
+            }
+
+            if (!result) {
+                return speeches.USER_NOT_FOUND
+            }
+            let dispatchStatus = "updated"
+            let resStatus = 202
+            let dispatchStatusMsg = speeches.USER_BADGES_LINKED
+            if (errors && errors.length > 0) {
+                dispatchStatus = "error"
+                dispatchStatusMsg = "error"
+                resStatus = 400
+            }
+
+            return { errs: errors, success: mentorBadgesObj }
+        } catch (err) {
+            return err
+        }
+    }
+
+    async findalldistrict(data: any) {
+        const totalall = {
+            district_name: "all",
+            overall_schools: 0,
+            reg_schools: 0,
+            reg_mentors: 0,
+            schools_with_teams: 0,
+            teams: 0,
+            ideas: 0,
+            students: 0,
+        }
+        data.map((iteam: any) => {
+            totalall.overall_schools=totalall.overall_schools+JSON.parse(iteam.overall_schools),
+            totalall.reg_schools=totalall.reg_schools+JSON.parse(iteam.reg_schools),
+            totalall.reg_mentors=totalall.reg_mentors+JSON.parse(iteam.reg_mentors),
+            totalall.schools_with_teams=totalall.schools_with_teams+JSON.parse(iteam.schools_with_teams),
+            totalall.teams=totalall.teams+JSON.parse(iteam.teams),
+            totalall.ideas=totalall.ideas+JSON.parse(iteam.ideas),
+            totalall.students=totalall.students+JSON.parse(iteam.students)
+        })
+        return [...data,totalall]
     }
 }

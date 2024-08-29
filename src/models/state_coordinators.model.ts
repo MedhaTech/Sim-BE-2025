@@ -16,6 +16,10 @@ export class state_coordinators extends Model<InferAttributes<state_coordinators
     declare is_loggedin: Enumerator;
     declare last_login: Date;
     declare role: string;
+    declare whatapp_link: string;
+    declare ideaSubmission: number;
+    declare mentor_note: string;
+    declare student_note: string;
 }
 
 state_coordinators.init({
@@ -37,6 +41,18 @@ state_coordinators.init({
         allowNull: false
     },
     role: {
+        type: DataTypes.STRING
+    },
+    whatapp_link: {
+        type: DataTypes.STRING
+    },
+    ideaSubmission: {
+        type: DataTypes.INTEGER
+    },
+    mentor_note: {
+        type: DataTypes.STRING
+    },
+    student_note: {
         type: DataTypes.STRING
     },
     is_loggedin: {
