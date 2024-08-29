@@ -703,7 +703,28 @@ export default class MentorController extends BaseController {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
         }
         try {
+            let newREQQuery: any = {}
+            if (req.query.Data) {
+                let newQuery: any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery = JSON.parse(newQuery);
+            } else if (Object.keys(req.query).length !== 0) {
+                return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
+            }
+
+            const totalnumber = await this.crudService.findAndCountAll(team, {
+                where: {
+                    mentor_id: newREQQuery.mentor_id
+                }
+            })
             const mentor_user_id: any = await this.authService.decryptGlobal(req.params.mentor_user_id);
+            
+            if (totalnumber.count > 4) {
+                await this.authService.addbadgesformentor(mentor_user_id, ['active_mentor'])
+            }
+            if (totalnumber.count > 9) {
+                await this.authService.addbadgesformentor(mentor_user_id, ['inspirational_mentor'])
+            }
+
             let mentorBadgesObj: any = await this.authService.getMentorBadges(mentor_user_id);
             ///do not do empty or null check since badges obj can be null if no badges earned yet hence this is not an error condition 
             if (mentorBadgesObj instanceof Error) {
@@ -712,13 +733,7 @@ export default class MentorController extends BaseController {
             if (!mentorBadgesObj) {
                 mentorBadgesObj = {};
             }
-            let newREQQuery: any = {}
-            if (req.query.Data) {
-                let newQuery: any = await this.authService.decryptGlobal(req.query.Data);
-                newREQQuery = JSON.parse(newQuery);
-            } else if (Object.keys(req.query).length !== 0) {
-                return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
-            }
+
             const paramStatus: any = newREQQuery.status;
             const where: any = {};
             let whereClauseStatusPart: any = {};
