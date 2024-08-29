@@ -589,7 +589,7 @@ export default class MentorController extends BaseController {
             data['totalProgress'] = baseConfig.MENTOR_COURSE
             data['teamsCount'] = await db.query(`SELECT count(*) as teams_count FROM teams where mentor_id = ${id}`, { type: QueryTypes.SELECT });
             data['studentCount'] = await db.query(`SELECT count(*) as student_count FROM students join teams on students.team_id = teams.team_id  where mentor_id = ${id};`, { type: QueryTypes.SELECT });
-            //data['IdeaCount'] = await db.query(`SELECT count(*) as idea_count FROM challenge_responses join teams on challenge_responses.team_id = teams.team_id where mentor_id = ${id} && challenge_responses.status = 'SUBMITTED';`, { type: QueryTypes.SELECT });
+            data['IdeaCount'] = await db.query(`SELECT count(*) as idea_count FROM challenge_responses join teams on challenge_responses.team_id = teams.team_id where mentor_id = ${id} && challenge_responses.status = 'SUBMITTED';`, { type: QueryTypes.SELECT });
             if (!data || data instanceof Error) {
                 if (data != null) {
                     throw notFound(data.message)
