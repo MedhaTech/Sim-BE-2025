@@ -1147,4 +1147,27 @@ export default class authService {
             return err
         }
     }
+
+    async findalldistrict(data: any) {
+        const totalall = {
+            district_name: "all",
+            overall_schools: 0,
+            reg_schools: 0,
+            reg_mentors: 0,
+            schools_with_teams: 0,
+            teams: 0,
+            ideas: 0,
+            students: 0,
+        }
+        data.map((iteam: any) => {
+            totalall.overall_schools=totalall.overall_schools+JSON.parse(iteam.overall_schools),
+            totalall.reg_schools=totalall.reg_schools+JSON.parse(iteam.reg_schools),
+            totalall.reg_mentors=totalall.reg_mentors+JSON.parse(iteam.reg_mentors),
+            totalall.schools_with_teams=totalall.schools_with_teams+JSON.parse(iteam.schools_with_teams),
+            totalall.teams=totalall.teams+JSON.parse(iteam.teams),
+            totalall.ideas=totalall.ideas+JSON.parse(iteam.ideas),
+            totalall.students=totalall.students+JSON.parse(iteam.students)
+        })
+        return [...data,totalall]
+    }
 }
