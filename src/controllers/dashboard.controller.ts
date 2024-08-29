@@ -263,14 +263,23 @@ export default class DashboardController extends BaseController {
             } else if (Object.keys(req.query).length !== 0) {
                 return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
             }
-            this.model = dashboard_statemap_stat.name
-            return await this.getData(req, res, next, [{state:newREQQuery.state}],
-                [
-                    [db.fn('DISTINCT', db.col('district_name')), 'district_name'],
-                    `dashboard_statemap_stat_id`,
-                    `overall_schools`, `reg_schools`, `reg_mentors`, `schools_with_teams`, `teams`, `ideas`, `students`, `status`, `created_by`, `created_at`, `updated_by`, `updated_at`
-                ]
-            )
+            const mapsdata = await db.query(`SELECT 
+    district_name,
+    overall_schools,
+    reg_schools,
+    teams,
+    students,
+    ideas,
+    reg_mentors,
+    schools_with_teams
+FROM
+    dashboard_statemap_stats
+WHERE
+    state = '${newREQQuery.state}'`, { type: QueryTypes.SELECT })
+            let final: any = {}
+            final['dataValues'] = await this.authService.findalldistrict(mapsdata);
+            res.status(200).send(dispatcher(res, final, 'done'))
+
         } catch (error) {
             next(error);
         }

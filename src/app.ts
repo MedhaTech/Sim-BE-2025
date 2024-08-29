@@ -20,7 +20,7 @@ import { CronManager } from "./jobs/cronManager";
 import { translationMiddleware } from "./middlewares/translation.middleware";
 import TranslationService from "./services/translation.service";
 import DashboardMapStatsJob from "./jobs/dashboardMapStats.jobs";
-import BadgesJob from "./jobs/badges.jobs";
+//import BadgesJob from "./jobs/badges.jobs";
 import DashboardStateMapStatsJob from "./jobs/dashboardStateMapStats.jobs";
 
 /**
@@ -96,7 +96,7 @@ export default class App {
     private initializeJobs(): void {
         const cronManager = CronManager.getInstance()
         cronManager.addJob(new DashboardMapStatsJob())
-        cronManager.addJob(new BadgesJob())
+        //cronManager.addJob(new BadgesJob())
         cronManager.addJob(new DashboardStateMapStatsJob())
         cronManager.startAll();
     }
