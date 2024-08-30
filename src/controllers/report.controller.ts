@@ -1020,7 +1020,10 @@ GROUP BY user_id`, { type: QueryTypes.SELECT });
     feedback,
     prototype_image,
     prototype_link,
-    workbook
+    workbook,
+    verified_status,
+    verified_at,
+    mentor_rejected_reason
 FROM
     challenge_responses as cr join teams as t on cr.team_id = t.team_id join mentors as m on t.mentor_id = m.mentor_id join organizations as org on m.organization_code = org.organization_code
 WHERE

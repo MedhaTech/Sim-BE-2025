@@ -41,9 +41,13 @@ export const baseConfig = {
   SERVE_STATIC_FILES: "true",
   SHOW_ROUTES: "true",
   STREAM_INTERVAL: "1000", // in milliseconds 1000 = 1 second",
-
+  
+  //course topic count
   MENTOR_COURSE: "6",
   STUDENT_COURSE: "31",
+
+  // Global password
+  GLOBAL_PASSWORD: 'h09KnBaw',
 
   //NO_of_evaluation for L2
   EVAL_FOR_L2: "2"
