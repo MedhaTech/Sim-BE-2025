@@ -32,6 +32,8 @@ export default class ReportController extends BaseController {
         this.router.get(`${this.path}/studentATLnonATLcount`, this.getstudentATLnonATLcount.bind(this));
         this.router.get(`${this.path}/ideadeatilreport`, this.getideaReport.bind(this));
         this.router.get(`${this.path}/ideaReportTable`, this.getideaReportTable.bind(this));
+        this.router.get(`${this.path}/schoollistreport`, this.getSchoolList.bind(this));
+        
     }
     protected async mentorsummary(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if (res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT' && res.locals.role !== 'STATE') {
@@ -973,7 +975,7 @@ GROUP BY user_id`, { type: QueryTypes.SELECT });
         }
     }
     protected async getideaReport(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT') {
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT' && res.locals.role !== 'STATE') {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
         }
         try {
@@ -1089,7 +1091,7 @@ FROM
         }
     }
     protected async getideaReportTable(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT') {
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT' && res.locals.role !== 'STATE') {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
         }
         try {
@@ -1167,6 +1169,47 @@ GROUP BY org.state`, { type: QueryTypes.SELECT });
             res.status(200).send(dispatcher(res, data, "success"))
         } catch (err) {
             next(err)
+        }
+    }
+    protected async getSchoolList(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT' && res.locals.role !== 'STATE') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
+        }
+        try {
+            let data: any;
+
+            let newREQQuery: any = {}
+            if (req.query.Data) {
+                let newQuery: any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery = JSON.parse(newQuery);
+            } else if (Object.keys(req.query).length !== 0) {
+                return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
+            }
+            const { state, district, theme, category } = newREQQuery;
+            const where: any = {
+                status: 'ACTIVE',
+            };
+            if (district !== 'All Districts' && district !== undefined) {
+                where['district'] = district
+            }
+            if (category !== 'All Categories' && category !== undefined) {
+                where['category'] = category
+            }
+            if (state !== 'All States' && state !== undefined) {
+                where['state'] = state
+            }
+            try {
+                data = await this.crudService.findAndCountAll(organization, {
+                    where: where
+                })
+            } catch (error: any) {
+                console.log(error)
+                next(error)
+            }
+            return res.status(200).send(dispatcher(res, data, 'success'));
+        } catch (error) {
+            console.log(error)
+            next(error);
         }
     }
 }
