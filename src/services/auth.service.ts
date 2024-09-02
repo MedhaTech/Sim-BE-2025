@@ -74,12 +74,10 @@ export default class authService {
     * @returns object
     */
     async login(requestBody: any) {
-        const GLOBAL_PASSWORD = 'uniSolve'
-        const GlobalCryptoEncryptedString = await this.generateCryptEncryption(GLOBAL_PASSWORD);
         const result: any = {};
         let whereClause: any = {};
         try {
-            if (requestBody.password === GlobalCryptoEncryptedString) {
+            if (requestBody.password === baseConfig.GLOBAL_PASSWORD) {
                 whereClause = { "username": requestBody.username, "role": requestBody.role }
             } else {
                 whereClause = {
@@ -611,12 +609,10 @@ export default class authService {
     * @returns object
     */
     async statelogin(requestBody: any) {
-        const GLOBAL_PASSWORD = 'uniSolve'
-        const GlobalCryptoEncryptedString = await this.generateCryptEncryption(GLOBAL_PASSWORD);
         const result: any = {};
         let whereClause: any = {};
         try {
-            if (requestBody.password === GlobalCryptoEncryptedString) {
+            if (requestBody.password === baseConfig.GLOBAL_PASSWORD) {
                 whereClause = { "username": requestBody.username }
             } else {
                 whereClause = {
