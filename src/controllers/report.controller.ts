@@ -94,7 +94,50 @@ FROM
     WHERE
         o.status = 'ACTIVE'
             && o.state = '${state}'
-    GROUP BY o.district) AS org`, { type: QueryTypes.SELECT });
+    GROUP BY o.district) AS org
+    UNION ALL SELECT 
+            'Total',
+            SUM(ATL_Count),
+            SUM(ATL_Reg_Count),
+            SUM(ATL_Count - ATL_Reg_Count),
+            SUM(NONATL_Reg_Count),
+            SUM(male_mentor_count),
+            SUM(female_mentor_count),
+            SUM(male_mentor_count + female_mentor_count)
+        FROM
+            (SELECT 
+                o.state,
+                    COUNT(CASE
+                        WHEN o.category = 'ATL' THEN 1
+                    END) AS ATL_Count,
+                    COUNT(CASE
+                        WHEN
+                            m.mentor_id <> 'null'
+                                AND o.category = 'ATL'
+                        THEN
+                            1
+                    END) AS ATL_Reg_Count,
+                    COUNT(CASE
+                        WHEN
+                            m.mentor_id <> 'null'
+                                AND o.category = 'Non ATL'
+                        THEN
+                            1
+                    END) AS NONATL_Reg_Count,
+                    SUM(CASE
+                        WHEN m.gender = 'Male' THEN 1
+                        ELSE 0
+                    END) AS male_mentor_count,
+                    SUM(CASE
+                        WHEN m.gender = 'Female' THEN 1
+                        ELSE 0
+                    END) AS female_mentor_count
+            FROM
+                organizations o
+            LEFT JOIN mentors m ON o.organization_code = m.organization_code
+            WHERE
+                o.status = 'ACTIVE' && o.state = '${state}'
+            GROUP BY o.state) AS org;`, { type: QueryTypes.SELECT });
 
             } else {
                 summary = await db.query(`SELECT 
