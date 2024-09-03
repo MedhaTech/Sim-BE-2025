@@ -1106,32 +1106,57 @@ GROUP BY user_id`, { type: QueryTypes.SELECT });
             }
             const state = newREQQuery.state;
             let wherefilter = '';
+            let summary
             if (state) {
                 wherefilter = `WHERE org.state= '${state}'`;
+                summary = await db.query(`SELECT 
+                    org.district, COALESCE(ATL_Student_Count, 0) as ATL_Student_Count, COALESCE(NONATL_Student_Count, 0) as NONATL_Student_Count
+                FROM
+                    organizations AS org
+                       left JOIN
+                    (SELECT 
+                        o.district,
+                            COUNT(CASE
+                                WHEN o.category = 'ATL' THEN 1
+                            END) AS ATL_Student_Count,
+                            COUNT(CASE
+                                WHEN o.category = 'Non ATL' THEN 1
+                            END) AS NONATL_Student_Count
+                    FROM
+                        students AS s
+                    JOIN teams AS t ON s.team_id = t.team_id
+                    JOIN mentors AS m ON t.mentor_id = m.mentor_id
+                    JOIN organizations AS o ON m.organization_code = o.organization_code
+                    WHERE
+                        o.status = 'ACTIVE'
+                    GROUP BY o.district) AS t2 ON org.district = t2.district
+                    ${wherefilter}
+                GROUP BY org.district;`, { type: QueryTypes.SELECT });
+            } else {
+                summary = await db.query(`SELECT 
+                    org.state, COALESCE(ATL_Student_Count, 0) as ATL_Student_Count, COALESCE(NONATL_Student_Count, 0) as NONATL_Student_Count
+                FROM
+                    organizations AS org
+                       left JOIN
+                    (SELECT 
+                        o.state,
+                            COUNT(CASE
+                                WHEN o.category = 'ATL' THEN 1
+                            END) AS ATL_Student_Count,
+                            COUNT(CASE
+                                WHEN o.category = 'Non ATL' THEN 1
+                            END) AS NONATL_Student_Count
+                    FROM
+                        students AS s
+                    JOIN teams AS t ON s.team_id = t.team_id
+                    JOIN mentors AS m ON t.mentor_id = m.mentor_id
+                    JOIN organizations AS o ON m.organization_code = o.organization_code
+                    WHERE
+                        o.status = 'ACTIVE'
+                    GROUP BY o.state) AS t2 ON org.state = t2.state
+                GROUP BY org.state;`, { type: QueryTypes.SELECT });
             }
-            const summary = await db.query(`SELECT 
-            org.state, COALESCE(ATL_Student_Count, 0) as ATL_Student_Count, COALESCE(NONATL_Student_Count, 0) as NONATL_Student_Count
-        FROM
-            organizations AS org
-               left JOIN
-            (SELECT 
-                o.state,
-                    COUNT(CASE
-                        WHEN o.category = 'ATL' THEN 1
-                    END) AS ATL_Student_Count,
-                    COUNT(CASE
-                        WHEN o.category = 'Non ATL' THEN 1
-                    END) AS NONATL_Student_Count
-            FROM
-                students AS s
-            JOIN teams AS t ON s.team_id = t.team_id
-            JOIN mentors AS m ON t.mentor_id = m.mentor_id
-            JOIN organizations AS o ON m.organization_code = o.organization_code
-            WHERE
-                o.status = 'ACTIVE'
-            GROUP BY o.state) AS t2 ON org.state = t2.state
-            ${wherefilter}
-        GROUP BY org.state;`, { type: QueryTypes.SELECT });
+
             data = summary;
             if (!data) {
                 throw notFound(speeches.DATA_NOT_FOUND)
