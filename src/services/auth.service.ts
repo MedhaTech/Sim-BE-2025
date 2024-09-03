@@ -756,15 +756,19 @@ export default class authService {
      * @param argTeamId String
      * @returns Boolean
      */
-    async checkIfTeamHasPlaceForNewMember(argTeamId: any) {
+    async checkIfTeamHasPlaceForNewMember(argTeamId: any, state: string) {
         try {
+            const TEAMS_MAX_STUDENTS_ALLOWED : any = {
+                "Tamil Nadu": 5,
+                "default":3
+            }
             let studentResult: any = await student.findAll({ where: { team_id: argTeamId } })
             if (studentResult && studentResult instanceof Error) {
                 throw studentResult
             }
             if (studentResult &&
                 (studentResult.length == 0 ||
-                    studentResult.length < constents.TEAMS_MAX_STUDENTS_ALLOWED)
+                    studentResult.length < ((state in TEAMS_MAX_STUDENTS_ALLOWED) ? TEAMS_MAX_STUDENTS_ALLOWED[state] : TEAMS_MAX_STUDENTS_ALLOWED['default']))
             ) {
                 return true;
             }
@@ -1156,14 +1160,14 @@ export default class authService {
             students: 0,
         }
         data.map((iteam: any) => {
-            totalall.overall_schools=totalall.overall_schools+JSON.parse(iteam.overall_schools),
-            totalall.reg_schools=totalall.reg_schools+JSON.parse(iteam.reg_schools),
-            totalall.reg_mentors=totalall.reg_mentors+JSON.parse(iteam.reg_mentors),
-            totalall.schools_with_teams=totalall.schools_with_teams+JSON.parse(iteam.schools_with_teams),
-            totalall.teams=totalall.teams+JSON.parse(iteam.teams),
-            totalall.ideas=totalall.ideas+JSON.parse(iteam.ideas),
-            totalall.students=totalall.students+JSON.parse(iteam.students)
+            totalall.overall_schools = totalall.overall_schools + JSON.parse(iteam.overall_schools),
+                totalall.reg_schools = totalall.reg_schools + JSON.parse(iteam.reg_schools),
+                totalall.reg_mentors = totalall.reg_mentors + JSON.parse(iteam.reg_mentors),
+                totalall.schools_with_teams = totalall.schools_with_teams + JSON.parse(iteam.schools_with_teams),
+                totalall.teams = totalall.teams + JSON.parse(iteam.teams),
+                totalall.ideas = totalall.ideas + JSON.parse(iteam.ideas),
+                totalall.students = totalall.students + JSON.parse(iteam.students)
         })
-        return [...data,totalall]
+        return [...data, totalall]
     }
 }

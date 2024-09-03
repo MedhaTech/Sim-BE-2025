@@ -156,7 +156,7 @@ export default class StudentController extends BaseController {
                         where: {
                             [Op.and]: [
                                 whereClauseStatusPart,
-                               // condition,
+                                // condition,
                                 stateFilter.liter
                             ]
                         },
@@ -326,13 +326,14 @@ export default class StudentController extends BaseController {
     private async register(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try {
             // const randomGeneratedSixDigitID = this.nanoid();
-            const { team_id } = req.body;
+            const { team_id, state } = req.body;
             const cryptoEncryptedString = await this.authService.generateCryptEncryption('STUDENT@123');
             req.body.username = `${req.body.team_id}_${req.body.full_name.trim()}`
             if (!req.body.role || req.body.role !== 'STUDENT') return res.status(406).send(dispatcher(res, null, 'error', speeches.USER_ROLE_REQUIRED, 406));
             if (!req.body.team_id) return res.status(406).send(dispatcher(res, null, 'error', speeches.USER_TEAMID_REQUIRED, 406));
+
             if (team_id) {
-                const teamCanAddMember = await this.authService.checkIfTeamHasPlaceForNewMember(team_id)
+                const teamCanAddMember = await this.authService.checkIfTeamHasPlaceForNewMember(team_id, state)
                 if (!teamCanAddMember) {
                     throw badRequest(speeches.TEAM_MAX_MEMBES_EXCEEDED)
                 }
@@ -357,8 +358,9 @@ export default class StudentController extends BaseController {
             for (let student in req.body) {
                 if (!req.body[student].team_id) throw notFound(speeches.USER_TEAMID_REQUIRED);
                 const team_id = req.body[student].team_id
+                const state = req.body[student].state
                 if (team_id) {
-                    const teamCanAddMember = await this.authService.checkIfTeamHasPlaceForNewMember(team_id)
+                    const teamCanAddMember = await this.authService.checkIfTeamHasPlaceForNewMember(team_id, state)
                     if (!teamCanAddMember) {
                         throw badRequest(speeches.TEAM_MAX_MEMBES_EXCEEDED)
                     }

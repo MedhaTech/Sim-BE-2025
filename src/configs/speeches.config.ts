@@ -63,7 +63,7 @@ export const speeches = {
     TEAM_NAME_REQUIRED: "Team name is required, it should not be empty.",
     TEAM_NAME_ID: "Team ID is required, it should not be empty.",
     TEAM_NOT_FOUND: "Team not found, check the teamID.",
-    TEAM_MAX_MEMBES_EXCEEDED: `Team can have at max ${"" + constents.TEAMS_MAX_STUDENTS_ALLOWED} members`,
+    TEAM_MAX_MEMBES_EXCEEDED: `Team reached maximum members`,
     //quiz submit response keys
     QUIZ_ID_REQUIRED: "Quiz ID is required, it should not be empty.",
     CHALLENGE_ID_REQUIRED: "Challenge ID is required, it should not be empty.",
