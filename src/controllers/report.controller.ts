@@ -33,7 +33,7 @@ export default class ReportController extends BaseController {
         this.router.get(`${this.path}/ideadeatilreport`, this.getideaReport.bind(this));
         this.router.get(`${this.path}/ideaReportTable`, this.getideaReportTable.bind(this));
         this.router.get(`${this.path}/schoollistreport`, this.getSchoolList.bind(this));
-        
+
     }
     protected async mentorsummary(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if (res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT' && res.locals.role !== 'STATE') {
@@ -52,48 +52,92 @@ export default class ReportController extends BaseController {
             let summary
             if (state) {
                 summary = await db.query(`SELECT 
-                org.state,
-                org.ATL_Count,
-                org.ATL_Reg_Count,
-                (org.ATL_Count - org.ATL_Reg_Count) AS total_not_Reg_ATL,
-                org.NONATL_Reg_Count,
-                org.male_mentor_count,
-                org.female_mentor_count,
-                org.male_mentor_count + org.female_mentor_count AS total_registered_teachers
+    org.district,
+    org.ATL_Count,
+    org.ATL_Reg_Count,
+    (org.ATL_Count - org.ATL_Reg_Count) AS total_not_Reg_ATL,
+    org.NONATL_Reg_Count,
+    org.male_mentor_count,
+    org.female_mentor_count,
+    org.male_mentor_count + org.female_mentor_count AS total_registered_teachers
+FROM
+    (SELECT 
+        o.district,
+            COUNT(CASE
+                WHEN o.category = 'ATL' THEN 1
+            END) AS ATL_Count,
+            COUNT(CASE
+                WHEN
+                    m.mentor_id <> 'null'
+                        AND o.category = 'ATL'
+                THEN
+                    1
+            END) AS ATL_Reg_Count,
+            COUNT(CASE
+                WHEN
+                    m.mentor_id <> 'null'
+                        AND o.category = 'Non ATL'
+                THEN
+                    1
+            END) AS NONATL_Reg_Count,
+            SUM(CASE
+                WHEN m.gender = 'Male' THEN 1
+                ELSE 0
+            END) AS male_mentor_count,
+            SUM(CASE
+                WHEN m.gender = 'Female' THEN 1
+                ELSE 0
+            END) AS female_mentor_count
+    FROM
+        organizations o
+    LEFT JOIN mentors m ON o.organization_code = m.organization_code
+    WHERE
+        o.status = 'ACTIVE'
+            && o.state = '${state}'
+    GROUP BY o.district) AS org
+    UNION ALL SELECT 
+            'Total',
+            SUM(ATL_Count),
+            SUM(ATL_Reg_Count),
+            SUM(ATL_Count - ATL_Reg_Count),
+            SUM(NONATL_Reg_Count),
+            SUM(male_mentor_count),
+            SUM(female_mentor_count),
+            SUM(male_mentor_count + female_mentor_count)
+        FROM
+            (SELECT 
+                o.state,
+                    COUNT(CASE
+                        WHEN o.category = 'ATL' THEN 1
+                    END) AS ATL_Count,
+                    COUNT(CASE
+                        WHEN
+                            m.mentor_id <> 'null'
+                                AND o.category = 'ATL'
+                        THEN
+                            1
+                    END) AS ATL_Reg_Count,
+                    COUNT(CASE
+                        WHEN
+                            m.mentor_id <> 'null'
+                                AND o.category = 'Non ATL'
+                        THEN
+                            1
+                    END) AS NONATL_Reg_Count,
+                    SUM(CASE
+                        WHEN m.gender = 'Male' THEN 1
+                        ELSE 0
+                    END) AS male_mentor_count,
+                    SUM(CASE
+                        WHEN m.gender = 'Female' THEN 1
+                        ELSE 0
+                    END) AS female_mentor_count
             FROM
-                (SELECT 
-                    o.state,
-                        COUNT(CASE
-                            WHEN o.category = 'ATL' THEN 1
-                        END) AS ATL_Count,
-                        COUNT(CASE
-                            WHEN
-                                m.mentor_id <> 'null'
-                                    AND o.category = 'ATL'
-                            THEN
-                                1
-                        END) AS ATL_Reg_Count,
-                        COUNT(CASE
-                            WHEN
-                                m.mentor_id <> 'null'
-                                    AND o.category = 'Non ATL'
-                            THEN
-                                1
-                        END) AS NONATL_Reg_Count,
-                        SUM(CASE
-                            WHEN m.gender = 'Male' THEN 1
-                            ELSE 0
-                        END) AS male_mentor_count,
-                        SUM(CASE
-                            WHEN m.gender = 'Female' THEN 1
-                            ELSE 0
-                        END) AS female_mentor_count
-                FROM
-                    organizations o
-                LEFT JOIN mentors m ON o.organization_code = m.organization_code
-                WHERE
-                    o.status = 'ACTIVE' && o.state= '${state}'
-                GROUP BY o.state) AS org`, { type: QueryTypes.SELECT });
+                organizations o
+            LEFT JOIN mentors m ON o.organization_code = m.organization_code
+            WHERE
+                o.status = 'ACTIVE' && o.state = '${state}'
+            GROUP BY o.state) AS org;`, { type: QueryTypes.SELECT });
 
             } else {
                 summary = await db.query(`SELECT 
@@ -371,78 +415,154 @@ export default class ReportController extends BaseController {
             }
             const state = newREQQuery.state;
             let wherefilter = '';
+            let summary
+            let teamCount
+            let studentCountDetails
+            let courseINcompleted
+            let courseCompleted
             if (state) {
                 wherefilter = `&& og.state= '${state}'`;
+                summary = await db.query(`SELECT 
+    og.district, COUNT(mn.mentor_id) AS totalReg
+FROM
+    organizations AS og
+        LEFT JOIN
+    mentors AS mn ON og.organization_code = mn.organization_code
+WHERE
+    og.status = 'ACTIVE' ${wherefilter}
+GROUP BY og.district;`, { type: QueryTypes.SELECT });
+                teamCount = await db.query(`SELECT 
+                og.district, COUNT(t.team_id) AS totalTeams
+            FROM
+                organizations AS og
+                    LEFT JOIN
+                mentors AS mn ON og.organization_code = mn.organization_code
+                    INNER JOIN
+                teams AS t ON mn.mentor_id = t.mentor_id
+                WHERE og.status='ACTIVE' ${wherefilter}
+            GROUP BY og.district;`, { type: QueryTypes.SELECT });
+                studentCountDetails = await db.query(`SELECT 
+                og.district,
+                COUNT(st.student_id) AS totalstudent,
+                SUM(CASE
+                    WHEN st.gender = 'MALE' THEN 1
+                    ELSE 0
+                END) AS male,
+                SUM(CASE
+                    WHEN st.gender = 'FEMALE' THEN 1
+                    ELSE 0
+                END) AS female
+            FROM
+                organizations AS og
+                    LEFT JOIN
+                mentors AS mn ON og.organization_code = mn.organization_code
+                    INNER JOIN
+                teams AS t ON mn.mentor_id = t.mentor_id
+                    INNER JOIN
+                students AS st ON st.team_id = t.team_id
+                WHERE og.status='ACTIVE' ${wherefilter}
+            GROUP BY og.district;`, { type: QueryTypes.SELECT });
+                courseINcompleted = await db.query(`select district,count(*) as courseIN from (SELECT 
+                    district,cou
+                FROM
+                    organizations AS og
+                        LEFT JOIN
+                    (SELECT 
+                        organization_code, cou
+                    FROM
+                        mentors AS mn
+                    LEFT JOIN (SELECT 
+                        user_id, COUNT(*) AS cou
+                    FROM
+                        mentor_topic_progress
+                    GROUP BY user_id having count(*)<${baseConfig.MENTOR_COURSE}) AS t ON mn.user_id = t.user_id ) AS c ON c.organization_code = og.organization_code WHERE og.status='ACTIVE' ${wherefilter}
+                group by organization_id having cou<${baseConfig.MENTOR_COURSE}) as final group by district;`, { type: QueryTypes.SELECT });
+                courseCompleted = await db.query(`select district,count(*) as courseCMP from (SELECT 
+                    district,cou
+                FROM
+                    organizations AS og
+                        LEFT JOIN
+                    (SELECT 
+                        organization_code, cou
+                    FROM
+                        mentors AS mn
+                    LEFT JOIN (SELECT 
+                        user_id, COUNT(*) AS cou
+                    FROM
+                        mentor_topic_progress
+                    GROUP BY user_id having count(*)>=${baseConfig.MENTOR_COURSE}) AS t ON mn.user_id = t.user_id ) AS c ON c.organization_code = og.organization_code WHERE og.status='ACTIVE' ${wherefilter}
+                group by organization_id having cou>=${baseConfig.MENTOR_COURSE}) as final group by district`, { type: QueryTypes.SELECT });
+            } else {
+                summary = await db.query(`SELECT 
+                    og.state, COUNT(mn.mentor_id) AS totalReg
+                FROM
+                    organizations AS og
+                        LEFT JOIN
+                    mentors AS mn ON og.organization_code = mn.organization_code
+                    WHERE og.status='ACTIVE'
+                GROUP BY og.state;`, { type: QueryTypes.SELECT });
+                teamCount = await db.query(`SELECT 
+                og.state, COUNT(t.team_id) AS totalTeams
+            FROM
+                organizations AS og
+                    LEFT JOIN
+                mentors AS mn ON og.organization_code = mn.organization_code
+                    INNER JOIN
+                teams AS t ON mn.mentor_id = t.mentor_id
+                WHERE og.status='ACTIVE'
+            GROUP BY og.state;`, { type: QueryTypes.SELECT });
+                studentCountDetails = await db.query(`SELECT 
+                og.state,
+                COUNT(st.student_id) AS totalstudent,
+                SUM(CASE
+                    WHEN st.gender = 'MALE' THEN 1
+                    ELSE 0
+                END) AS male,
+                SUM(CASE
+                    WHEN st.gender = 'FEMALE' THEN 1
+                    ELSE 0
+                END) AS female
+            FROM
+                organizations AS og
+                    LEFT JOIN
+                mentors AS mn ON og.organization_code = mn.organization_code
+                    INNER JOIN
+                teams AS t ON mn.mentor_id = t.mentor_id
+                    INNER JOIN
+                students AS st ON st.team_id = t.team_id
+                WHERE og.status='ACTIVE'
+            GROUP BY og.state;`, { type: QueryTypes.SELECT });
+                courseINcompleted = await db.query(`select state,count(*) as courseIN from (SELECT 
+                    state,cou
+                FROM
+                    organizations AS og
+                        LEFT JOIN
+                    (SELECT 
+                        organization_code, cou
+                    FROM
+                        mentors AS mn
+                    LEFT JOIN (SELECT 
+                        user_id, COUNT(*) AS cou
+                    FROM
+                        mentor_topic_progress
+                    GROUP BY user_id having count(*)<${baseConfig.MENTOR_COURSE}) AS t ON mn.user_id = t.user_id ) AS c ON c.organization_code = og.organization_code WHERE og.status='ACTIVE'
+                group by organization_id having cou<${baseConfig.MENTOR_COURSE}) as final group by state;`, { type: QueryTypes.SELECT });
+                courseCompleted = await db.query(`select state,count(*) as courseCMP from (SELECT 
+                    state,cou
+                FROM
+                    organizations AS og
+                        LEFT JOIN
+                    (SELECT 
+                        organization_code, cou
+                    FROM
+                        mentors AS mn
+                    LEFT JOIN (SELECT 
+                        user_id, COUNT(*) AS cou
+                    FROM
+                        mentor_topic_progress
+                    GROUP BY user_id having count(*)>=${baseConfig.MENTOR_COURSE}) AS t ON mn.user_id = t.user_id ) AS c ON c.organization_code = og.organization_code WHERE og.status='ACTIVE'
+                group by organization_id having cou>=${baseConfig.MENTOR_COURSE}) as final group by state`, { type: QueryTypes.SELECT });
             }
-            const summary = await db.query(`SELECT 
-            og.state, COUNT(mn.mentor_id) AS totalReg
-        FROM
-            organizations AS og
-                LEFT JOIN
-            mentors AS mn ON og.organization_code = mn.organization_code
-            WHERE og.status='ACTIVE' ${wherefilter}
-        GROUP BY og.state;`, { type: QueryTypes.SELECT });
-            const teamCount = await db.query(`SELECT 
-        og.state, COUNT(t.team_id) AS totalTeams
-    FROM
-        organizations AS og
-            LEFT JOIN
-        mentors AS mn ON og.organization_code = mn.organization_code
-            INNER JOIN
-        teams AS t ON mn.mentor_id = t.mentor_id
-        WHERE og.status='ACTIVE' ${wherefilter}
-    GROUP BY og.state;`, { type: QueryTypes.SELECT });
-            const studentCountDetails = await db.query(`SELECT 
-        og.state,
-        COUNT(st.student_id) AS totalstudent,
-        SUM(CASE
-            WHEN st.gender = 'MALE' THEN 1
-            ELSE 0
-        END) AS male,
-        SUM(CASE
-            WHEN st.gender = 'FEMALE' THEN 1
-            ELSE 0
-        END) AS female
-    FROM
-        organizations AS og
-            LEFT JOIN
-        mentors AS mn ON og.organization_code = mn.organization_code
-            INNER JOIN
-        teams AS t ON mn.mentor_id = t.mentor_id
-            INNER JOIN
-        students AS st ON st.team_id = t.team_id
-        WHERE og.status='ACTIVE' ${wherefilter}
-    GROUP BY og.state;`, { type: QueryTypes.SELECT });
-            const courseINcompleted = await db.query(`select state,count(*) as courseIN from (SELECT 
-            state,cou
-        FROM
-            organizations AS og
-                LEFT JOIN
-            (SELECT 
-                organization_code, cou
-            FROM
-                mentors AS mn
-            LEFT JOIN (SELECT 
-                user_id, COUNT(*) AS cou
-            FROM
-                mentor_topic_progress
-            GROUP BY user_id having count(*)<${baseConfig.MENTOR_COURSE}) AS t ON mn.user_id = t.user_id ) AS c ON c.organization_code = og.organization_code WHERE og.status='ACTIVE' ${wherefilter}
-        group by organization_id having cou<${baseConfig.MENTOR_COURSE}) as final group by state;`, { type: QueryTypes.SELECT });
-            const courseCompleted = await db.query(`select state,count(*) as courseCMP from (SELECT 
-            state,cou
-        FROM
-            organizations AS og
-                LEFT JOIN
-            (SELECT 
-                organization_code, cou
-            FROM
-                mentors AS mn
-            LEFT JOIN (SELECT 
-                user_id, COUNT(*) AS cou
-            FROM
-                mentor_topic_progress
-            GROUP BY user_id having count(*)>=${baseConfig.MENTOR_COURSE}) AS t ON mn.user_id = t.user_id ) AS c ON c.organization_code = og.organization_code WHERE og.status='ACTIVE' ${wherefilter}
-        group by organization_id having cou>=${baseConfig.MENTOR_COURSE}) as final group by state`, { type: QueryTypes.SELECT });
             data['summary'] = summary;
             data['teamCount'] = teamCount;
             data['studentCountDetails'] = studentCountDetails;
@@ -475,95 +595,188 @@ export default class ReportController extends BaseController {
             }
             const state = newREQQuery.state;
             let wherefilter = '';
+            let summary
+            let studentCountDetails
+            let courseCompleted
+            let courseINprogesss
+            let submittedCount
+            let draftCount
             if (state) {
                 wherefilter = `&& og.state= '${state}'`;
+                summary = await db.query(`SELECT 
+                    og.district, COUNT(t.team_id) AS totalTeams
+                FROM
+                    organizations AS og
+                        LEFT JOIN
+                    mentors AS mn ON og.organization_code = mn.organization_code
+                        LEFT JOIN
+                    teams AS t ON mn.mentor_id = t.mentor_id
+                    WHERE og.status='ACTIVE' ${wherefilter}
+                GROUP BY og.district;`, { type: QueryTypes.SELECT });
+                studentCountDetails = await db.query(`SELECT 
+                    og.district,
+                    COUNT(st.student_id) AS totalstudent
+                FROM
+                    organizations AS og
+                        LEFT JOIN
+                    mentors AS mn ON og.organization_code = mn.organization_code
+                        INNER JOIN
+                    teams AS t ON mn.mentor_id = t.mentor_id
+                        INNER JOIN
+                    students AS st ON st.team_id = t.team_id where og.status = 'ACTIVE' ${wherefilter}
+                GROUP BY og.district;`, { type: QueryTypes.SELECT });
+                courseCompleted = await db.query(`SELECT 
+                    og.district,count(st.student_id) as studentCourseCMP
+                FROM
+                    students AS st
+                        JOIN
+                    teams AS te ON st.team_id = te.team_id
+                        JOIN
+                    mentors AS mn ON te.mentor_id = mn.mentor_id
+                        JOIN
+                    organizations AS og ON mn.organization_code = og.organization_code
+                        JOIN
+                    (SELECT 
+                        user_id, COUNT(*)
+                    FROM
+                        user_topic_progress
+                    GROUP BY user_id
+                    HAVING COUNT(*) >= ${baseConfig.STUDENT_COURSE}) AS temp ON st.user_id = temp.user_id WHERE og.status='ACTIVE' ${wherefilter} group by og.district`, { type: QueryTypes.SELECT });
+                courseINprogesss = await db.query(`SELECT 
+                    og.district,count(st.student_id) as studentCourseIN
+                FROM
+                    students AS st
+                        JOIN
+                    teams AS te ON st.team_id = te.team_id
+                        JOIN
+                    mentors AS mn ON te.mentor_id = mn.mentor_id
+                        JOIN
+                    organizations AS og ON mn.organization_code = og.organization_code
+                        JOIN
+                    (SELECT 
+                        user_id, COUNT(*)
+                    FROM
+                        user_topic_progress
+                    GROUP BY user_id
+                    HAVING COUNT(*) < ${baseConfig.STUDENT_COURSE}) AS temp ON st.user_id = temp.user_id WHERE og.status='ACTIVE' ${wherefilter} group by og.district`, { type: QueryTypes.SELECT });
+                submittedCount = await db.query(`SELECT 
+                    og.district,count(te.team_id) as submittedCount
+                FROM
+                    teams AS te
+                        JOIN
+                    mentors AS mn ON te.mentor_id = mn.mentor_id
+                        JOIN
+                    organizations AS og ON mn.organization_code = og.organization_code
+                        JOIN
+                    (SELECT 
+                        team_id, status
+                    FROM
+                        challenge_responses
+                    WHERE
+                        status = 'SUBMITTED') AS temp ON te.team_id = temp.team_id WHERE og.status='ACTIVE' ${wherefilter} group by og.district`, { type: QueryTypes.SELECT });
+                draftCount = await db.query(`SELECT 
+                    og.district,count(te.team_id) as draftCount
+                FROM
+                    teams AS te
+                        JOIN
+                    mentors AS mn ON te.mentor_id = mn.mentor_id
+                        JOIN
+                    organizations AS og ON mn.organization_code = og.organization_code
+                        JOIN
+                    (SELECT 
+                        team_id, status
+                    FROM
+                        challenge_responses
+                    WHERE
+                        status = 'DRAFT') AS temp ON te.team_id = temp.team_id WHERE og.status='ACTIVE' ${wherefilter} group by og.district`, { type: QueryTypes.SELECT });
+            } else {
+                summary = await db.query(`SELECT 
+                    og.state, COUNT(t.team_id) AS totalTeams
+                FROM
+                    organizations AS og
+                        LEFT JOIN
+                    mentors AS mn ON og.organization_code = mn.organization_code
+                        LEFT JOIN
+                    teams AS t ON mn.mentor_id = t.mentor_id
+                    WHERE og.status='ACTIVE'
+                GROUP BY og.state;`, { type: QueryTypes.SELECT });
+                studentCountDetails = await db.query(`SELECT 
+                    og.state,
+                    COUNT(st.student_id) AS totalstudent
+                FROM
+                    organizations AS og
+                        LEFT JOIN
+                    mentors AS mn ON og.organization_code = mn.organization_code
+                        INNER JOIN
+                    teams AS t ON mn.mentor_id = t.mentor_id
+                        INNER JOIN
+                    students AS st ON st.team_id = t.team_id where og.status = 'ACTIVE'
+                GROUP BY og.state;`, { type: QueryTypes.SELECT });
+                courseCompleted = await db.query(`SELECT 
+                    og.state,count(st.student_id) as studentCourseCMP
+                FROM
+                    students AS st
+                        JOIN
+                    teams AS te ON st.team_id = te.team_id
+                        JOIN
+                    mentors AS mn ON te.mentor_id = mn.mentor_id
+                        JOIN
+                    organizations AS og ON mn.organization_code = og.organization_code
+                        JOIN
+                    (SELECT 
+                        user_id, COUNT(*)
+                    FROM
+                        user_topic_progress
+                    GROUP BY user_id
+                    HAVING COUNT(*) >= ${baseConfig.STUDENT_COURSE}) AS temp ON st.user_id = temp.user_id WHERE og.status='ACTIVE' group by og.state`, { type: QueryTypes.SELECT });
+                courseINprogesss = await db.query(`SELECT 
+                    og.state,count(st.student_id) as studentCourseIN
+                FROM
+                    students AS st
+                        JOIN
+                    teams AS te ON st.team_id = te.team_id
+                        JOIN
+                    mentors AS mn ON te.mentor_id = mn.mentor_id
+                        JOIN
+                    organizations AS og ON mn.organization_code = og.organization_code
+                        JOIN
+                    (SELECT 
+                        user_id, COUNT(*)
+                    FROM
+                        user_topic_progress
+                    GROUP BY user_id
+                    HAVING COUNT(*) < ${baseConfig.STUDENT_COURSE}) AS temp ON st.user_id = temp.user_id WHERE og.status='ACTIVE' group by og.state`, { type: QueryTypes.SELECT });
+                submittedCount = await db.query(`SELECT 
+                    og.state,count(te.team_id) as submittedCount
+                FROM
+                    teams AS te
+                        JOIN
+                    mentors AS mn ON te.mentor_id = mn.mentor_id
+                        JOIN
+                    organizations AS og ON mn.organization_code = og.organization_code
+                        JOIN
+                    (SELECT 
+                        team_id, status
+                    FROM
+                        challenge_responses
+                    WHERE
+                        status = 'SUBMITTED') AS temp ON te.team_id = temp.team_id WHERE og.status='ACTIVE' group by og.state`, { type: QueryTypes.SELECT });
+                draftCount = await db.query(`SELECT 
+                    og.state,count(te.team_id) as draftCount
+                FROM
+                    teams AS te
+                        JOIN
+                    mentors AS mn ON te.mentor_id = mn.mentor_id
+                        JOIN
+                    organizations AS og ON mn.organization_code = og.organization_code
+                        JOIN
+                    (SELECT 
+                        team_id, status
+                    FROM
+                        challenge_responses
+                    WHERE
+                        status = 'DRAFT') AS temp ON te.team_id = temp.team_id WHERE og.status='ACTIVE' group by og.state`, { type: QueryTypes.SELECT });
             }
-            const summary = await db.query(`SELECT 
-            og.state, COUNT(t.team_id) AS totalTeams
-        FROM
-            organizations AS og
-                LEFT JOIN
-            mentors AS mn ON og.organization_code = mn.organization_code
-                LEFT JOIN
-            teams AS t ON mn.mentor_id = t.mentor_id
-            WHERE og.status='ACTIVE' ${wherefilter}
-        GROUP BY og.state;`, { type: QueryTypes.SELECT });
-            const studentCountDetails = await db.query(`SELECT 
-            og.state,
-            COUNT(st.student_id) AS totalstudent
-        FROM
-            organizations AS og
-                LEFT JOIN
-            mentors AS mn ON og.organization_code = mn.organization_code
-                INNER JOIN
-            teams AS t ON mn.mentor_id = t.mentor_id
-                INNER JOIN
-            students AS st ON st.team_id = t.team_id where og.status = 'ACTIVE' ${wherefilter}
-        GROUP BY og.state;`, { type: QueryTypes.SELECT });
-            const courseCompleted = await db.query(`SELECT 
-            og.state,count(st.student_id) as studentCourseCMP
-        FROM
-            students AS st
-                JOIN
-            teams AS te ON st.team_id = te.team_id
-                JOIN
-            mentors AS mn ON te.mentor_id = mn.mentor_id
-                JOIN
-            organizations AS og ON mn.organization_code = og.organization_code
-                JOIN
-            (SELECT 
-                user_id, COUNT(*)
-            FROM
-                user_topic_progress
-            GROUP BY user_id
-            HAVING COUNT(*) >= ${baseConfig.STUDENT_COURSE}) AS temp ON st.user_id = temp.user_id WHERE og.status='ACTIVE' ${wherefilter} group by og.state`, { type: QueryTypes.SELECT });
-            const courseINprogesss = await db.query(`SELECT 
-            og.state,count(st.student_id) as studentCourseIN
-        FROM
-            students AS st
-                JOIN
-            teams AS te ON st.team_id = te.team_id
-                JOIN
-            mentors AS mn ON te.mentor_id = mn.mentor_id
-                JOIN
-            organizations AS og ON mn.organization_code = og.organization_code
-                JOIN
-            (SELECT 
-                user_id, COUNT(*)
-            FROM
-                user_topic_progress
-            GROUP BY user_id
-            HAVING COUNT(*) < ${baseConfig.STUDENT_COURSE}) AS temp ON st.user_id = temp.user_id WHERE og.status='ACTIVE' ${wherefilter} group by og.state`, { type: QueryTypes.SELECT });
-            const submittedCount = await db.query(`SELECT 
-            og.state,count(te.team_id) as submittedCount
-        FROM
-            teams AS te
-                JOIN
-            mentors AS mn ON te.mentor_id = mn.mentor_id
-                JOIN
-            organizations AS og ON mn.organization_code = og.organization_code
-                JOIN
-            (SELECT 
-                team_id, status
-            FROM
-                challenge_responses
-            WHERE
-                status = 'SUBMITTED') AS temp ON te.team_id = temp.team_id WHERE og.status='ACTIVE' ${wherefilter} group by og.state`, { type: QueryTypes.SELECT });
-            const draftCount = await db.query(`SELECT 
-            og.state,count(te.team_id) as draftCount
-        FROM
-            teams AS te
-                JOIN
-            mentors AS mn ON te.mentor_id = mn.mentor_id
-                JOIN
-            organizations AS og ON mn.organization_code = og.organization_code
-                JOIN
-            (SELECT 
-                team_id, status
-            FROM
-                challenge_responses
-            WHERE
-                status = 'DRAFT') AS temp ON te.team_id = temp.team_id WHERE og.status='ACTIVE' ${wherefilter} group by og.state`, { type: QueryTypes.SELECT });
             data['summary'] = summary;
             data['studentCountDetails'] = studentCountDetails;
             data['courseCompleted'] = courseCompleted;
@@ -936,32 +1149,57 @@ GROUP BY user_id`, { type: QueryTypes.SELECT });
             }
             const state = newREQQuery.state;
             let wherefilter = '';
+            let summary
             if (state) {
                 wherefilter = `WHERE org.state= '${state}'`;
+                summary = await db.query(`SELECT 
+                    org.district, COALESCE(ATL_Student_Count, 0) as ATL_Student_Count, COALESCE(NONATL_Student_Count, 0) as NONATL_Student_Count
+                FROM
+                    organizations AS org
+                       left JOIN
+                    (SELECT 
+                        o.district,
+                            COUNT(CASE
+                                WHEN o.category = 'ATL' THEN 1
+                            END) AS ATL_Student_Count,
+                            COUNT(CASE
+                                WHEN o.category = 'Non ATL' THEN 1
+                            END) AS NONATL_Student_Count
+                    FROM
+                        students AS s
+                    JOIN teams AS t ON s.team_id = t.team_id
+                    JOIN mentors AS m ON t.mentor_id = m.mentor_id
+                    JOIN organizations AS o ON m.organization_code = o.organization_code
+                    WHERE
+                        o.status = 'ACTIVE'
+                    GROUP BY o.district) AS t2 ON org.district = t2.district
+                    ${wherefilter}
+                GROUP BY org.district;`, { type: QueryTypes.SELECT });
+            } else {
+                summary = await db.query(`SELECT 
+                    org.state, COALESCE(ATL_Student_Count, 0) as ATL_Student_Count, COALESCE(NONATL_Student_Count, 0) as NONATL_Student_Count
+                FROM
+                    organizations AS org
+                       left JOIN
+                    (SELECT 
+                        o.state,
+                            COUNT(CASE
+                                WHEN o.category = 'ATL' THEN 1
+                            END) AS ATL_Student_Count,
+                            COUNT(CASE
+                                WHEN o.category = 'Non ATL' THEN 1
+                            END) AS NONATL_Student_Count
+                    FROM
+                        students AS s
+                    JOIN teams AS t ON s.team_id = t.team_id
+                    JOIN mentors AS m ON t.mentor_id = m.mentor_id
+                    JOIN organizations AS o ON m.organization_code = o.organization_code
+                    WHERE
+                        o.status = 'ACTIVE'
+                    GROUP BY o.state) AS t2 ON org.state = t2.state
+                GROUP BY org.state;`, { type: QueryTypes.SELECT });
             }
-            const summary = await db.query(`SELECT 
-            org.state, COALESCE(ATL_Student_Count, 0) as ATL_Student_Count, COALESCE(NONATL_Student_Count, 0) as NONATL_Student_Count
-        FROM
-            organizations AS org
-               left JOIN
-            (SELECT 
-                o.state,
-                    COUNT(CASE
-                        WHEN o.category = 'ATL' THEN 1
-                    END) AS ATL_Student_Count,
-                    COUNT(CASE
-                        WHEN o.category = 'Non ATL' THEN 1
-                    END) AS NONATL_Student_Count
-            FROM
-                students AS s
-            JOIN teams AS t ON s.team_id = t.team_id
-            JOIN mentors AS m ON t.mentor_id = m.mentor_id
-            JOIN organizations AS o ON m.organization_code = o.organization_code
-            WHERE
-                o.status = 'ACTIVE'
-            GROUP BY o.state) AS t2 ON org.state = t2.state
-            ${wherefilter}
-        GROUP BY org.state;`, { type: QueryTypes.SELECT });
+
             data = summary;
             if (!data) {
                 throw notFound(speeches.DATA_NOT_FOUND)
@@ -1105,60 +1343,112 @@ FROM
             }
             const state = newREQQuery.state;
             let wherefilter = '';
+            let summary
             if (state) {
                 wherefilter = `WHERE org.state= '${state}'`;
+                summary = await db.query(`SELECT 
+                    org.district,
+                    COALESCE(totalSubmited, 0) AS totalSubmited,
+                    COALESCE(SustainableDevelopmentandEnvironment, 0) AS SustainableDevelopmentandEnvironment,
+                    COALESCE(DigitalTransformation, 0) AS DigitalTransformation,
+                    COALESCE(HealthandWellbeing, 0) AS HealthandWellbeing,
+                    COALESCE(QualityEducation, 0) AS QualityEducation,
+                    COALESCE(EconomicEmpowerment, 0) AS EconomicEmpowerment,
+                    COALESCE(SmartandResilientCommunities, 0) AS SmartandResilientCommunities,
+                    COALESCE(AgricultureandRuralDevelopment, 0) AS AgricultureandRuralDevelopment,
+                    COALESCE(OTHERS, 0) AS OTHERS
+                FROM
+                    organizations AS org
+                        LEFT JOIN
+                    (SELECT 
+                        COUNT(*) AS totalSubmited,
+                            COUNT(CASE
+                                WHEN cal.theme = 'Sustainable Development and Environment' THEN 1
+                            END) AS SustainableDevelopmentandEnvironment,
+                            COUNT(CASE
+                                WHEN cal.theme = 'Digital Transformation' THEN 1
+                            END) AS DigitalTransformation,
+                            COUNT(CASE
+                                WHEN cal.theme = 'Health and Well being' THEN 1
+                            END) AS HealthandWellbeing,
+                            COUNT(CASE
+                                WHEN cal.theme = 'Quality Education' THEN 1
+                            END) AS QualityEducation,
+                            COUNT(CASE
+                                WHEN cal.theme = 'Economic Empowerment' THEN 1
+                            END) AS EconomicEmpowerment,
+                            COUNT(CASE
+                                WHEN cal.theme = 'Smart and Resilient Communities' THEN 1
+                            END) AS SmartandResilientCommunities,
+                            COUNT(CASE
+                                WHEN cal.theme = 'Agriculture and Rural Development' THEN 1
+                            END) AS AgricultureandRuralDevelopment,
+                            COUNT(CASE
+                                WHEN cal.theme = 'Others' THEN 1
+                            END) AS OTHERS,
+                            org.district
+                    FROM
+                        challenge_responses AS cal
+                    JOIN teams AS t ON cal.team_id = t.team_id
+                    JOIN mentors AS m ON t.mentor_id = m.mentor_id
+                    JOIN organizations AS org ON m.organization_code = org.organization_code
+                    WHERE
+                        cal.status = 'SUBMITTED'
+                    GROUP BY org.district) AS t2 ON org.district = t2.district
+                    ${wherefilter}
+                GROUP BY org.district`, { type: QueryTypes.SELECT });
+            } else {
+                summary = await db.query(`SELECT 
+                    org.state,
+                    COALESCE(totalSubmited, 0) AS totalSubmited,
+                    COALESCE(SustainableDevelopmentandEnvironment, 0) AS SustainableDevelopmentandEnvironment,
+                    COALESCE(DigitalTransformation, 0) AS DigitalTransformation,
+                    COALESCE(HealthandWellbeing, 0) AS HealthandWellbeing,
+                    COALESCE(QualityEducation, 0) AS QualityEducation,
+                    COALESCE(EconomicEmpowerment, 0) AS EconomicEmpowerment,
+                    COALESCE(SmartandResilientCommunities, 0) AS SmartandResilientCommunities,
+                    COALESCE(AgricultureandRuralDevelopment, 0) AS AgricultureandRuralDevelopment,
+                    COALESCE(OTHERS, 0) AS OTHERS
+                FROM
+                    organizations AS org
+                        LEFT JOIN
+                    (SELECT 
+                        COUNT(*) AS totalSubmited,
+                            COUNT(CASE
+                                WHEN cal.theme = 'Sustainable Development and Environment' THEN 1
+                            END) AS SustainableDevelopmentandEnvironment,
+                            COUNT(CASE
+                                WHEN cal.theme = 'Digital Transformation' THEN 1
+                            END) AS DigitalTransformation,
+                            COUNT(CASE
+                                WHEN cal.theme = 'Health and Well being' THEN 1
+                            END) AS HealthandWellbeing,
+                            COUNT(CASE
+                                WHEN cal.theme = 'Quality Education' THEN 1
+                            END) AS QualityEducation,
+                            COUNT(CASE
+                                WHEN cal.theme = 'Economic Empowerment' THEN 1
+                            END) AS EconomicEmpowerment,
+                            COUNT(CASE
+                                WHEN cal.theme = 'Smart and Resilient Communities' THEN 1
+                            END) AS SmartandResilientCommunities,
+                            COUNT(CASE
+                                WHEN cal.theme = 'Agriculture and Rural Development' THEN 1
+                            END) AS AgricultureandRuralDevelopment,
+                            COUNT(CASE
+                                WHEN cal.theme = 'Others' THEN 1
+                            END) AS OTHERS,
+                            org.state
+                    FROM
+                        challenge_responses AS cal
+                    JOIN teams AS t ON cal.team_id = t.team_id
+                    JOIN mentors AS m ON t.mentor_id = m.mentor_id
+                    JOIN organizations AS org ON m.organization_code = org.organization_code
+                    WHERE
+                        cal.status = 'SUBMITTED'
+                    GROUP BY org.state) AS t2 ON org.state = t2.state
+                GROUP BY org.state`, { type: QueryTypes.SELECT });
             }
-            const summary = await db.query(`SELECT 
-    org.state,
-    COALESCE(totalSubmited, 0) AS totalSubmited,
-    COALESCE(SustainableDevelopmentandEnvironment, 0) AS SustainableDevelopmentandEnvironment,
-    COALESCE(DigitalTransformation, 0) AS DigitalTransformation,
-    COALESCE(HealthandWellbeing, 0) AS HealthandWellbeing,
-    COALESCE(QualityEducation, 0) AS QualityEducation,
-    COALESCE(EconomicEmpowerment, 0) AS EconomicEmpowerment,
-    COALESCE(SmartandResilientCommunities, 0) AS SmartandResilientCommunities,
-    COALESCE(AgricultureandRuralDevelopment, 0) AS AgricultureandRuralDevelopment,
-    COALESCE(OTHERS, 0) AS OTHERS
-FROM
-    organizations AS org
-        LEFT JOIN
-    (SELECT 
-        COUNT(*) AS totalSubmited,
-            COUNT(CASE
-                WHEN cal.theme = 'Sustainable Development and Environment' THEN 1
-            END) AS SustainableDevelopmentandEnvironment,
-            COUNT(CASE
-                WHEN cal.theme = 'Digital Transformation' THEN 1
-            END) AS DigitalTransformation,
-            COUNT(CASE
-                WHEN cal.theme = 'Health and Well being' THEN 1
-            END) AS HealthandWellbeing,
-            COUNT(CASE
-                WHEN cal.theme = 'Quality Education' THEN 1
-            END) AS QualityEducation,
-            COUNT(CASE
-                WHEN cal.theme = 'Economic Empowerment' THEN 1
-            END) AS EconomicEmpowerment,
-            COUNT(CASE
-                WHEN cal.theme = 'Smart and Resilient Communities' THEN 1
-            END) AS SmartandResilientCommunities,
-            COUNT(CASE
-                WHEN cal.theme = 'Agriculture and Rural Development' THEN 1
-            END) AS AgricultureandRuralDevelopment,
-            COUNT(CASE
-                WHEN cal.theme = 'Others' THEN 1
-            END) AS OTHERS,
-            org.state
-    FROM
-        challenge_responses AS cal
-    JOIN teams AS t ON cal.team_id = t.team_id
-    JOIN mentors AS m ON t.mentor_id = m.mentor_id
-    JOIN organizations AS org ON m.organization_code = org.organization_code
-    WHERE
-        cal.status = 'SUBMITTED'
-    GROUP BY org.state) AS t2 ON org.state = t2.state
-    ${wherefilter}
-GROUP BY org.state`, { type: QueryTypes.SELECT });
             data = summary;
             if (!data) {
                 throw notFound(speeches.DATA_NOT_FOUND)
