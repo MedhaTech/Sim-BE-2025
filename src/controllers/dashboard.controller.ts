@@ -15,6 +15,7 @@ import { challenge_response } from '../models/challenge_response.model';
 import StudentService from '../services/students.service';
 import { baseConfig } from "../configs/base.config";
 import { dashboard_statemap_stat } from '../models/dashboard_statemap_stat.model';
+import DashboardTNService from '../services/dashboardtnwise.service';
 
 
 export default class DashboardController extends BaseController {
@@ -34,6 +35,9 @@ export default class DashboardController extends BaseController {
         /// state map stats
         this.router.get(`${this.path}/stateMapStats`, this.getStateMapStats.bind(this))
         this.router.get(`${this.path}/refreshStateMapStats`, this.refreshStateMapStats.bind(this))
+        /// th map stats
+        this.router.get(`${this.path}/tnMapStats`, this.gettnMapStats.bind(this))
+        this.router.get(`${this.path}/refreshtnMapStats`, this.refreshtnMapStats.bind(this))
         //student Stats...
         this.router.get(`${this.path}/stuCourseStats`, this.getStudentCourse.bind(this));
         this.router.get(`${this.path}/stuVideoStats`, this.getStudentVideo.bind(this));
@@ -276,6 +280,40 @@ FROM
     dashboard_statemap_stats
 WHERE
     state = '${newREQQuery.state}'`, { type: QueryTypes.SELECT })
+            let final: any = {}
+            final['dataValues'] = await this.authService.findalldistrict(mapsdata);
+            res.status(200).send(dispatcher(res, final, 'done'))
+
+        } catch (error) {
+            next(error);
+        }
+    };
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    ///////// tn WISE MAPP STATS
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    private async refreshtnMapStats(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        try {
+            const service = new DashboardTNService()
+            const result = await service.resetTNMapStats()
+            res.status(200).json(dispatcher(res, result, "success"))
+        } catch (err) {
+            next(err);
+        }
+    }
+    private async gettnMapStats(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        try {
+            const mapsdata = await db.query(`SELECT 
+    district_name,
+    overall_schools,
+    reg_schools,
+    teams,
+    students,
+    ideas,
+    reg_mentors,
+    schools_with_teams
+FROM
+    dashboard_tn_stats;`, { type: QueryTypes.SELECT })
             let final: any = {}
             final['dataValues'] = await this.authService.findalldistrict(mapsdata);
             res.status(200).send(dispatcher(res, final, 'done'))
