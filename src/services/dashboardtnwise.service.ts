@@ -1,21 +1,28 @@
 import { challenge_response } from "../models/challenge_response.model";
-import { dashboard_statemap_stat } from "../models/dashboard_statemap_stat.model";
+import { dashboard_tn_stat } from "../models/dashboard_tn_stat.model";
 import { mentor } from "../models/mentor.model";
 import { organization } from "../models/organization.model";
 import { student } from "../models/student.model";
 import { team } from "../models/team.model";
 import BaseService from "./base.service";
+import { Op } from "sequelize";
 
-export default class DashboardStateService extends BaseService {
+export default class DashboardTNService extends BaseService {
     /**
-     * truncates the data in dashboard statemap stats tables and re entries
+     * truncates the data in dashboard TN map stats tables and re entries
      * @returns Object 
      */
-    async resetStateMapStats() {
+    async resetTNMapStats() {
         try {
             let uniqueDistricts: any;
             let bulkCreateArray: any = [];
-            uniqueDistricts = await this.crudService.findAll(organization, { group: ["district"] });
+            uniqueDistricts = await this.crudService.findAll(organization, {
+                where: {
+                    state: "Tamil Nadu",
+                    category: { [Op.not]: 'Non ATL' }
+                },
+                group: ["district"]
+            });
             if (!uniqueDistricts || uniqueDistricts.length <= 0) {
                 console.log("uniqueDistricts", uniqueDistricts)
                 return
@@ -36,7 +43,7 @@ export default class DashboardStateService extends BaseService {
                         teams: stats.teamIdInDistrict.length,
                         ideas: stats.challengeInDistrict.length,
                         district_name: district.district,
-                        state:district.dataValues.state,
+                        state: district.dataValues.state,
                         students: stats.studentsInDistric.length,
                         schools_with_teams: stats.schoolIdsInDistrictWithTeams.length,
                         reg_mentors: stats.registerMentor.length
@@ -45,23 +52,9 @@ export default class DashboardStateService extends BaseService {
                     console.log(err)
                 }
             }
-
-            const statsForAllDistrics: any = await this.getMapStatsForDistrict(null)
-
-            bulkCreateArray.push({
-                overall_schools: statsForAllDistrics.schoolIdsInDistrict.length,
-                reg_schools: statsForAllDistrics.registeredSchoolIdsInDistrict.length,
-                teams: statsForAllDistrics.teamIdInDistrict.length,
-                ideas: statsForAllDistrics.challengeInDistrict.length,
-                district_name: "all",
-                state:"all",
-                students: statsForAllDistrics.studentsInDistric.length,
-                schools_with_teams: statsForAllDistrics.schoolIdsInDistrictWithTeams.length,
-                reg_mentors: statsForAllDistrics.registerMentor.length
-            })
-
-            await this.crudService.delete(dashboard_statemap_stat, { where: {}, truncate: true });
-            const result = await this.crudService.bulkCreate(dashboard_statemap_stat, bulkCreateArray);
+            
+            await this.crudService.delete(dashboard_tn_stat, { where: {}, truncate: true });
+            const result = await this.crudService.bulkCreate(dashboard_tn_stat, bulkCreateArray);
             return result;
         } catch (err) {
             return err
