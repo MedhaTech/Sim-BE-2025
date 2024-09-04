@@ -67,7 +67,8 @@ export default class DashboardController extends BaseController {
         this.router.get(`${this.path}/schoolCount`, this.getSchoolCount.bind(this));
         this.router.get(`${this.path}/mentorCourseCount`, this.getmentorCourseCount.bind(this));
         this.router.get(`${this.path}/ATLNonATLRegCount`, this.getATLNonATLRegCount.bind(this));
-        this.router.get(`${this.path}/totalQuizSurveys`, this.getTotalQuizSurveys.bind(this));
+        this.router.get(`${this.path}/mentorSurveysCount`, this.getMentorSurveysCounts.bind(this));
+        this.router.get(`${this.path}/studentSurveysCount`, this.getStuSurveysCounts.bind(this));
         //State DashBoard stats
         this.router.get(`${this.path}/StateDashboard`, this.getStateDashboard.bind(this));
     }
@@ -1499,31 +1500,125 @@ FROM
             next(err)
         }
     }
-    protected async getTotalQuizSurveys(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+    protected async getMentorSurveysCounts(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if (res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR') {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
         }
         try {
             let result: any = {};
-            result = await db.query(`SELECT 
+            let newREQQuery: any = {}
+            if (req.query.Data) {
+                let newQuery: any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery = JSON.parse(newQuery);
+            } else if (Object.keys(req.query).length !== 0) {
+                return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
+            }
+            const { state } = newREQQuery
+            if (state) {
+                result = await db.query(`SELECT 
     SUM(CASE
         WHEN qsr.quiz_survey_id = 1 THEN 1
         ELSE 0
     END) AS mentorpre,
     SUM(CASE
+        WHEN qsr.quiz_survey_id = 3 THEN 1
+        ELSE 0
+    END) AS mentorpost
+FROM
+    quiz_survey_responses AS qsr
+        JOIN
+    mentors AS m ON qsr.user_id = m.user_id
+        JOIN
+    organizations AS og ON m.organization_code = og.organization_code
+WHERE
+    og.status = 'ACTIVE'
+        && og.state = '${state}'`, { type: QueryTypes.SELECT })
+            } else {
+                result = await db.query(`SELECT 
+                    SUM(CASE
+                        WHEN qsr.quiz_survey_id = 1 THEN 1
+                        ELSE 0
+                    END) AS mentorpre,
+                    SUM(CASE
+                        WHEN qsr.quiz_survey_id = 3 THEN 1
+                        ELSE 0
+                    END) AS mentorpost
+                FROM
+                    quiz_survey_responses AS qsr
+                        JOIN
+                    mentors AS m ON qsr.user_id = m.user_id
+                        JOIN
+                    organizations AS og ON m.organization_code = og.organization_code
+                WHERE
+                    og.status = 'ACTIVE'`, { type: QueryTypes.SELECT })
+            }
+
+            res.status(200).send(dispatcher(res, result, 'done'))
+        }
+        catch (err) {
+            next(err)
+        }
+    }
+    protected async getStuSurveysCounts(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
+        }
+        try {
+            let result: any = {};
+            let newREQQuery: any = {}
+            if (req.query.Data) {
+                let newQuery: any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery = JSON.parse(newQuery);
+            } else if (Object.keys(req.query).length !== 0) {
+                return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
+            }
+            const { state } = newREQQuery
+            if (state) {
+                result = await db.query(`
+                    SELECT 
+    SUM(CASE
         WHEN qsr.quiz_survey_id = 2 THEN 1
         ELSE 0
     END) AS studentpre,
-    SUM(CASE
-        WHEN qsr.quiz_survey_id = 3 THEN 1
-        ELSE 0
-    END) AS mentorpost,
     SUM(CASE
         WHEN qsr.quiz_survey_id = 4 THEN 1
         ELSE 0
     END) AS studentpost
 FROM
-    quiz_survey_responses AS qsr`, { type: QueryTypes.SELECT })
+    quiz_survey_responses AS qsr
+        JOIN
+    students AS st ON qsr.user_id = st.user_id
+        JOIN
+    teams AS t ON st.team_id = t.team_id
+        JOIN
+    mentors AS m ON t.mentor_id = m.mentor_id
+        JOIN
+    organizations AS og ON m.organization_code = og.organization_code
+WHERE
+    og.status = 'ACTIVE' && og.state='${state}'`, { type: QueryTypes.SELECT })
+            } else {
+                result = await db.query(`SELECT 
+    SUM(CASE
+        WHEN qsr.quiz_survey_id = 2 THEN 1
+        ELSE 0
+    END) AS studentpre,
+    SUM(CASE
+        WHEN qsr.quiz_survey_id = 4 THEN 1
+        ELSE 0
+    END) AS studentpost
+FROM
+    quiz_survey_responses AS qsr
+        JOIN
+    students AS st ON qsr.user_id = st.user_id
+        JOIN
+    teams AS t ON st.team_id = t.team_id
+        JOIN
+    mentors AS m ON t.mentor_id = m.mentor_id
+        JOIN
+    organizations AS og ON m.organization_code = og.organization_code
+WHERE
+    og.status = 'ACTIVE'`, { type: QueryTypes.SELECT })
+            }
             res.status(200).send(dispatcher(res, result, 'done'))
         }
         catch (err) {
