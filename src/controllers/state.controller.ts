@@ -5,6 +5,8 @@ import BaseController from "./base.controller";
 import authService from "../services/auth.service";
 import { badRequest } from "boom";
 import { state_coordinators } from "../models/state_coordinators.model";
+import ValidationsHolder from "../validations/validationHolder";
+import { state_coordinatorSchema, state_coordinatorUpdateSchema } from "../validations/state_coordinator.validationa";
 
 export default class StateController extends BaseController {
 
@@ -15,6 +17,7 @@ export default class StateController extends BaseController {
         this.path = '/state_coordinators';
     }
     protected initializeValidations(): void {
+        this.validations = new ValidationsHolder(state_coordinatorSchema, state_coordinatorUpdateSchema);
     }
     protected initializeRoutes(): void {
         this.router.post(`${this.path}/login`, this.login.bind(this));
@@ -99,14 +102,7 @@ export default class StateController extends BaseController {
                 })
             }
             else {
-                data = await this.crudService.findAll(state_coordinators, {
-                    attributes: [
-                        "state_coordinators_id",
-                        "state_name",
-                        "whatapp_link",
-                        "ideaSubmission"
-                    ]
-                })
+                data = await this.crudService.findAll(state_coordinators)
             }
             return res.status(200).send(dispatcher(res, data, 'success'));
         } catch (error) {
