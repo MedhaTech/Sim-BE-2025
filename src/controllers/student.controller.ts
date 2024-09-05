@@ -167,29 +167,37 @@ export default class StudentController extends BaseController {
                                 'team_name',
                                 'team_email'
                             ],
-                            include: {
-                                model: mentor,
-                                attributes: [
-                                    'mentor_id',
-                                    'full_name'
-                                ],
-                                include: {
-                                    where: stateFilter.whereClause,
-                                    required: false,
-                                    model: organization,
+                            include: [
+                                {
+                                    model: mentor,
                                     attributes: [
-                                        "organization_name",
-                                        'organization_code',
-                                        "unique_code",
-                                        "pin_code",
-                                        "category",
-                                        "city",
-                                        "district",
-                                        "state",
-                                        'address'
+                                        'mentor_id',
+                                        'full_name'
+                                    ],
+                                    include: {
+                                        where: stateFilter.whereClause,
+                                        required: false,
+                                        model: organization,
+                                        attributes: [
+                                            "organization_name",
+                                            'organization_code',
+                                            "unique_code",
+                                            "pin_code",
+                                            "category",
+                                            "city",
+                                            "district",
+                                            "state",
+                                            'address'
+                                        ]
+                                    }
+                                },
+                                {
+                                    model: user,
+                                    attributes: [
+                                        'username'
                                     ]
                                 }
-                            }
+                            ]
                         }, limit, offset
                     });
                     const result = this.getPagingData(responseOfFindAndCountAll, page, limit);

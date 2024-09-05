@@ -1510,6 +1510,7 @@ export default class ChallengeResponsesController extends BaseController {
             teams.team_id,
             team_name,
             ch.status AS ideaStatus,
+            ch.verified_status,
             ch.evaluation_status,
             ch.final_result
         FROM
