@@ -50,95 +50,71 @@ export default class ReportController extends BaseController {
             }
             const state = newREQQuery.state;
             let summary
+            let REG_school
+            let cat_gender
             if (state) {
+                const categorydata = await db.query(`SELECT DISTINCT
+                    category
+                        FROM
+                    organizations
+                    WHERE
+                state = '${state}'`, { type: QueryTypes.SELECT });
+                const querystring: any = await this.authService.combinecategory(categorydata);
                 summary = await db.query(`SELECT 
-    org.district,
-    org.ATL_Count,
-    org.ATL_Reg_Count,
-    (org.ATL_Count - org.ATL_Reg_Count) AS total_not_Reg_ATL,
-    org.NONATL_Reg_Count,
-    org.male_mentor_count,
-    org.female_mentor_count,
-    org.male_mentor_count + org.female_mentor_count AS total_registered_teachers
+    COUNT(*) AS Eligible_school, district
 FROM
-    (SELECT 
-        o.district,
-            COUNT(CASE
-                WHEN o.category = 'ATL' THEN 1
-            END) AS ATL_Count,
-            COUNT(CASE
-                WHEN
-                    m.mentor_id <> 'null'
-                        AND o.category = 'ATL'
-                THEN
-                    1
-            END) AS ATL_Reg_Count,
-            COUNT(CASE
-                WHEN
-                    m.mentor_id <> 'null'
-                        AND o.category = 'Non ATL'
-                THEN
-                    1
-            END) AS NONATL_Reg_Count,
-            SUM(CASE
-                WHEN m.gender = 'Male' THEN 1
-                ELSE 0
-            END) AS male_mentor_count,
-            SUM(CASE
-                WHEN m.gender = 'Female' THEN 1
-                ELSE 0
-            END) AS female_mentor_count
-    FROM
-        organizations o
-    LEFT JOIN mentors m ON o.organization_code = m.organization_code
-    WHERE
-        o.status = 'ACTIVE'
-            && o.state = '${state}'
-    GROUP BY o.district) AS org
-    UNION ALL SELECT 
-            'Total',
-            SUM(ATL_Count),
-            SUM(ATL_Reg_Count),
-            SUM(ATL_Count - ATL_Reg_Count),
-            SUM(NONATL_Reg_Count),
-            SUM(male_mentor_count),
-            SUM(female_mentor_count),
-            SUM(male_mentor_count + female_mentor_count)
-        FROM
-            (SELECT 
-                o.state,
-                    COUNT(CASE
-                        WHEN o.category = 'ATL' THEN 1
-                    END) AS ATL_Count,
-                    COUNT(CASE
-                        WHEN
-                            m.mentor_id <> 'null'
-                                AND o.category = 'ATL'
-                        THEN
-                            1
-                    END) AS ATL_Reg_Count,
-                    COUNT(CASE
-                        WHEN
-                            m.mentor_id <> 'null'
-                                AND o.category = 'Non ATL'
-                        THEN
-                            1
-                    END) AS NONATL_Reg_Count,
-                    SUM(CASE
-                        WHEN m.gender = 'Male' THEN 1
-                        ELSE 0
-                    END) AS male_mentor_count,
-                    SUM(CASE
-                        WHEN m.gender = 'Female' THEN 1
-                        ELSE 0
-                    END) AS female_mentor_count
-            FROM
-                organizations o
-            LEFT JOIN mentors m ON o.organization_code = m.organization_code
-            WHERE
-                o.status = 'ACTIVE' && o.state = '${state}'
-            GROUP BY o.state) AS org;`, { type: QueryTypes.SELECT });
-
+    organizations
+WHERE
+    status = 'ACTIVE'
+        && state = '${state}'
+GROUP BY district;`, { type: QueryTypes.SELECT });
+                REG_school = await db.query(`SELECT 
+    COUNT(DISTINCT m.organization_code) AS reg_school,
+    o.district
+FROM
+    mentors AS m
+        JOIN
+    organizations AS o ON m.organization_code = o.organization_code
+WHERE
+    o.status = 'ACTIVE'
+        && o.state = '${state}';`, { type: QueryTypes.SELECT });
+                cat_gender = await db.query(`
+                    SELECT 
+                    ${querystring.combilequery}
+    COUNT(CASE
+        WHEN
+            m.gender = 'Female'
+                AND m.mentor_id <> 'null'
+        THEN
+            1
+    END) AS 'Female',
+    COUNT(CASE
+        WHEN
+            m.gender = 'Male'
+                AND m.mentor_id <> 'null'
+        THEN
+            1
+    END) AS 'Male',
+    COUNT(CASE
+        WHEN
+            m.gender NOT IN ('Male' , 'Female')
+                AND m.mentor_id <> 'null'
+        THEN
+            1
+    END) AS 'others',
+    o.district
+FROM
+    mentors AS m
+        RIGHT JOIN
+    organizations AS o ON m.organization_code = o.organization_code
+WHERE
+    o.status = 'ACTIVE'
+        && o.state = '${state}'
+GROUP BY o.district
+                    `, { type: QueryTypes.SELECT });
+                const result = await this.authService.totalofREGsummary(summary, REG_school, cat_gender, querystring.categoryList)
+                console.log(result, "result")
+                data = result
             } else {
                 summary = await db.query(`SELECT 
             org.state,
@@ -148,7 +124,8 @@ FROM
             org.NONATL_Reg_Count,
             org.male_mentor_count,
             org.female_mentor_count,
-            org.male_mentor_count + org.female_mentor_count AS total_registered_teachers
+            org.other_mentor_count,
+            org.male_mentor_count + org.female_mentor_count + org.other_mentor_count AS total_registered_teachers
         FROM
             (SELECT 
                 o.state,
@@ -176,7 +153,11 @@ FROM
                     SUM(CASE
                         WHEN m.gender = 'Female' THEN 1
                         ELSE 0
-                    END) AS female_mentor_count
+                    END) AS female_mentor_count,
+                    SUM(CASE
+                        WHEN m.gender NOT IN ('Female','Male') THEN 1
+                        ELSE 0
+                    END) AS other_mentor_count
             FROM
                 organizations o
             LEFT JOIN mentors m ON o.organization_code = m.organization_code
@@ -191,7 +172,8 @@ FROM
             SUM(NONATL_Reg_Count),
             SUM(male_mentor_count),
             SUM(female_mentor_count),
-            SUM(male_mentor_count + female_mentor_count)
+            SUM(other_mentor_count),
+            SUM(male_mentor_count + female_mentor_count + other_mentor_count)
         FROM
             (SELECT 
                 o.state,
@@ -219,15 +201,20 @@ FROM
                     SUM(CASE
                         WHEN m.gender = 'Female' THEN 1
                         ELSE 0
-                    END) AS female_mentor_count
+                    END) AS female_mentor_count,
+                    SUM(CASE
+                        WHEN m.gender NOT IN ('Female','Male') THEN 1
+                        ELSE 0
+                    END) AS other_mentor_count
             FROM
                 organizations o
             LEFT JOIN mentors m ON o.organization_code = m.organization_code
             WHERE
                 o.status = 'ACTIVE'
             GROUP BY o.state) AS org;`, { type: QueryTypes.SELECT });
+            data = summary
             }
-            data = summary;
+            
             if (!data) {
                 throw notFound(speeches.DATA_NOT_FOUND)
             }
