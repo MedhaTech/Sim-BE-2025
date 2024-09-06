@@ -1210,7 +1210,7 @@ export default class authService {
             summary.forEach((entry: any) => {
                 combinedData[entry.district] = {
                     Eligible_school: entry.Eligible_school,
-                    REG_school: 0, // Default value
+                    reg_school: 0, // Default value
                 };
                 dataobj.Eligible_school += entry.Eligible_school
             });
@@ -1218,7 +1218,7 @@ export default class authService {
             // Update with REG_school data
             REG_school.forEach((entry: any) => {
                 if (combinedData[entry.district]) {
-                    combinedData[entry.district].REG_school = entry.reg_school;
+                    combinedData[entry.district].reg_school = entry.reg_school;
                     dataobj.reg_school += entry.reg_school
                 }
             });
@@ -1233,6 +1233,57 @@ export default class authService {
                     parts.forEach((cat: any) => {
                         dataobj[cat] += entry[cat]
                     })
+                    dataobj.Female += entry.Female
+                    dataobj.Male += entry.Male
+                    dataobj.others += entry.others
+                }
+            });
+
+            return { ...combinedData, 'Total': dataobj }
+        } catch (err) {
+            return err
+        }
+    }
+    async totalofREGsummarystate(summary: any, REG_school: any, cat_gender: any) {
+        try {
+            const combinedData: any = {};
+            const dataobj: any = {
+                ATL_Count: 0,
+                reg_school: 0,
+                ATL_Reg_Count:0,
+                NONATL_Reg_Count:0,
+                Female: 0,
+                Male: 0,
+                others: 0,
+                state: "Total"
+            };
+           
+            // Initialize combinedData with summary data
+            summary.forEach((entry: any) => {
+                combinedData[entry.state] = {
+                    ATL_Count: entry.ATL_Count,
+                    reg_school: 0, // Default value
+                };
+                dataobj.ATL_Count += entry.ATL_Count
+            });
+
+            // Update with REG_school data
+            REG_school.forEach((entry: any) => {
+                if (combinedData[entry.state]) {
+                    combinedData[entry.state].reg_school = entry.reg_school;
+                    dataobj.reg_school += entry.reg_school
+                }
+            });
+
+            // Update with cat_gender data
+            cat_gender.forEach((entry: any) => {
+                if (combinedData[entry.state]) {
+                    combinedData[entry.state] = {
+                        ...combinedData[entry.state],
+                        ...entry
+                    };
+                    dataobj.ATL_Reg_Count += entry.ATL_Reg_Count
+                    dataobj.NONATL_Reg_Count += entry.NONATL_Reg_Count
                     dataobj.Female += entry.Female
                     dataobj.Male += entry.Male
                     dataobj.others += entry.others
