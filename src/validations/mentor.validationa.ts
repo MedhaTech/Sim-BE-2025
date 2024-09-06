@@ -39,7 +39,7 @@ export const mentorChangePasswordSchema = Joi.object().keys({
 
 export const mentorUpdateSchema = Joi.object().keys({
     status: Joi.string().valid(...Object.values(constents.common_status_flags.list)),
-    username: Joi.string().trim().min(1).required().email().messages({
+    username: Joi.string().trim().min(1).email().messages({
         'string.empty': speeches.USER_USERNAME_REQUIRED
     }),
     mobile: Joi.string().trim().regex(constents.ONLY_DIGIT_PATTERN),
