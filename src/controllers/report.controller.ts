@@ -113,7 +113,6 @@ WHERE
 GROUP BY o.district
                     `, { type: QueryTypes.SELECT });
                 const result = await this.authService.totalofREGsummary(summary, REG_school, cat_gender, querystring.categoryList)
-                console.log(result, "result")
                 data = result
             } else {
                 summary = await db.query(`SELECT 
