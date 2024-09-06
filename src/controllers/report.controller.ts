@@ -114,7 +114,11 @@ WHERE
 GROUP BY o.district
                     `, { type: QueryTypes.SELECT });
                 const result = await this.authService.totalofREGsummary(summary, REG_school, cat_gender, querystring.categoryList)
-                data = result
+                const transformedArray = Object.entries(result).map(([key, value]) => {
+                    const { ...rest }: any = value;
+                    return rest;
+                });
+                data = transformedArray
             } else {
                 summary = await db.query(`SELECT 
     COUNT(*) AS ATL_Count, state
@@ -176,8 +180,13 @@ FROM
 WHERE
     o.status = 'ACTIVE'
 GROUP BY o.state`, { type: QueryTypes.SELECT });
-const result = await this.authService.totalofREGsummarystate(summary, REG_school, cat_gender)
-                data = result
+                const result = await this.authService.totalofREGsummarystate(summary, REG_school, cat_gender)
+
+                const transformedArray = Object.entries(result).map(([key, value]) => {
+                    const { ...rest }: any = value;
+                    return rest;
+                });
+                data = transformedArray
             }
 
             if (!data) {
