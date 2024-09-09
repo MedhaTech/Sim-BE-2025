@@ -33,6 +33,8 @@ export default class ReportController extends BaseController {
         this.router.get(`${this.path}/ideadeatilreport`, this.getideaReport.bind(this));
         this.router.get(`${this.path}/ideaReportTable`, this.getideaReportTable.bind(this));
         this.router.get(`${this.path}/schoollistreport`, this.getSchoolList.bind(this));
+        this.router.get(`${this.path}/schoolcategorylistreport`, this.getschoolcategorylist.bind(this));
+
 
     }
     protected async mentorsummary(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
@@ -1461,6 +1463,46 @@ FROM
         } catch (error) {
             console.log(error)
             next(error);
+        }
+    }
+    protected async getschoolcategorylist(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'REPORT' && res.locals.role !== 'STATE') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
+        }
+        try {
+            let data: any = {}
+            let newREQQuery: any = {}
+            if (req.query.Data) {
+                let newQuery: any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery = JSON.parse(newQuery);
+            } else if (Object.keys(req.query).length !== 0) {
+                return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
+            }
+            const state = newREQQuery.state;
+            if (state) {
+                const categorydata = await db.query(`SELECT DISTINCT
+                    category
+                        FROM
+                    organizations
+                    WHERE
+                state = '${state}'`, { type: QueryTypes.SELECT });
+                const querystring: any = await this.authService.combineCategorylistState(categorydata);
+
+                data = await db.query(`SELECT 
+                    ${querystring.replace(/,$/, '')}
+                    FROM
+                organizations as o`, { type: QueryTypes.SELECT });
+            }
+
+            if (!data) {
+                throw notFound(speeches.DATA_NOT_FOUND)
+            }
+            if (data instanceof Error) {
+                throw data
+            }
+            res.status(200).send(dispatcher(res, data, "success"))
+        } catch (err) {
+            next(err)
         }
     }
 }
