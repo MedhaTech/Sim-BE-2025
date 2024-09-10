@@ -833,6 +833,7 @@ FROM
             const { state } = newREQQuery
             let mentorCount
             let mentorMale
+            let mentorFemale
             if (state) {
                 mentorCount = await db.query(`SELECT 
                     COUNT(mn.mentor_id) AS totalmentor
@@ -847,7 +848,14 @@ FROM
                     organizations AS og
                         LEFT JOIN
                     mentors AS mn ON og.organization_code = mn.organization_code
-                    WHERE og.status='ACTIVE' && og.state='${state}' && mn.gender = 'Male';`, { type: QueryTypes.SELECT })
+                    WHERE og.status='ACTIVE' && og.state='${state}' && mn.gender = 'Male';`, { type: QueryTypes.SELECT });
+                mentorFemale = await db.query(`SELECT 
+                        COUNT(mn.mentor_id) AS mentorFemale
+                    FROM
+                        organizations AS og
+                            LEFT JOIN
+                        mentors AS mn ON og.organization_code = mn.organization_code
+                        WHERE og.status='ACTIVE' && og.state='${state}' && mn.gender = 'Female';`, { type: QueryTypes.SELECT })
             }
             else {
                 mentorCount = await db.query(`SELECT 
@@ -863,11 +871,19 @@ FROM
                     organizations AS og
                         LEFT JOIN
                     mentors AS mn ON og.organization_code = mn.organization_code
-                    WHERE og.status='ACTIVE' && mn.gender = 'Male';`, { type: QueryTypes.SELECT })
+                    WHERE og.status='ACTIVE' && mn.gender = 'Male';`, { type: QueryTypes.SELECT });
+                mentorFemale = await db.query(`SELECT 
+                        COUNT(mn.mentor_id) AS mentorFemale
+                    FROM
+                        organizations AS og
+                            LEFT JOIN
+                        mentors AS mn ON og.organization_code = mn.organization_code
+                        WHERE og.status='ACTIVE' && mn.gender = 'Female';`, { type: QueryTypes.SELECT })
             }
 
             result['mentorCount'] = Object.values(mentorCount[0]).toString()
             result['mentorMale'] = Object.values(mentorMale[0]).toString()
+            result['mentorFemale'] = Object.values(mentorFemale[0]).toString()
             res.status(200).send(dispatcher(res, result, 'done'))
         }
         catch (err) {
@@ -891,14 +907,14 @@ FROM
             let student
             if (state) {
                 student = await db.query(`SELECT 
-                    SUM(CASE
+                     COALESCE(SUM(CASE
                         WHEN st.gender = 'MALE' THEN 1
                         ELSE 0
-                    END) AS male,
-                    SUM(CASE
-                        WHEN st.gender = 'FEMALE' THEN 1
-                        ELSE 0
-                    END) AS female
+                    END), 0) AS male,
+                    COALESCE(SUM(CASE
+                    WHEN st.gender = 'FEMALE' THEN 1
+                     ELSE 0
+                     END), 0) AS female
                 FROM
                     organizations AS og
                         LEFT JOIN
@@ -952,9 +968,9 @@ FROM
             }
             const { state } = newREQQuery
             if (state) {
-                result = await db.query(`SELECT count(*) as schoolCount FROM organizations WHERE status='ACTIVE' && state='${state}';`, { type: QueryTypes.SELECT })
+                result = await db.query(`SELECT count(*) as schoolCount FROM organizations WHERE status='ACTIVE' && category <> 'Non ATL' && state='${state}';`, { type: QueryTypes.SELECT })
             } else {
-                result = await db.query(`SELECT count(*) as schoolCount FROM organizations WHERE status='ACTIVE';`, { type: QueryTypes.SELECT })
+                result = await db.query(`SELECT count(*) as schoolCount FROM organizations WHERE status='ACTIVE' && category <> 'Non ATL';`, { type: QueryTypes.SELECT })
             }
             res.status(200).send(dispatcher(res, result, 'done'))
         }

@@ -63,13 +63,23 @@ export default class ReportController extends BaseController {
                 state = '${state}'`, { type: QueryTypes.SELECT });
                 const querystring: any = await this.authService.combinecategory(categorydata);
                 summary = await db.query(`SELECT 
-    COUNT(*) AS Eligible_school, district
+    o.district, COALESCE(eli.Eligible_school,0) as Eligible_school
 FROM
-    organizations
+    organizations AS o
+        left JOIN
+    (SELECT 
+        COUNT(*) AS Eligible_school, district
+    FROM
+        organizations
+    WHERE
+        status = 'ACTIVE'
+            AND category <> 'Non ATL'
+            && state = '${state}'
+    GROUP BY district) AS eli ON o.district = eli.district
 WHERE
-    status = 'ACTIVE' and category <> 'Non ATL'
-        && state = '${state}'
-GROUP BY district;`, { type: QueryTypes.SELECT });
+o.status = 'ACTIVE' &&
+    o.state = '${state}'
+GROUP BY district`, { type: QueryTypes.SELECT });
                 REG_school = await db.query(`SELECT 
     COUNT(DISTINCT m.organization_code) AS reg_school,
     o.district
@@ -123,11 +133,19 @@ GROUP BY o.district
                 data = transformedArray
             } else {
                 summary = await db.query(`SELECT 
-    COUNT(*) AS ATL_Count, state
+    o.state, COALESCE(eli.ATL_Count, 0) as ATL_Count
 FROM
-    organizations
-WHERE
-    status = 'ACTIVE' and category <> 'Non ATL'
+    organizations AS o
+        LEFT JOIN
+    (SELECT 
+        COUNT(*) AS ATL_Count, state
+    FROM
+        organizations
+    WHERE
+        status = 'ACTIVE'
+            AND category <> 'Non ATL'
+    GROUP BY state) AS eli ON o.state = eli.state
+    where o.status ="ACTIVE"
 GROUP BY state;`, { type: QueryTypes.SELECT });
                 REG_school = await db.query(`SELECT 
     COUNT(DISTINCT m.organization_code) AS reg_school,
