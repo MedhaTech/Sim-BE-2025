@@ -1040,7 +1040,7 @@ FROM
                         LEFT JOIN
                     mentors AS mn ON og.organization_code = mn.organization_code
                 WHERE
-                    og.status = 'ACTIVE' && og.state='${state}' and og.category = 'ATL';`, { type: QueryTypes.SELECT });
+                    og.status = 'ACTIVE' && og.state='${state}' and og.category <> 'Non ATL';`, { type: QueryTypes.SELECT });
                 NONATLCount = await db.query(`SELECT 
                     COUNT(DISTINCT mn.organization_code) AS RegSchools
                 FROM
@@ -1057,7 +1057,7 @@ FROM
                         LEFT JOIN
                     mentors AS mn ON og.organization_code = mn.organization_code
                 WHERE
-                    og.status = 'ACTIVE' and og.category = 'ATL';`, { type: QueryTypes.SELECT });
+                    og.status = 'ACTIVE' and og.category <> 'Non ATL';`, { type: QueryTypes.SELECT });
                 NONATLCount = await db.query(`SELECT 
                     COUNT(DISTINCT mn.organization_code) AS RegSchools
                 FROM

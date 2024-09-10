@@ -1250,14 +1250,14 @@ export default class authService {
             const dataobj: any = {
                 ATL_Count: 0,
                 reg_school: 0,
-                ATL_Reg_Count:0,
-                NONATL_Reg_Count:0,
+                ATL_Reg_Count: 0,
+                NONATL_Reg_Count: 0,
                 Female: 0,
                 Male: 0,
                 others: 0,
                 state: "Total"
             };
-           
+
             // Initialize combinedData with summary data
             summary.forEach((entry: any) => {
                 combinedData[entry.state] = {
@@ -1291,6 +1291,23 @@ export default class authService {
             });
 
             return { ...combinedData, 'Total': dataobj }
+        } catch (err) {
+            return err
+        }
+    }
+    async combineCategorylistState(data: any) {
+        try {
+            let combilequery = ''
+            data.map((iteam: any) => {
+                combilequery += `COUNT(CASE
+        WHEN
+            o.category = '${iteam.category}'
+        THEN
+            1
+    END) AS '${iteam.category.replace(/[^a-zA-Z]/g, '')}_Count',`
+            })
+
+            return combilequery 
         } catch (err) {
             return err
         }
