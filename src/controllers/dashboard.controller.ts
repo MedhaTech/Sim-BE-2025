@@ -968,9 +968,9 @@ FROM
             }
             const { state } = newREQQuery
             if (state) {
-                result = await db.query(`SELECT count(*) as schoolCount FROM organizations WHERE status='ACTIVE' && state='${state}';`, { type: QueryTypes.SELECT })
+                result = await db.query(`SELECT count(*) as schoolCount FROM organizations WHERE status='ACTIVE' && category <> 'Non ATL' && state='${state}';`, { type: QueryTypes.SELECT })
             } else {
-                result = await db.query(`SELECT count(*) as schoolCount FROM organizations WHERE status='ACTIVE';`, { type: QueryTypes.SELECT })
+                result = await db.query(`SELECT count(*) as schoolCount FROM organizations WHERE status='ACTIVE' && category <> 'Non ATL';`, { type: QueryTypes.SELECT })
             }
             res.status(200).send(dispatcher(res, result, 'done'))
         }
