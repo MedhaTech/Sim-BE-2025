@@ -1306,8 +1306,26 @@ export default class authService {
             1
     END) AS '${iteam.category.replace(/[^a-zA-Z]/g, '')}_Count',`
             })
-
             return combilequery 
+        } catch (err) {
+            return err
+        }
+    }
+    async totalofCategorylistState(data: any) {
+        try {
+            const keys = Object.keys(data[0]);
+            const totalall: any = {
+            };
+            keys.forEach((entry: any) => {
+                totalall[entry] = 0
+            })
+            data.map((entry: any) => {
+                keys.forEach((cat: any) => {
+                    totalall[cat] += entry[cat]
+                })
+            })
+            totalall['district'] = 'Total'
+            return [...data, totalall]
         } catch (err) {
             return err
         }
