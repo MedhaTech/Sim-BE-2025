@@ -251,18 +251,18 @@ GROUP BY o.state`, { type: QueryTypes.SELECT });
                 addWhereClauseStatusPart = true;
             }
             let districtFilter: any = {}
-            if (district !== 'All Districts' && category !== 'All Categories' && state !== 'All States') {
-                districtFilter = { category, district, status, state }
-            } else if (district !== 'All Districts') {
-                districtFilter = { district, status }
-            } else if (category !== 'All Categories') {
-                districtFilter = { category, status }
-            } else if (state !== 'All States') {
-                districtFilter = { status, state }
+
+            districtFilter['status'] = "ACTIVE"
+            if (district !== 'All Districts' && district !== undefined) {
+                districtFilter['district'] = district
             }
-            else {
-                districtFilter = { status }
+            if (category !== 'All Categories' && category !== undefined) {
+                districtFilter['category'] = category
             }
+            if (state !== 'All States' && state !== undefined) {
+                districtFilter['state'] = state
+            }
+
             const mentorsResult = await mentor.findAll({
                 attributes: [
                     "full_name",
@@ -329,31 +329,19 @@ GROUP BY o.state`, { type: QueryTypes.SELECT });
             }
             const { district, category, state } = newREQQuery;
 
-            let districtFilter: any = ''
-            let categoryFilter: any = ''
-            let stateFilter: any = ''
-            if (district !== 'All Districts' && category !== 'All Categories' && state !== 'All States') {
+            let districtFilter: any = `'%%'`
+            let categoryFilter: any = `'%%'`
+            let stateFilter: any = `'%%'`
+            if (district !== 'All Districts' && district !== undefined) {
                 districtFilter = `'${district}'`
-                categoryFilter = `'${category}'`
-                stateFilter = `'${state}'`
-            } else if (district !== 'All Districts') {
-                districtFilter = `'${district}'`
-                categoryFilter = `'%%'`
-                stateFilter = `'%%'`
-            } else if (category !== 'All Categories') {
-                categoryFilter = `'${category}'`
-                districtFilter = `'%%'`
-                stateFilter = `'%%'`
-            } else if (state !== 'All States') {
-                stateFilter = `'${state}'`
-                districtFilter = `'%%'`
-                categoryFilter = `'%%'`
             }
-            else {
-                districtFilter = `'%%'`
-                categoryFilter = `'%%'`
-                stateFilter = `'%%'`
+            if (category !== 'All Categories' && category !== undefined) {
+                categoryFilter = `'${category}'`
             }
+            if (state !== 'All States' && state !== undefined) {
+                stateFilter = `'${state}'`
+            }
+
             const mentorsResult = await db.query(`SELECT 
             organization_id,
             organization_code,
@@ -789,30 +777,17 @@ GROUP BY og.district;`, { type: QueryTypes.SELECT });
                 return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
             }
             const { category, district, state } = newREQQuery;
-            let districtFilter: any = ''
-            let categoryFilter: any = ''
-            let stateFilter: any = ''
-            if (district !== 'All Districts' && category !== 'All Categories' && state !== 'All States') {
+            let districtFilter: any = `'%%'`
+            let categoryFilter: any = `'%%'`
+            let stateFilter: any = `'%%'`
+            if (district !== 'All Districts' && district !== undefined) {
                 districtFilter = `'${district}'`
-                categoryFilter = `'${category}'`
-                stateFilter = `'${state}'`
-            } else if (district !== 'All Districts') {
-                districtFilter = `'${district}'`
-                categoryFilter = `'%%'`
-                stateFilter = `'%%'`
-            } else if (category !== 'All Categories') {
-                categoryFilter = `'${category}'`
-                districtFilter = `'%%'`
-                stateFilter = `'%%'`
-            } else if (state !== 'All States') {
-                stateFilter = `'${state}'`
-                districtFilter = `'%%'`
-                categoryFilter = `'%%'`
             }
-            else {
-                districtFilter = `'%%'`
-                categoryFilter = `'%%'`
-                stateFilter = `'%%'`
+            if (category !== 'All Categories' && category !== undefined) {
+                categoryFilter = `'${category}'`
+            }
+            if (state !== 'All States' && state !== undefined) {
+                stateFilter = `'${state}'`
             }
             const summary = await db.query(`SELECT 
     mn.mentor_id,
@@ -984,30 +959,17 @@ GROUP BY mentor_id
                 return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
             }
             const { category, district, state } = newREQQuery;
-            let districtFilter: any = ''
-            let categoryFilter: any = ''
-            let stateFilter: any = ''
-            if (district !== 'All Districts' && category !== 'All Categories' && state !== 'All States') {
+            let districtFilter: any = `'%%'`
+            let categoryFilter: any = `'%%'`
+            let stateFilter: any = `'%%'`
+            if (district !== 'All Districts' && district !== undefined) {
                 districtFilter = `'${district}'`
-                categoryFilter = `'${category}'`
-                stateFilter = `'${state}'`
-            } else if (district !== 'All Districts') {
-                districtFilter = `'${district}'`
-                categoryFilter = `'%%'`
-                stateFilter = `'%%'`
-            } else if (category !== 'All Categories') {
-                categoryFilter = `'${category}'`
-                districtFilter = `'%%'`
-                stateFilter = `'%%'`
-            } else if (state !== 'All States') {
-                stateFilter = `'${state}'`
-                districtFilter = `'%%'`
-                categoryFilter = `'%%'`
             }
-            else {
-                districtFilter = `'%%'`
-                categoryFilter = `'%%'`
-                stateFilter = `'%%'`
+            if (category !== 'All Categories' && category !== undefined) {
+                categoryFilter = `'${category}'`
+            }
+            if (state !== 'All States' && state !== undefined) {
+                stateFilter = `'${state}'`
             }
             const summary = await db.query(`SELECT 
     student_id,
@@ -1488,7 +1450,7 @@ FROM
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
         }
         try {
-            let data: any = {}
+            let result: any = {}
             let newREQQuery: any = {}
             if (req.query.Data) {
                 let newQuery: any = await this.authService.decryptGlobal(req.query.Data);
@@ -1506,19 +1468,20 @@ FROM
                 state = '${state}'`, { type: QueryTypes.SELECT });
                 const querystring: any = await this.authService.combineCategorylistState(categorydata);
 
-                data = await db.query(`SELECT 
+                const data = await db.query(`SELECT district,
                     ${querystring.replace(/,$/, '')}
                     FROM
-                organizations as o`, { type: QueryTypes.SELECT });
+                organizations as o where state = '${state}' group by district`, { type: QueryTypes.SELECT });
+                result = await this.authService.totalofCategorylistState(data);
             }
 
-            if (!data) {
+            if (!result) {
                 throw notFound(speeches.DATA_NOT_FOUND)
             }
-            if (data instanceof Error) {
-                throw data
+            if (result instanceof Error) {
+                throw result
             }
-            res.status(200).send(dispatcher(res, data, "success"))
+            res.status(200).send(dispatcher(res, result, "success"))
         } catch (err) {
             next(err)
         }
