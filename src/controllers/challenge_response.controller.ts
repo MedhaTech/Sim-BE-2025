@@ -37,6 +37,7 @@ export default class ChallengeResponsesController extends BaseController {
         this.router.get(`${this.path}/finalEvaluation/`, this.finalEvaluation.bind(this));
         this.router.get(`${this.path}/ideastatusbyteamId`, this.getideastatusbyteamid.bind(this));
         this.router.get(`${this.path}/schoolpdfideastatus`, this.getSchoolPdfIdeaStatus.bind(this));
+        this.router.get(this.path + '/submittedDetailsforideapdf', this.getResponseideapdf.bind(this));
         super.initializeRoutes();
     }
 
@@ -852,6 +853,97 @@ export default class ChallengeResponsesController extends BaseController {
             next(error);
         }
     }
+    protected async getResponseideapdf(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'TEAM' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STATE') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
+        }
+        try {
+            let newREQQuery: any = {}
+            if (req.query.Data) {
+                let newQuery: any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery = JSON.parse(newQuery);
+            } else if (Object.keys(req.query).length !== 0) {
+                return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
+            }
+            let { team_id } = newREQQuery;
+            if (!team_id) {
+                throw unauthorized(speeches.USER_TEAMID_REQUIRED)
+            }
+            let data: any;
+            const where: any = {};
+            where[`team_id`] = team_id;
+            data = await this.crudService.findOne(challenge_response, {
+                attributes: [
+                    "initiated_by",
+                    "submitted_at",
+                    "theme",
+                    "focus_area",
+                    "team_id",
+                    "status",
+                    "others",
+                    "title",
+                    "problem_statement",
+                    "causes",
+                    "effects",
+                    "community",
+                    "facing",
+                    "solution",
+                    "stakeholders",
+                    "problem_solving",
+                    "feedback",
+                    "prototype_image",
+                    "prototype_link",
+                    "workbook",
+                    "challenge_response_id",
+                    "verified_status",
+                    "verified_at",
+                    "mentor_rejected_reason",
+                    [
+                        db.literal(`(SELECT full_name FROM users As s WHERE s.user_id = \`challenge_response\`.\`initiated_by\` )`), 'initiated_name'
+                    ],
+                    [
+                        db.literal(`(SELECT team_name FROM teams As t WHERE t.team_id =  \`challenge_response\`.\`team_id\` )`), 'team_name'
+                    ],
+                    [
+                        db.literal(`(SELECT username FROM teams As t join users as u on t.user_id = u.user_id WHERE t.team_id =  \`challenge_response\`.\`team_id\` )`), 'team_username'
+                    ],
+                    [
+                        db.literal(`(SELECT JSON_ARRAYAGG(full_name) FROM  students  AS s LEFT OUTER JOIN  teams AS t ON s.team_id = t.team_id WHERE t.team_id = \`challenge_response\`.\`team_id\` )`), 'team_members'
+                    ],
+                    [
+                        db.literal(`(SELECT mentorTeamOrg.organization_name FROM challenge_responses AS challenge_responses LEFT OUTER JOIN teams AS team ON challenge_response.team_id = team.team_id LEFT OUTER JOIN mentors AS mentorTeam ON team.mentor_id = mentorTeam.mentor_id LEFT OUTER JOIN organizations AS mentorTeamOrg ON mentorTeam.organization_code = mentorTeamOrg.organization_code WHERE challenge_responses.team_id =  \`challenge_response\`.\`team_id\` GROUP BY challenge_response.team_id)`), 'organization_name'
+                    ],
+                    [
+                        db.literal(`(SELECT mentorTeamOrg.category FROM challenge_responses AS challenge_responses LEFT OUTER JOIN teams AS team ON challenge_response.team_id = team.team_id LEFT OUTER JOIN mentors AS mentorTeam ON team.mentor_id = mentorTeam.mentor_id LEFT OUTER JOIN organizations AS mentorTeamOrg ON mentorTeam.organization_code = mentorTeamOrg.organization_code WHERE challenge_responses.team_id =  \`challenge_response\`.\`team_id\` GROUP BY challenge_response.team_id)`), 'category'
+                    ],
+                    [
+                        db.literal(`(SELECT mentorTeamOrg.state FROM challenge_responses AS challenge_responses LEFT OUTER JOIN teams AS team ON challenge_response.team_id = team.team_id LEFT OUTER JOIN mentors AS mentorTeam ON team.mentor_id = mentorTeam.mentor_id LEFT OUTER JOIN organizations AS mentorTeamOrg ON mentorTeam.organization_code = mentorTeamOrg.organization_code WHERE challenge_responses.team_id =  \`challenge_response\`.\`team_id\` GROUP BY challenge_response.team_id)`), 'state'
+                    ],
+                    [
+                        db.literal(`(SELECT mentorTeamOrg.organization_code FROM challenge_responses AS challenge_responses LEFT OUTER JOIN teams AS team ON challenge_response.team_id = team.team_id LEFT OUTER JOIN mentors AS mentorTeam ON team.mentor_id = mentorTeam.mentor_id LEFT OUTER JOIN organizations AS mentorTeamOrg ON mentorTeam.organization_code = mentorTeamOrg.organization_code WHERE challenge_responses.team_id = \`challenge_response\`.\`team_id\` GROUP BY challenge_response.team_id)`), 'organization_code'
+                    ],
+                    [
+                        db.literal(`(SELECT full_name FROM challenge_responses AS challenge_responses LEFT OUTER JOIN teams AS team ON challenge_response.team_id = team.team_id LEFT OUTER JOIN mentors AS mentorTeam ON team.mentor_id = mentorTeam.mentor_id WHERE challenge_responses.team_id = \`challenge_response\`.\`team_id\` GROUP BY challenge_response.team_id)`), 'mentor_name'
+                    ]
+                ],
+                where: {
+                    [Op.and]: [
+                        where
+                    ]
+                },
+            });
+            if (!data || data instanceof Error) {
+                if (data != null) {
+                    throw notFound(data.message)
+                } else {
+                    throw notFound()
+                }
+            }
+            return res.status(200).send(dispatcher(res, data, 'success'));
+        } catch (error) {
+            next(error);
+        }
+    }
     protected async getRandomChallenge(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if (res.locals.role !== 'ADMIN' && res.locals.role !== 'EVALUATOR') {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
@@ -1418,6 +1510,7 @@ export default class ChallengeResponsesController extends BaseController {
             teams.team_id,
             team_name,
             ch.status AS ideaStatus,
+            ch.verified_status,
             ch.evaluation_status,
             ch.final_result
         FROM

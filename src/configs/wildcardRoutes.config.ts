@@ -22,5 +22,8 @@ export const wildcardRoutes = [
     "/api/v1/mentors/triggerWelcomeEmail",
     "/api/v1/teams/login",
     "/api/v1/dashboard/mapStats",
-    "/api/v1/dashboard/stateMapStats"
+    "/api/v1/dashboard/stateMapStats",
+    "/api/v1/dashboard/tnMapStats",
+    "/api/v1/state_coordinators/login",
+    "/api/v1/state_coordinators/resetPassword"
 ];

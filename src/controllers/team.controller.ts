@@ -136,7 +136,7 @@ export default class TeamController extends BaseController {
             //attributes separating for challenge submission;
             let attributesNeeded: any = [];
             const ideaStatus = newREQQuery.ideaStatus;
-            if (ideaStatus && ideaStatus == 'true') {
+            if (ideaStatus && ideaStatus === true) {
                 attributesNeeded = [
                     'team_name',
                     'team_id',
@@ -162,6 +162,13 @@ export default class TeamController extends BaseController {
                             FROM challenge_responses AS idea
                             WHERE idea.team_id = \`team\`.\`team_id\`
                         )`), 'ideaStatus'
+                    ],
+                    [
+                        db.literal(`(
+                            SELECT verified_status
+                            FROM challenge_responses AS idea
+                            WHERE idea.team_id = \`team\`.\`team_id\`
+                        )`), 'ideaAcceptance'
                     ],
                     [
                         db.literal(`(

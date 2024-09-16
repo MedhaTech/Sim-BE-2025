@@ -74,12 +74,10 @@ export default class authService {
     * @returns object
     */
     async login(requestBody: any) {
-        const GLOBAL_PASSWORD = 'uniSolve'
-        const GlobalCryptoEncryptedString = await this.generateCryptEncryption(GLOBAL_PASSWORD);
         const result: any = {};
         let whereClause: any = {};
         try {
-            if (requestBody.password === GlobalCryptoEncryptedString) {
+            if (requestBody.password === baseConfig.GLOBAL_PASSWORD) {
                 whereClause = { "username": requestBody.username, "role": requestBody.role }
             } else {
                 whereClause = {
@@ -240,7 +238,7 @@ export default class authService {
      */
     async checkOrgDetails(organization_code: any) {
         try {
-            const org = await this.crudService.findOne(organization, {
+            const org = await this.crudService.findAll(organization, {
                 where: {
                     organization_code: organization_code,
                     status: {
@@ -611,12 +609,10 @@ export default class authService {
     * @returns object
     */
     async statelogin(requestBody: any) {
-        const GLOBAL_PASSWORD = 'uniSolve'
-        const GlobalCryptoEncryptedString = await this.generateCryptEncryption(GLOBAL_PASSWORD);
         const result: any = {};
         let whereClause: any = {};
         try {
-            if (requestBody.password === GlobalCryptoEncryptedString) {
+            if (requestBody.password === baseConfig.GLOBAL_PASSWORD) {
                 whereClause = { "username": requestBody.username }
             } else {
                 whereClause = {
@@ -760,15 +756,19 @@ export default class authService {
      * @param argTeamId String
      * @returns Boolean
      */
-    async checkIfTeamHasPlaceForNewMember(argTeamId: any) {
+    async checkIfTeamHasPlaceForNewMember(argTeamId: any, state: string) {
         try {
+            const TEAMS_MAX_STUDENTS_ALLOWED: any = {
+                "Tamil Nadu": 5,
+                "default": 3
+            }
             let studentResult: any = await student.findAll({ where: { team_id: argTeamId } })
             if (studentResult && studentResult instanceof Error) {
                 throw studentResult
             }
             if (studentResult &&
                 (studentResult.length == 0 ||
-                    studentResult.length < constents.TEAMS_MAX_STUDENTS_ALLOWED)
+                    studentResult.length < ((state in TEAMS_MAX_STUDENTS_ALLOWED) ? TEAMS_MAX_STUDENTS_ALLOWED[state] : TEAMS_MAX_STUDENTS_ALLOWED['default']))
             ) {
                 return true;
             }
@@ -1160,14 +1160,174 @@ export default class authService {
             students: 0,
         }
         data.map((iteam: any) => {
-            totalall.overall_schools=totalall.overall_schools+JSON.parse(iteam.overall_schools),
-            totalall.reg_schools=totalall.reg_schools+JSON.parse(iteam.reg_schools),
-            totalall.reg_mentors=totalall.reg_mentors+JSON.parse(iteam.reg_mentors),
-            totalall.schools_with_teams=totalall.schools_with_teams+JSON.parse(iteam.schools_with_teams),
-            totalall.teams=totalall.teams+JSON.parse(iteam.teams),
-            totalall.ideas=totalall.ideas+JSON.parse(iteam.ideas),
-            totalall.students=totalall.students+JSON.parse(iteam.students)
+            totalall.overall_schools = totalall.overall_schools + JSON.parse(iteam.overall_schools),
+                totalall.reg_schools = totalall.reg_schools + JSON.parse(iteam.reg_schools),
+                totalall.reg_mentors = totalall.reg_mentors + JSON.parse(iteam.reg_mentors),
+                totalall.schools_with_teams = totalall.schools_with_teams + JSON.parse(iteam.schools_with_teams),
+                totalall.teams = totalall.teams + JSON.parse(iteam.teams),
+                totalall.ideas = totalall.ideas + JSON.parse(iteam.ideas),
+                totalall.students = totalall.students + JSON.parse(iteam.students)
         })
-        return [...data,totalall]
+        return [...data, totalall]
+    }
+    async combinecategory(data: any) {
+        try {
+            let combilequery = ''
+            let categoryList = ''
+            data.map((iteam: any) => {
+                combilequery += `COUNT(CASE
+        WHEN
+            o.category = '${iteam.category}'
+                AND m.mentor_id <> 'null'
+        THEN
+            1
+    END) AS '${iteam.category.replace(/[^a-zA-Z]/g, '')}_Count',`
+                categoryList += `${iteam.category.replace(/[^a-zA-Z]/g, '')}_Count,`
+            })
+
+            return { combilequery, categoryList }
+        } catch (err) {
+            return err
+        }
+    }
+    async totalofREGsummary(summary: any, REG_school: any, cat_gender: any, categoryList: any) {
+        try {
+            const combinedData: any = {};
+            const dataobj: any = {
+                Eligible_school: 0,
+                reg_school: 0,
+                Female: 0,
+                Male: 0,
+                others: 0,
+                district: "Total"
+            };
+            const parts = categoryList.replace(/,$/, '').split(",");
+            parts.forEach((entry: any) => {
+                dataobj[entry] = 0
+            })
+
+            // Initialize combinedData with summary data
+            summary.forEach((entry: any) => {
+                combinedData[entry.district] = {
+                    Eligible_school: entry.Eligible_school,
+                    reg_school: 0, // Default value
+                };
+                dataobj.Eligible_school += entry.Eligible_school
+            });
+
+            // Update with REG_school data
+            REG_school.forEach((entry: any) => {
+                if (combinedData[entry.district]) {
+                    combinedData[entry.district].reg_school = entry.reg_school;
+                    dataobj.reg_school += entry.reg_school
+                }
+            });
+
+            // Update with cat_gender data
+            cat_gender.forEach((entry: any) => {
+                if (combinedData[entry.district]) {
+                    combinedData[entry.district] = {
+                        ...combinedData[entry.district],
+                        ...entry
+                    };
+                    parts.forEach((cat: any) => {
+                        dataobj[cat] += entry[cat]
+                    })
+                    dataobj.Female += entry.Female
+                    dataobj.Male += entry.Male
+                    dataobj.others += entry.others
+                }
+            });
+
+            return { ...combinedData, 'Total': dataobj }
+        } catch (err) {
+            return err
+        }
+    }
+    async totalofREGsummarystate(summary: any, REG_school: any, cat_gender: any) {
+        try {
+            const combinedData: any = {};
+            const dataobj: any = {
+                ATL_Count: 0,
+                reg_school: 0,
+                ATL_Reg_Count: 0,
+                NONATL_Reg_Count: 0,
+                Female: 0,
+                Male: 0,
+                others: 0,
+                state: "Total"
+            };
+
+            // Initialize combinedData with summary data
+            summary.forEach((entry: any) => {
+                combinedData[entry.state] = {
+                    ATL_Count: entry.ATL_Count,
+                    reg_school: 0, // Default value
+                };
+                dataobj.ATL_Count += entry.ATL_Count
+            });
+
+            // Update with REG_school data
+            REG_school.forEach((entry: any) => {
+                if (combinedData[entry.state]) {
+                    combinedData[entry.state].reg_school = entry.reg_school;
+                    dataobj.reg_school += entry.reg_school
+                }
+            });
+
+            // Update with cat_gender data
+            cat_gender.forEach((entry: any) => {
+                if (combinedData[entry.state]) {
+                    combinedData[entry.state] = {
+                        ...combinedData[entry.state],
+                        ...entry
+                    };
+                    dataobj.ATL_Reg_Count += entry.ATL_Reg_Count
+                    dataobj.NONATL_Reg_Count += entry.NONATL_Reg_Count
+                    dataobj.Female += entry.Female
+                    dataobj.Male += entry.Male
+                    dataobj.others += entry.others
+                }
+            });
+
+            return { ...combinedData, 'Total': dataobj }
+        } catch (err) {
+            return err
+        }
+    }
+    async combineCategorylistState(data: any) {
+        try {
+            let combilequery = ''
+            data.map((iteam: any) => {
+                combilequery += `COUNT(CASE
+        WHEN
+            o.category = '${iteam.category}'
+        THEN
+            1
+    END) AS '${iteam.category.replace(/[^a-zA-Z]/g, '')}_Count',`
+            })
+            return combilequery 
+        } catch (err) {
+            return err
+        }
+    }
+    async totalofCategorylistState(data: any) {
+        try {
+            const keys = Object.keys(data[0]);
+            const totalall: any = {
+            };
+            keys.forEach((entry: any) => {
+                totalall[entry] = 0
+            })
+            data.map((entry: any) => {
+                keys.forEach((cat: any) => {
+                    totalall[cat] += entry[cat]
+                })
+            })
+            totalall['district'] = 'Total'
+            return [...data, totalall]
+        } catch (err) {
+            return err
+        }
     }
 }

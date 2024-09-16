@@ -239,6 +239,12 @@ export default class MentorController extends BaseController {
             where[`${this.model}_id`] = newParamId;
             const modelLoaded = await this.loadModel(model);
             const payload = this.autoFillTrackingColumns(req, res, modelLoaded)
+            if (req.body.username) {
+                var pass = req.body.username.trim();
+                var myArray = pass.split("@");
+                const cryptoEncryptedString = await this.authService.generateCryptEncryption(myArray[0]);
+                payload['password'] = cryptoEncryptedString
+            }
             const findMentorDetail = await this.crudService.findOne(modelLoaded, { where: where });
             if (!findMentorDetail || findMentorDetail instanceof Error) {
                 throw notFound();
@@ -717,7 +723,7 @@ export default class MentorController extends BaseController {
                 }
             })
             const mentor_user_id: any = await this.authService.decryptGlobal(req.params.mentor_user_id);
-            
+
             if (totalnumber.count > 4) {
                 await this.authService.addbadgesformentor(mentor_user_id, ['active_mentor'])
             }
@@ -776,7 +782,7 @@ export default class MentorController extends BaseController {
         }
     }
     protected async getteamCredentials(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR') {
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STATE') {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
         }
         try {
