@@ -11,7 +11,10 @@ export const latest_newsSchema = Joi.object().keys({
     }),
     url: Joi.string(),
     file_name: Joi.string(),
-    new_status: Joi.string().regex(constents.ALPHA_NUMERIC_PATTERN)
+    new_status: Joi.string().regex(constents.ALPHA_NUMERIC_PATTERN),
+    state: Joi.string().required().regex(constents.ALPHA_NUMERIC_PATTERN).messages({
+        'string.empty': speeches.STATE_REQ
+    }),
 });
 
 export const latest_newsUpdateSchema = Joi.object().keys({
@@ -27,5 +30,6 @@ export const latest_newsUpdateSchema = Joi.object().keys({
     }),
     url: Joi.string(),
     file_name: Joi.string(),
-    new_status: Joi.string().regex(constents.ALPHA_NUMERIC_PATTERN)
+    new_status: Joi.string().regex(constents.ALPHA_NUMERIC_PATTERN),
+    state: Joi.string().regex(constents.ALPHA_NUMERIC_PATTERN)
 });
