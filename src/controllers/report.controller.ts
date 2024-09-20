@@ -73,7 +73,6 @@ FROM
         organizations
     WHERE
         status = 'ACTIVE'
-            AND category <> 'Non ATL'
             && state = '${state}'
     GROUP BY district) AS eli ON o.district = eli.district
 WHERE
@@ -88,7 +87,7 @@ FROM
         JOIN
     organizations AS o ON m.organization_code = o.organization_code
 WHERE
-    o.status = 'ACTIVE' and category <> 'Non ATL'
+    o.status = 'ACTIVE'
         && o.state = '${state}'
         GROUP BY district;`, { type: QueryTypes.SELECT });
                 cat_gender = await db.query(`
@@ -133,17 +132,16 @@ GROUP BY o.district
                 data = transformedArray
             } else {
                 summary = await db.query(`SELECT 
-    o.state, COALESCE(eli.ATL_Count, 0) as ATL_Count
+    o.state, COALESCE(eli.Eligible_school, 0) as Eligible_school
 FROM
     organizations AS o
         LEFT JOIN
     (SELECT 
-        COUNT(*) AS ATL_Count, state
+        COUNT(*) AS Eligible_school, state
     FROM
         organizations
     WHERE
         status = 'ACTIVE'
-            AND category <> 'Non ATL'
     GROUP BY state) AS eli ON o.state = eli.state
     where o.status ="ACTIVE"
 GROUP BY state;`, { type: QueryTypes.SELECT });
@@ -155,7 +153,7 @@ FROM
         JOIN
     organizations AS o ON m.organization_code = o.organization_code
 WHERE
-    o.status = 'ACTIVE' and category <> 'Non ATL' group by state`, { type: QueryTypes.SELECT });
+    o.status = 'ACTIVE' group by state`, { type: QueryTypes.SELECT });
                 cat_gender = await db.query(`SELECT 
     COUNT(CASE
         WHEN
@@ -1433,6 +1431,23 @@ FROM
             }
             try {
                 data = await this.crudService.findAndCountAll(organization, {
+                    attributes: [
+                        "organization_name",
+                        "organization_code",
+                        "city",
+                        "district",
+                        "category",
+                        "state",
+                        "country",
+                        "address",
+                        "pin_code",
+                        "principal_name",
+                        "principal_mobile",
+                        "principal_email",
+                        [
+                            db.literal(`(select count(mentor_id) from mentors where organization_code =  \`organization\`.\`organization_code\` )`), 'mentor_reg'
+                        ]
+                    ],
                     where: where
                 })
             } catch (error: any) {
