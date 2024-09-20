@@ -1248,7 +1248,7 @@ export default class authService {
         try {
             const combinedData: any = {};
             const dataobj: any = {
-                ATL_Count: 0,
+                Eligible_school: 0,
                 reg_school: 0,
                 ATL_Reg_Count: 0,
                 NONATL_Reg_Count: 0,
@@ -1261,10 +1261,10 @@ export default class authService {
             // Initialize combinedData with summary data
             summary.forEach((entry: any) => {
                 combinedData[entry.state] = {
-                    ATL_Count: entry.ATL_Count,
+                    Eligible_school: entry.Eligible_school,
                     reg_school: 0, // Default value
                 };
-                dataobj.ATL_Count += entry.ATL_Count
+                dataobj.Eligible_school += entry.Eligible_school
             });
 
             // Update with REG_school data
