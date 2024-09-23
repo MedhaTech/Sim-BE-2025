@@ -10,7 +10,8 @@ export const supportTicketsReplies = Joi.object().keys({
         'string.empty': speeches.QUERY_DETAILS
     }),
     file:Joi.string(),
-    link:Joi.string()
+    link:Joi.string(),
+    replied_by:Joi.string()
 });
 
 export const supportTicketsRepliesUpdateSchema = Joi.object().keys({

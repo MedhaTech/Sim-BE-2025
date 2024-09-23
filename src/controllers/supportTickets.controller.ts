@@ -93,6 +93,7 @@ export default class SupportTicketController extends BaseController {
                             "support_tickets_reply_id",
                             "link",
                             "file",
+                            "replied_by",
                             "reply_details",
                             "status",
                             "created_at",
