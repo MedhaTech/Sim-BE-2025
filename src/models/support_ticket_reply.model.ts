@@ -8,6 +8,7 @@ export interface supportTicketRepliesAttributes {
     support_tickets_reply_id: number;
     support_ticket_id: string;
     reply_details: string;
+    replied_by: string;
     file: string;
     link: string;
     status: Enumerator;
@@ -33,6 +34,9 @@ support_ticket_reply.init(
         reply_details: {
             type: DataTypes.TEXT("long"),
             allowNull: false
+        },
+        replied_by: {
+            type: DataTypes.STRING
         },
         file: {
             type: DataTypes.TEXT("long")
