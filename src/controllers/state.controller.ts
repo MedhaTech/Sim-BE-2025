@@ -87,11 +87,19 @@ export default class StateController extends BaseController {
         }
     }
     protected async getData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STATE') {
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STATE' && res.locals.role !== 'STUDENT' && res.locals.role !== 'TEAM') {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
         }
         try {
             let data: any = {}
+            let newREQQuery: any = {}
+            if (req.query.Data) {
+                let newQuery: any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery = JSON.parse(newQuery);
+            } else if (Object.keys(req.query).length !== 0) {
+                return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
+            }
+            const { state } = newREQQuery
             const where: any = {};
             const { id } = req.params;
             if (id) {
@@ -99,6 +107,10 @@ export default class StateController extends BaseController {
                 where[`state_coordinators_id`] = newParamId;
                 data = await this.crudService.findOne(state_coordinators, {
                     where: [where]
+                })
+            } else if (state) {
+                data = await this.crudService.findOne(state_coordinators, {
+                    where: { ['state_name']: state }
                 })
             }
             else {

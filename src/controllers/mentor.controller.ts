@@ -238,13 +238,14 @@ export default class MentorController extends BaseController {
             const newParamId = await this.authService.decryptGlobal(req.params.id);
             where[`${this.model}_id`] = newParamId;
             const modelLoaded = await this.loadModel(model);
-            const payload = this.autoFillTrackingColumns(req, res, modelLoaded)
+            
             if (req.body.username) {
                 var pass = req.body.username.trim();
                 var myArray = pass.split("@");
                 const cryptoEncryptedString = await this.authService.generateCryptEncryption(myArray[0]);
-                payload['password'] = cryptoEncryptedString
+                req.body.password = await bcrypt.hashSync(cryptoEncryptedString, process.env.SALT || baseConfig.SALT)
             }
+            const payload = this.autoFillTrackingColumns(req, res, modelLoaded)
             const findMentorDetail = await this.crudService.findOne(modelLoaded, { where: where });
             if (!findMentorDetail || findMentorDetail instanceof Error) {
                 throw notFound();

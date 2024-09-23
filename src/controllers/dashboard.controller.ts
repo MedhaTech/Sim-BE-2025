@@ -968,9 +968,9 @@ FROM
             }
             const { state } = newREQQuery
             if (state) {
-                result = await db.query(`SELECT count(*) as schoolCount FROM organizations WHERE status='ACTIVE' && category <> 'Non ATL' && state='${state}';`, { type: QueryTypes.SELECT })
+                result = await db.query(`SELECT count(*) as schoolCount FROM organizations WHERE status='ACTIVE' && state='${state}';`, { type: QueryTypes.SELECT })
             } else {
-                result = await db.query(`SELECT count(*) as schoolCount FROM organizations WHERE status='ACTIVE' && category <> 'Non ATL';`, { type: QueryTypes.SELECT })
+                result = await db.query(`SELECT count(*) as schoolCount FROM organizations WHERE status='ACTIVE';`, { type: QueryTypes.SELECT })
             }
             res.status(200).send(dispatcher(res, result, 'done'))
         }
@@ -993,37 +993,41 @@ FROM
             }
             const { state } = newREQQuery
             if (state) {
-                result = await db.query(`select count(*) as mentorCoursesCompletedCount from (SELECT 
-                    district,cou
-                FROM
-                    organizations AS og
-                        LEFT JOIN
-                    (SELECT 
-                        organization_code, cou
-                    FROM
-                        mentors AS mn
-                    LEFT JOIN (SELECT 
-                        user_id, COUNT(*) AS cou
-                    FROM
-                        mentor_topic_progress
-                    GROUP BY user_id having count(*)>=${baseConfig.MENTOR_COURSE}) AS t ON mn.user_id = t.user_id ) AS c ON c.organization_code = og.organization_code WHERE og.status='ACTIVE' && og.state='${state}'
-                group by organization_id having cou>=${baseConfig.MENTOR_COURSE}) as final`, { type: QueryTypes.SELECT })
+                result = await db.query(`SELECT 
+    count(mentor_id) as mentorCoursesCompletedCount
+FROM
+    organizations AS og
+        left JOIN
+    (SELECT 
+        organization_code, cou, mentor_id
+    FROM
+        mentors AS mn
+    JOIN (SELECT 
+        user_id, COUNT(*) AS cou
+    FROM
+        mentor_topic_progress
+    GROUP BY user_id
+    HAVING COUNT(*) >= ${baseConfig.MENTOR_COURSE}) AS t ON mn.user_id = t.user_id) AS c ON c.organization_code = og.organization_code
+WHERE
+    og.status = 'ACTIVE' && state = '${state}' group by state`, { type: QueryTypes.SELECT })
             } else {
-                result = await db.query(`select count(*) as mentorCoursesCompletedCount from (SELECT 
-                    district,cou
-                FROM
-                    organizations AS og
-                        LEFT JOIN
-                    (SELECT 
-                        organization_code, cou
-                    FROM
-                        mentors AS mn
-                    LEFT JOIN (SELECT 
-                        user_id, COUNT(*) AS cou
-                    FROM
-                        mentor_topic_progress
-                    GROUP BY user_id having count(*)>=${baseConfig.MENTOR_COURSE}) AS t ON mn.user_id = t.user_id ) AS c ON c.organization_code = og.organization_code WHERE og.status='ACTIVE'
-                group by organization_id having cou>=${baseConfig.MENTOR_COURSE}) as final`, { type: QueryTypes.SELECT })
+                result = await db.query(`SELECT 
+    count(mentor_id) as mentorCoursesCompletedCount
+FROM
+    organizations AS og
+        left JOIN
+    (SELECT 
+        organization_code, cou, mentor_id
+    FROM
+        mentors AS mn
+    JOIN (SELECT 
+        user_id, COUNT(*) AS cou
+    FROM
+        mentor_topic_progress
+    GROUP BY user_id
+    HAVING COUNT(*) >= ${baseConfig.MENTOR_COURSE}) AS t ON mn.user_id = t.user_id) AS c ON c.organization_code = og.organization_code
+WHERE
+    og.status = 'ACTIVE';`, { type: QueryTypes.SELECT })
             }
 
             res.status(200).send(dispatcher(res, result, 'done'))
