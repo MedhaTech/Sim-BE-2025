@@ -18,16 +18,16 @@ export const organizationRawSchema = Joi.object().keys({
     organization_code: Joi.string().trim().min(1).required().messages({
         'string.empty': speeches.ORG_CODE_REQUIRED
     }),
-    organization_name: Joi.string().trim().min(1).required().regex(constents.ALPHA_NUMERIC_PATTERN).messages({
+    organization_name: Joi.string().trim().min(1).required().regex(constents.ALPHA_NUMERIC_PLUS_PATTERN).messages({
         'string.empty': speeches.ORG_NAME_REQUIRED
     }),
     district: Joi.string().required().regex(constents.ALPHA_NUMERIC_PLUS_PATTERN).messages({
         'string.empty': speeches.DISTRICT_REQ
     }),
-    category: Joi.string().required().regex(constents.ALPHA_NUMERIC_PATTERN).messages({
+    category: Joi.string().required().regex(constents.ALPHA_NUMERIC_PLUS_PATTERN).messages({
         'string.empty': speeches.CATEGORY_REQ
     }),
-    state: Joi.string().required().regex(constents.ALPHA_NUMERIC_PATTERN).messages({
+    state: Joi.string().required().regex(constents.ALPHA_NUMERIC_PLUS_PATTERN).messages({
         'string.empty': speeches.STATE_REQ
     }),
     pin_code: Joi.string().regex(constents.ALPHA_NUMERIC_PATTERN).messages({
@@ -54,20 +54,20 @@ export const organizationUpdateSchema = Joi.object().keys({
     organization_code: Joi.string().trim().min(1).required().messages({
         'string.empty': speeches.ORG_CODE_REQUIRED
     }),
-    organization_name: Joi.string().trim().min(1).required().regex(constents.ALPHA_NUMERIC_PATTERN).messages({
+    organization_name: Joi.string().trim().min(1).required().regex(constents.ALPHA_NUMERIC_PLUS_PATTERN).messages({
         'string.empty': speeches.ORG_NAME_REQUIRED
     }),
     district: Joi.string().regex(constents.ALPHA_NUMERIC_PLUS_PATTERN).messages({
         'string.empty': speeches.DISTRICT_REQ
     }),
-    category: Joi.string().regex(constents.ALPHA_NUMERIC_PATTERN).messages({
+    category: Joi.string().regex(constents.ALPHA_NUMERIC_PLUS_PATTERN).messages({
         'string.empty': speeches.CATEGORY_REQ
     }),
     principal_name: Joi.any(),
     principal_mobile: Joi.any(),
     principal_email: Joi.any(),
     city: Joi.any(),
-    state: Joi.any(),
+    state: Joi.string().regex(constents.ALPHA_NUMERIC_PLUS_PATTERN),
     pin_code: Joi.any(),
     address: Joi.any(),
     country: Joi.any(),

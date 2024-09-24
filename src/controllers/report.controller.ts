@@ -1310,7 +1310,7 @@ FROM
                                 WHEN cal.theme = 'Digital Transformation' THEN 1
                             END) AS DigitalTransformation,
                             COUNT(CASE
-                                WHEN cal.theme = 'Health and Well being' THEN 1
+                                WHEN cal.theme = 'Health and Well-being' THEN 1
                             END) AS HealthandWellbeing,
                             COUNT(CASE
                                 WHEN cal.theme = 'Quality Education' THEN 1
@@ -1362,7 +1362,7 @@ FROM
                                 WHEN cal.theme = 'Digital Transformation' THEN 1
                             END) AS DigitalTransformation,
                             COUNT(CASE
-                                WHEN cal.theme = 'Health and Well being' THEN 1
+                                WHEN cal.theme = 'Health and Well-being' THEN 1
                             END) AS HealthandWellbeing,
                             COUNT(CASE
                                 WHEN cal.theme = 'Quality Education' THEN 1
