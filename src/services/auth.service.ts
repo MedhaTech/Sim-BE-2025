@@ -950,7 +950,15 @@ export default class authService {
                 Body: { /* required */
                     Html: {
                         Charset: "UTF-8",
-                        Data: textBody
+                        Data: `<body style="border: solid;margin-right: 15%;margin-left: 15%; ">
+                        <img src="https://aim-email-images.s3.ap-south-1.amazonaws.com/Email1SIM_2024.png.jpg" alt="header" style="width: 100%;" />
+                        <div style="padding: 1% 5%;">
+                        ${textBody}
+                        <br>
+                        <strong>
+                        Regards,<br> SIM Team
+                        </strong>
+                        </div></body>`
                     },
                     Text: {
                         Charset: "UTF-8",
@@ -1251,6 +1259,7 @@ export default class authService {
                 Eligible_school: 0,
                 reg_school: 0,
                 ATL_Reg_Count: 0,
+                Others_Reg_Count:0,
                 NONATL_Reg_Count: 0,
                 Female: 0,
                 Male: 0,
@@ -1284,6 +1293,7 @@ export default class authService {
                     };
                     dataobj.ATL_Reg_Count += entry.ATL_Reg_Count
                     dataobj.NONATL_Reg_Count += entry.NONATL_Reg_Count
+                    dataobj.Others_Reg_Count += entry.Others_Reg_Count
                     dataobj.Female += entry.Female
                     dataobj.Male += entry.Male
                     dataobj.others += entry.others
@@ -1306,7 +1316,7 @@ export default class authService {
             1
     END) AS '${iteam.category.replace(/[^a-zA-Z]/g, '')}_Count',`
             })
-            return combilequery 
+            return combilequery
         } catch (err) {
             return err
         }
