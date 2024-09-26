@@ -6,8 +6,12 @@ import BaseController from './base.controller';
 import ValidationsHolder from '../validations/validationHolder';
 import { user } from '../models/user.model';
 import { admin } from '../models/admin.model';
-import { adminSchema, adminUpdateSchema } from '../validations/admins.validationa';
+import { adminbulkemail, adminSchema, adminUpdateSchema } from '../validations/admins.validationa';
 import { badRequest, notFound, unauthorized } from 'boom';
+import { QueryTypes } from 'sequelize';
+import db from "../utils/dbconnection.util"
+import validationMiddleware from '../middlewares/validation.middleware';
+import { email } from '../models/email.model';
 
 export default class AdminController extends BaseController {
     model = "admin";
@@ -27,6 +31,7 @@ export default class AdminController extends BaseController {
         this.router.put(`${this.path}/changePassword`, this.changePassword.bind(this));
         this.router.get(`${this.path}/knowqueryparm`, this.getknowqueryparm.bind(this));
         this.router.post(`${this.path}/createqueryparm`, this.getcreatequeryparm.bind(this));
+        this.router.post(`${this.path}/bulkEmail`, validationMiddleware(adminbulkemail), this.bulkEmail.bind(this));
         super.initializeRoutes();
     }
     protected async createData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
@@ -191,6 +196,36 @@ export default class AdminController extends BaseController {
             return res.status(404).send(dispatcher(res, null, 'error', speeches.USER_PASSWORD));
         } else {
             return res.status(202).send(dispatcher(res, result.data, 'accepted', speeches.USER_PASSWORD_CHANGE, 202));
+        }
+    }
+    private async bulkEmail(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if (res.locals.role !== 'ADMIN') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
+        }
+        try {
+            const { msg, subject, state } = req.body;
+            const payload = this.autoFillTrackingColumns(req, res, email);
+            await this.crudService.create(email, payload);
+            let data: any = {}
+            const summary = await db.query(`SELECT 
+    GROUP_CONCAT(username
+        SEPARATOR ', ') AS all_usernames
+FROM
+    (SELECT DISTINCT
+        u.username
+    FROM
+        mentors AS m
+    JOIN users AS u ON m.user_id = u.user_id
+    JOIN organizations AS o ON m.organization_code = o.organization_code
+    WHERE
+        state = '${state}') AS combined_usernames;`, { type: QueryTypes.SELECT });
+            data = summary;
+            const usernameArray = data[0].all_usernames;
+            let arrayOfUsernames = usernameArray.split(', ');
+            const result = await this.authService.triggerBulkEmail(arrayOfUsernames, msg, subject);
+            return res.status(200).send(dispatcher(res, result, 'Email sent'));
+        } catch (error) {
+            next(error);
         }
     }
 };

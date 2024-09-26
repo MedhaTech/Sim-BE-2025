@@ -44,3 +44,10 @@ export const adminUpdateSchema = Joi.object().keys({
         'string.empty': speeches.USER_FULLNAME_REQUIRED
     })
 });
+export const adminbulkemail = Joi.object().keys({
+    state: Joi.string().required().regex(constents.ALPHA_NUMERIC_PLUS_PATTERN).messages({
+        'string.empty': speeches.STATE_REQ
+    }),
+    msg:Joi.string().required(),
+    subject:Joi.string().required().regex(constents.ALPHA_NUMERIC_PLUS_PATTERN)
+})
