@@ -157,7 +157,7 @@ WHERE
                 cat_gender = await db.query(`SELECT 
     COUNT(CASE
         WHEN
-            o.category <> 'Non ATL'
+            o.category = 'ATL'
                 AND m.mentor_id <> 'null'
         THEN
             1
@@ -169,6 +169,13 @@ WHERE
         THEN
             1
     END) AS 'NONATL_Reg_Count',
+    COUNT(CASE
+        WHEN
+            o.category NOT IN ('ATL' , 'Non ATL')
+                AND m.mentor_id <> 'null'
+        THEN
+            1
+    END) AS 'Others_Reg_Count',
     COUNT(CASE
         WHEN
             m.gender = 'Female'
