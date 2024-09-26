@@ -1052,6 +1052,7 @@ WHERE
             const { state } = newREQQuery
             let ATLCount
             let NONATLCount
+            let OthersCount
             if (state) {
                 ATLCount = await db.query(`SELECT 
                     COUNT(DISTINCT mn.organization_code) AS RegSchools
@@ -1060,7 +1061,7 @@ WHERE
                         LEFT JOIN
                     mentors AS mn ON og.organization_code = mn.organization_code
                 WHERE
-                    og.status = 'ACTIVE' && og.state='${state}' and og.category <> 'Non ATL';`, { type: QueryTypes.SELECT });
+                    og.status = 'ACTIVE' && og.state='${state}' and og.category = 'ATL';`, { type: QueryTypes.SELECT });
                 NONATLCount = await db.query(`SELECT 
                     COUNT(DISTINCT mn.organization_code) AS RegSchools
                 FROM
@@ -1069,6 +1070,15 @@ WHERE
                     mentors AS mn ON og.organization_code = mn.organization_code
                 WHERE
                     og.status = 'ACTIVE' && og.state='${state}' and og.category = 'Non ATL';`, { type: QueryTypes.SELECT });
+
+                OthersCount = await db.query(`SELECT 
+                        COUNT(DISTINCT mn.organization_code) AS RegSchools
+                    FROM
+                        organizations AS og
+                            LEFT JOIN
+                        mentors AS mn ON og.organization_code = mn.organization_code
+                    WHERE
+                        og.status = 'ACTIVE' && og.state='${state}' and og.category NOT IN ('ATL' , 'Non ATL');`, { type: QueryTypes.SELECT });
             } else {
                 ATLCount = await db.query(`SELECT 
                     COUNT(DISTINCT mn.organization_code) AS RegSchools
@@ -1077,7 +1087,7 @@ WHERE
                         LEFT JOIN
                     mentors AS mn ON og.organization_code = mn.organization_code
                 WHERE
-                    og.status = 'ACTIVE' and og.category <> 'Non ATL';`, { type: QueryTypes.SELECT });
+                    og.status = 'ACTIVE' and og.category = 'ATL';`, { type: QueryTypes.SELECT });
                 NONATLCount = await db.query(`SELECT 
                     COUNT(DISTINCT mn.organization_code) AS RegSchools
                 FROM
@@ -1086,10 +1096,19 @@ WHERE
                     mentors AS mn ON og.organization_code = mn.organization_code
                 WHERE
                     og.status = 'ACTIVE' and og.category = 'Non ATL';`, { type: QueryTypes.SELECT });
+                OthersCount = await db.query(`SELECT 
+                        COUNT(DISTINCT mn.organization_code) AS RegSchools
+                    FROM
+                        organizations AS og
+                            LEFT JOIN
+                        mentors AS mn ON og.organization_code = mn.organization_code
+                    WHERE
+                        og.status = 'ACTIVE' and og.category NOT IN ('ATL' , 'Non ATL');`, { type: QueryTypes.SELECT });
             }
 
             result['ATLCount'] = Object.values(ATLCount[0]).toString();
             result['NONATLCount'] = Object.values(NONATLCount[0]).toString();
+            result['OthersCount'] = Object.values(OthersCount[0]).toString();
             res.status(200).send(dispatcher(res, result, 'done'))
         }
         catch (err) {

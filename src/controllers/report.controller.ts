@@ -157,7 +157,7 @@ WHERE
                 cat_gender = await db.query(`SELECT 
     COUNT(CASE
         WHEN
-            o.category <> 'Non ATL'
+            o.category = 'ATL'
                 AND m.mentor_id <> 'null'
         THEN
             1
@@ -169,6 +169,13 @@ WHERE
         THEN
             1
     END) AS 'NONATL_Reg_Count',
+    COUNT(CASE
+        WHEN
+            o.category NOT IN ('ATL' , 'Non ATL')
+                AND m.mentor_id <> 'null'
+        THEN
+            1
+    END) AS 'Others_Reg_Count',
     COUNT(CASE
         WHEN
             m.gender = 'Female'
@@ -1483,10 +1490,15 @@ FROM
                 state = '${state}'`, { type: QueryTypes.SELECT });
                 const querystring: any = await this.authService.combineCategorylistState(categorydata);
 
-                const data = await db.query(`SELECT district,
+                const data = await db.query(`SELECT district,count(mentor_id) as reg_school,
                     ${querystring.replace(/,$/, '')}
                     FROM
-                organizations as o where state = '${state}' group by district`, { type: QueryTypes.SELECT });
+                organizations as o LEFT JOIN
+    (SELECT 
+        mentor_id,organization_code
+    FROM
+        mentors
+    GROUP BY organization_code) AS m ON o.organization_code = m.organization_code where state = '${state}' group by district`, { type: QueryTypes.SELECT });
                 result = await this.authService.totalofCategorylistState(data);
             }
 
