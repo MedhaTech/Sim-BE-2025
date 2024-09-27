@@ -1202,7 +1202,7 @@ GROUP BY user_id`, { type: QueryTypes.SELECT });
     effects,
     community,
     facing,
-    Solution,
+    solution,
     stakeholders,
     problem_solving,
     feedback,
@@ -1232,6 +1232,7 @@ FROM
         mn.full_name,
         mn.mobile,
         og.state,
+        mn.gender,
         og.unique_code
     FROM
         (mentors AS mn)
