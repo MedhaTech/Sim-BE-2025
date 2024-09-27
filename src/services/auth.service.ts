@@ -958,7 +958,9 @@ export default class authService {
                         <strong>
                         Regards,<br> SIM Team
                         </strong>
-                        </div></body>`
+                        </div>
+                        <img src="https://aim-email-images.s3.ap-south-1.amazonaws.com/sim_footer.jpg" alt="footer" style="width: 100%;" />
+                        </body>`
                     },
                     Text: {
                         Charset: "UTF-8",
