@@ -64,6 +64,9 @@ export default class TeamController extends BaseController {
             if (mentorData.dataValues.reg_status !== '3') {
                 return res.status(404).send(dispatcher(res, null, 'error', speeches.USER_REG_STATUS));
             }
+            if(mentorData.dataValues.organization.status !=="ACTIVE"){
+                return res.status(401).send(dispatcher(res, 'organization inactive', 'error', speeches.USER_RISTRICTED, 401))
+            }
             result.data['Teacher_name'] = mentorData.dataValues.full_name;
             result.data['Teacher_mobile'] = mentorData.dataValues.mobile;
             result.data['organization_code'] = mentorData.dataValues.organization.organization_code;
