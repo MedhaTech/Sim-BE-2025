@@ -247,12 +247,14 @@ Available Routes:
     }
 
     public listen(): void {
-        this.app.listen(this.port, async () => {
+        const server = this.app.listen(this.port, async () => {
             await logIt(constents.log_levels.list.INFO, `App is running at http://${process.env.APP_HOST_NAME}:${this.port}`);
             if (process.env.SHOW_ROUTES === "true") {
                 this.showRoutes();
             }
         });
+        server.timeout = 300000;
+        server.keepAliveTimeout = 300000;
     }
 
 }
