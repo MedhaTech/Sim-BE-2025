@@ -78,7 +78,7 @@ FROM
 WHERE
 o.status = 'ACTIVE' &&
     o.state = '${state}'
-GROUP BY district`, { type: QueryTypes.SELECT });
+GROUP BY district ORDER BY district`, { type: QueryTypes.SELECT });
                 REG_school = await db.query(`SELECT 
     COUNT(DISTINCT m.organization_code) AS reg_school,
     o.district
@@ -144,7 +144,7 @@ FROM
         status = 'ACTIVE'
     GROUP BY state) AS eli ON o.state = eli.state
     where o.status ="ACTIVE"
-GROUP BY state;`, { type: QueryTypes.SELECT });
+GROUP BY state ORDER BY state;`, { type: QueryTypes.SELECT });
                 REG_school = await db.query(`SELECT 
     COUNT(DISTINCT m.organization_code) AS reg_school,
     o.state
@@ -157,7 +157,7 @@ WHERE
                 cat_gender = await db.query(`SELECT 
     COUNT(CASE
         WHEN
-            o.category <> 'Non ATL'
+            o.category = 'ATL'
                 AND m.mentor_id <> 'null'
         THEN
             1
@@ -169,6 +169,13 @@ WHERE
         THEN
             1
     END) AS 'NONATL_Reg_Count',
+    COUNT(CASE
+        WHEN
+            o.category NOT IN ('ATL' , 'Non ATL')
+                AND m.mentor_id <> 'null'
+        THEN
+            1
+    END) AS 'Others_Reg_Count',
     COUNT(CASE
         WHEN
             m.gender = 'Female'
@@ -397,7 +404,7 @@ FROM
     mentors AS mn ON og.organization_code = mn.organization_code
 WHERE
     og.status = 'ACTIVE' ${wherefilter}
-GROUP BY og.district;`, { type: QueryTypes.SELECT });
+GROUP BY og.district ORDER BY og.district;`, { type: QueryTypes.SELECT });
                 teamCount = await db.query(`SELECT 
                 og.district, COUNT(t.team_id) AS totalTeams
             FROM
@@ -467,7 +474,7 @@ GROUP BY og.district;`, { type: QueryTypes.SELECT });
                         LEFT JOIN
                     mentors AS mn ON og.organization_code = mn.organization_code
                     WHERE og.status='ACTIVE'
-                GROUP BY og.state;`, { type: QueryTypes.SELECT });
+                GROUP BY og.state ORDER BY og.state;`, { type: QueryTypes.SELECT });
                 teamCount = await db.query(`SELECT 
                 og.state, COUNT(t.team_id) AS totalTeams
             FROM
@@ -579,7 +586,7 @@ GROUP BY og.district;`, { type: QueryTypes.SELECT });
                         LEFT JOIN
                     teams AS t ON mn.mentor_id = t.mentor_id
                     WHERE og.status='ACTIVE' ${wherefilter}
-                GROUP BY og.district;`, { type: QueryTypes.SELECT });
+                GROUP BY og.district ORDER BY og.district;`, { type: QueryTypes.SELECT });
                 studentCountDetails = await db.query(`SELECT 
                     og.district,
                     COUNT(st.student_id) AS totalstudent
@@ -666,7 +673,7 @@ GROUP BY og.district;`, { type: QueryTypes.SELECT });
                         LEFT JOIN
                     teams AS t ON mn.mentor_id = t.mentor_id
                     WHERE og.status='ACTIVE'
-                GROUP BY og.state;`, { type: QueryTypes.SELECT });
+                GROUP BY og.state ORDER BY og.state;`, { type: QueryTypes.SELECT });
                 studentCountDetails = await db.query(`SELECT 
                     og.state,
                     COUNT(st.student_id) AS totalstudent
@@ -1195,7 +1202,7 @@ GROUP BY user_id`, { type: QueryTypes.SELECT });
     effects,
     community,
     facing,
-    Solution,
+    solution,
     stakeholders,
     problem_solving,
     feedback,
@@ -1225,6 +1232,7 @@ FROM
         mn.full_name,
         mn.mobile,
         og.state,
+        mn.gender,
         og.unique_code
     FROM
         (mentors AS mn)
@@ -1310,7 +1318,7 @@ FROM
                                 WHEN cal.theme = 'Digital Transformation' THEN 1
                             END) AS DigitalTransformation,
                             COUNT(CASE
-                                WHEN cal.theme = 'Health and Well being' THEN 1
+                                WHEN cal.theme = 'Health and Well-being' THEN 1
                             END) AS HealthandWellbeing,
                             COUNT(CASE
                                 WHEN cal.theme = 'Quality Education' THEN 1
@@ -1337,7 +1345,7 @@ FROM
                         cal.status = 'SUBMITTED'
                     GROUP BY org.district) AS t2 ON org.district = t2.district
                     ${wherefilter}
-                GROUP BY org.district`, { type: QueryTypes.SELECT });
+                GROUP BY org.district ORDER BY org.district`, { type: QueryTypes.SELECT });
             } else {
                 summary = await db.query(`SELECT 
                     org.state,
@@ -1362,7 +1370,7 @@ FROM
                                 WHEN cal.theme = 'Digital Transformation' THEN 1
                             END) AS DigitalTransformation,
                             COUNT(CASE
-                                WHEN cal.theme = 'Health and Well being' THEN 1
+                                WHEN cal.theme = 'Health and Well-being' THEN 1
                             END) AS HealthandWellbeing,
                             COUNT(CASE
                                 WHEN cal.theme = 'Quality Education' THEN 1
@@ -1388,7 +1396,7 @@ FROM
                     WHERE
                         cal.status = 'SUBMITTED'
                     GROUP BY org.state) AS t2 ON org.state = t2.state
-                GROUP BY org.state`, { type: QueryTypes.SELECT });
+                GROUP BY org.state ORDER BY org.state`, { type: QueryTypes.SELECT });
             }
             data = summary;
             if (!data) {
@@ -1483,10 +1491,15 @@ FROM
                 state = '${state}'`, { type: QueryTypes.SELECT });
                 const querystring: any = await this.authService.combineCategorylistState(categorydata);
 
-                const data = await db.query(`SELECT district,
+                const data = await db.query(`SELECT district,count(mentor_id) as reg_school,
                     ${querystring.replace(/,$/, '')}
                     FROM
-                organizations as o where state = '${state}' group by district`, { type: QueryTypes.SELECT });
+                organizations as o LEFT JOIN
+    (SELECT 
+        mentor_id,organization_code
+    FROM
+        mentors
+    GROUP BY organization_code) AS m ON o.organization_code = m.organization_code where state = '${state}' group by district`, { type: QueryTypes.SELECT });
                 result = await this.authService.totalofCategorylistState(data);
             }
 
