@@ -409,7 +409,7 @@ GROUP BY og.district ORDER BY og.district;`, { type: QueryTypes.SELECT });
                 og.district, COUNT(t.team_id) AS totalTeams
             FROM
                 organizations AS og
-                    LEFT JOIN
+                    INNER JOIN
                 mentors AS mn ON og.organization_code = mn.organization_code
                     INNER JOIN
                 teams AS t ON mn.mentor_id = t.mentor_id
@@ -428,7 +428,7 @@ GROUP BY og.district ORDER BY og.district;`, { type: QueryTypes.SELECT });
                 END) AS female
             FROM
                 organizations AS og
-                    LEFT JOIN
+                    INNER JOIN
                 mentors AS mn ON og.organization_code = mn.organization_code
                     INNER JOIN
                 teams AS t ON mn.mentor_id = t.mentor_id
@@ -436,36 +436,42 @@ GROUP BY og.district ORDER BY og.district;`, { type: QueryTypes.SELECT });
                 students AS st ON st.team_id = t.team_id
                 WHERE og.status='ACTIVE' ${wherefilter}
             GROUP BY og.district;`, { type: QueryTypes.SELECT });
-                courseINcompleted = await db.query(`select district,count(*) as courseIN from (SELECT 
-                    district,cou
-                FROM
-                    organizations AS og
-                        LEFT JOIN
-                    (SELECT 
-                        organization_code, cou
-                    FROM
-                        mentors AS mn
-                    LEFT JOIN (SELECT 
-                        user_id, COUNT(*) AS cou
-                    FROM
-                        mentor_topic_progress
-                    GROUP BY user_id having count(*)<${baseConfig.MENTOR_COURSE}) AS t ON mn.user_id = t.user_id ) AS c ON c.organization_code = og.organization_code WHERE og.status='ACTIVE' ${wherefilter}
-                group by organization_id having cou<${baseConfig.MENTOR_COURSE}) as final group by district;`, { type: QueryTypes.SELECT });
-                courseCompleted = await db.query(`select district,count(*) as courseCMP from (SELECT 
-                    district,cou
-                FROM
-                    organizations AS og
-                        LEFT JOIN
-                    (SELECT 
-                        organization_code, cou
-                    FROM
-                        mentors AS mn
-                    LEFT JOIN (SELECT 
-                        user_id, COUNT(*) AS cou
-                    FROM
-                        mentor_topic_progress
-                    GROUP BY user_id having count(*)>=${baseConfig.MENTOR_COURSE}) AS t ON mn.user_id = t.user_id ) AS c ON c.organization_code = og.organization_code WHERE og.status='ACTIVE' ${wherefilter}
-                group by organization_id having cou>=${baseConfig.MENTOR_COURSE}) as final group by district`, { type: QueryTypes.SELECT });
+                courseINcompleted = await db.query(`SELECT 
+    district,COUNT(district) AS courseIN
+FROM
+    organizations AS og
+        INNER JOIN
+    (SELECT 
+        organization_code, cou
+    FROM
+        mentors AS mn
+    INNER JOIN (SELECT 
+        user_id, COUNT(mentor_topic_progress_id) AS cou
+    FROM
+        mentor_topic_progress
+    GROUP BY user_id
+    HAVING cou < ${baseConfig.MENTOR_COURSE}) AS t ON mn.user_id = t.user_id) AS c ON c.organization_code = og.organization_code
+WHERE
+    og.status = 'ACTIVE' ${wherefilter}
+GROUP BY og.district`, { type: QueryTypes.SELECT });
+                courseCompleted = await db.query(`SELECT 
+    district,COUNT(district) AS courseCMP
+FROM
+    organizations AS og
+        INNER JOIN
+    (SELECT 
+        organization_code, cou
+    FROM
+        mentors AS mn
+    INNER JOIN (SELECT 
+        user_id, COUNT(mentor_topic_progress_id) AS cou
+    FROM
+        mentor_topic_progress
+    GROUP BY user_id
+    HAVING cou >= ${baseConfig.MENTOR_COURSE}) AS t ON mn.user_id = t.user_id) AS c ON c.organization_code = og.organization_code
+WHERE
+    og.status = 'ACTIVE' ${wherefilter}
+GROUP BY og.district`, { type: QueryTypes.SELECT });
             } else {
                 summary = await db.query(`SELECT 
                     og.state, COUNT(mn.mentor_id) AS totalReg
@@ -479,7 +485,7 @@ GROUP BY og.district ORDER BY og.district;`, { type: QueryTypes.SELECT });
                 og.state, COUNT(t.team_id) AS totalTeams
             FROM
                 organizations AS og
-                    LEFT JOIN
+                    INNER JOIN
                 mentors AS mn ON og.organization_code = mn.organization_code
                     INNER JOIN
                 teams AS t ON mn.mentor_id = t.mentor_id
@@ -498,7 +504,7 @@ GROUP BY og.district ORDER BY og.district;`, { type: QueryTypes.SELECT });
                 END) AS female
             FROM
                 organizations AS og
-                    LEFT JOIN
+                    INNER JOIN
                 mentors AS mn ON og.organization_code = mn.organization_code
                     INNER JOIN
                 teams AS t ON mn.mentor_id = t.mentor_id
@@ -506,36 +512,44 @@ GROUP BY og.district ORDER BY og.district;`, { type: QueryTypes.SELECT });
                 students AS st ON st.team_id = t.team_id
                 WHERE og.status='ACTIVE'
             GROUP BY og.state;`, { type: QueryTypes.SELECT });
-                courseINcompleted = await db.query(`select state,count(*) as courseIN from (SELECT 
-                    state,cou
-                FROM
-                    organizations AS og
-                        LEFT JOIN
-                    (SELECT 
-                        organization_code, cou
-                    FROM
-                        mentors AS mn
-                    LEFT JOIN (SELECT 
-                        user_id, COUNT(*) AS cou
-                    FROM
-                        mentor_topic_progress
-                    GROUP BY user_id having count(*)<${baseConfig.MENTOR_COURSE}) AS t ON mn.user_id = t.user_id ) AS c ON c.organization_code = og.organization_code WHERE og.status='ACTIVE'
-                group by organization_id having cou<${baseConfig.MENTOR_COURSE}) as final group by state;`, { type: QueryTypes.SELECT });
-                courseCompleted = await db.query(`select state,count(*) as courseCMP from (SELECT 
-                    state,cou
-                FROM
-                    organizations AS og
-                        LEFT JOIN
-                    (SELECT 
-                        organization_code, cou
-                    FROM
-                        mentors AS mn
-                    LEFT JOIN (SELECT 
-                        user_id, COUNT(*) AS cou
-                    FROM
-                        mentor_topic_progress
-                    GROUP BY user_id having count(*)>=${baseConfig.MENTOR_COURSE}) AS t ON mn.user_id = t.user_id ) AS c ON c.organization_code = og.organization_code WHERE og.status='ACTIVE'
-                group by organization_id having cou>=${baseConfig.MENTOR_COURSE}) as final group by state`, { type: QueryTypes.SELECT });
+                courseINcompleted = await db.query(`SELECT 
+    state,COUNT(state) AS courseIN
+FROM
+    organizations AS og
+        INNER JOIN
+    (SELECT 
+        organization_code, cou
+    FROM
+        mentors AS mn
+    INNER JOIN (SELECT 
+        user_id, COUNT(mentor_topic_progress_id) AS cou
+    FROM
+        mentor_topic_progress
+    GROUP BY user_id
+    HAVING cou < ${baseConfig.MENTOR_COURSE}) AS t ON mn.user_id = t.user_id) AS c ON c.organization_code = og.organization_code
+WHERE
+    og.status = 'ACTIVE'
+GROUP BY og.state`, { type: QueryTypes.SELECT });
+                courseCompleted = await db.query(`
+                    SELECT 
+    state,COUNT(state) AS courseCMP
+FROM
+    organizations AS og
+        INNER JOIN
+    (SELECT 
+        organization_code, cou
+    FROM
+        mentors AS mn
+    INNER JOIN (SELECT 
+        user_id, COUNT(mentor_topic_progress_id) AS cou
+    FROM
+        mentor_topic_progress
+    GROUP BY user_id
+    HAVING cou >= ${baseConfig.MENTOR_COURSE}) AS t ON mn.user_id = t.user_id) AS c ON c.organization_code = og.organization_code
+WHERE
+    og.status = 'ACTIVE'
+GROUP BY og.state
+                    `, { type: QueryTypes.SELECT });
             }
             data['summary'] = summary;
             data['teamCount'] = teamCount;
@@ -1438,26 +1452,31 @@ FROM
                 where['state'] = state
             }
             try {
-                data = await this.crudService.findAndCountAll(organization, {
+                data = await this.crudService.findAll(organization,{
                     attributes: [
-                        "organization_name",
-                        "organization_code",
-                        "city",
-                        "district",
-                        "category",
-                        "state",
-                        "country",
-                        "address",
-                        "pin_code",
-                        "principal_name",
-                        "principal_mobile",
-                        "principal_email",
-                        [
-                            db.literal(`(select count(mentor_id) from mentors where organization_code =  \`organization\`.\`organization_code\` )`), 'mentor_reg'
-                        ]
+                      "organization_name",
+                      "organization_code",
+                      "city",
+                      "district",
+                      "category",
+                      "state",
+                      "country",
+                      "address",
+                      "pin_code",
+                      "principal_name",
+                      "principal_mobile",
+                      "principal_email",
+                      [db.fn('COUNT', db.col('mentor.mentor_id')), 'mentor_reg']
                     ],
-                    where: where
-                })
+                    include: [{
+                      model: mentor,  // Assuming 'Mentors' is the related model
+                      attributes: [],  // No need to fetch mentor data, just count
+                      required: false  // LEFT JOIN to include organizations with no mentors
+                    }],
+                    where,
+                    group: ['organization.organization_code']
+                  });
+                  
             } catch (error: any) {
                 console.log(error)
                 next(error)
