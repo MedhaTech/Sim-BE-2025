@@ -242,7 +242,7 @@ export default class authService {
                 where: {
                     organization_code: organization_code,
                     status: {
-                        [Op.or]: ['ACTIVE', 'NEW']
+                        [Op.or]: ['INACTIVE','ACTIVE', 'NEW']
                     }
                 },
                 include: {
