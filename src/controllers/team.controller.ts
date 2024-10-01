@@ -136,81 +136,8 @@ export default class TeamController extends BaseController {
                 whereClauseStatusPartLiteral = `status = "${paramStatus}"`
                 addWhereClauseStatusPart = true;
             }
-            //attributes separating for challenge submission;
-            let attributesNeeded: any = [];
+
             const ideaStatus = newREQQuery.ideaStatus;
-            if (ideaStatus && ideaStatus === true) {
-                attributesNeeded = [
-                    'team_name',
-                    'team_id',
-                    'mentor_id',
-                    'status',
-                    'created_at',
-                    'created_by',
-                    'updated_at',
-                    'updated_by',
-                    [
-                        db.literal(`(
-                            SELECT COUNT(*)
-                            FROM students AS s
-                            WHERE
-                                ${addWhereClauseStatusPart ? "s." + whereClauseStatusPartLiteral : whereClauseStatusPartLiteral}
-                            AND
-                                s.team_id = \`team\`.\`team_id\`
-                        )`), 'student_count'
-                    ],
-                    [
-                        db.literal(`(
-                            SELECT status
-                            FROM challenge_responses AS idea
-                            WHERE idea.team_id = \`team\`.\`team_id\`
-                        )`), 'ideaStatus'
-                    ],
-                    [
-                        db.literal(`(
-                            SELECT verified_status
-                            FROM challenge_responses AS idea
-                            WHERE idea.team_id = \`team\`.\`team_id\`
-                        )`), 'ideaAcceptance'
-                    ],
-                    [
-                        db.literal(`(
-                            SELECT challenge_response_id
-                            FROM challenge_responses AS idea
-                            WHERE idea.team_id = \`team\`.\`team_id\`
-                        )`), 'challenge_response_id'
-                    ]
-                ]
-            } else {
-                attributesNeeded = [
-                    'team_name',
-                    'team_id',
-                    'team_email',
-                    'mentor_id',
-                    'status',
-                    'created_at',
-                    'created_by',
-                    'updated_at',
-                    'updated_by',
-                    [
-                        db.literal(`(
-                            SELECT COUNT(*)
-                            FROM students AS s
-                            WHERE
-                                ${addWhereClauseStatusPart ? "s." + whereClauseStatusPartLiteral : whereClauseStatusPartLiteral}
-                            AND
-                                s.team_id = \`team\`.\`team_id\`
-                        )`), 'student_count'
-                    ],
-                    [
-                        db.literal(`(
-                            SELECT status
-                            FROM challenge_responses AS idea
-                            WHERE idea.team_id = \`team\`.\`team_id\`
-                        )`), 'ideaStatus'
-                    ]
-                ]
-            }
             let state: any = newREQQuery.state;
             let stateFilter: any = {}
             if (state) {
@@ -250,54 +177,144 @@ export default class TeamController extends BaseController {
                 });
             } else {
                 try {
-                    const responseOfFindAndCountAll = await this.crudService.findAll(modelClass, {
-                        attributes: attributesNeeded = [
-                            'team_name',
-                            [db.fn('COUNT', db.col('student.student_id')), 'student_count']
-                        ],
-                        where: {
-                            [Op.and]: [
-                                whereClauseStatusPart,
-                                condition,
-                                stateFilter.liter
-                            ]
-                        },
-                        include: [
-                            {
-                                model: mentor,
-                                attributes: [
-                                    'full_name'
+                    if (ideaStatus && ideaStatus === true) {
+                        const responseOfFindAndCountAll = await this.crudService.findAndCountAll(modelClass, {
+                            attributes: [
+                                'team_name',
+                                'team_id',
+                                'mentor_id',
+                                'status',
+                                'created_at',
+                                'created_by',
+                                'updated_at',
+                                'updated_by',
+                                [
+                                    db.literal(`(
+                                        SELECT COUNT(*)
+                                        FROM students AS s
+                                        WHERE
+                                            ${addWhereClauseStatusPart ? "s." + whereClauseStatusPartLiteral : whereClauseStatusPartLiteral}
+                                        AND
+                                            s.team_id = \`team\`.\`team_id\`
+                                    )`), 'student_count'
                                 ],
-                                include: {
-                                    where: stateFilter.whereClause,
-                                    required: false,
-                                    model: organization,
-                                    attributes: [
-                                        "organization_name",
-                                        'organization_code',
-                                        "district",
-                                        "state"
-                                    ]
-                                }
-
-                            },
-                            {
-                                model: user,
-                                attributes: [
-                                    'username'
+                                [
+                                    db.literal(`(
+                                        SELECT status
+                                        FROM challenge_responses AS idea
+                                        WHERE idea.team_id = \`team\`.\`team_id\`
+                                    )`), 'ideaStatus'
+                                ],
+                                [
+                                    db.literal(`(
+                                        SELECT verified_status
+                                        FROM challenge_responses AS idea
+                                        WHERE idea.team_id = \`team\`.\`team_id\`
+                                    )`), 'ideaAcceptance'
+                                ],
+                                [
+                                    db.literal(`(
+                                        SELECT challenge_response_id
+                                        FROM challenge_responses AS idea
+                                        WHERE idea.team_id = \`team\`.\`team_id\`
+                                    )`), 'challenge_response_id'
+                                ]
+                            ],
+                            where: {
+                                [Op.and]: [
+                                    whereClauseStatusPart,
+                                    condition,
+                                    stateFilter.liter
                                 ]
                             },
-                            {
-                                model: student,
-                                attributes: [],
-                                required: false
-                            }
-                        ],
-                        group: ['team.team_id'],
-                        limit, offset,
-                        order: [["created_at", "DESC"]],
-                    })
-                    data = responseOfFindAndCountAll;
+                            include: [
+                                {
+                                    model: mentor,
+                                    attributes: [
+                                        'mentor_id',
+                                        'full_name'
+                                    ],
+                                    include: {
+                                        where: stateFilter.whereClause,
+                                        required: false,
+                                        model: organization,
+                                        attributes: [
+                                            "organization_name",
+                                            'organization_code',
+                                            "unique_code",
+                                            "pin_code",
+                                            "category",
+                                            "city",
+                                            "district",
+                                            "state",
+                                            'address'
+                                        ]
+                                    }
+
+                                },
+                                {
+                                    model: user,
+                                    attributes: [
+                                        'username'
+                                    ]
+                                }
+                            ], limit, offset,
+                            order: [["created_at", "DESC"]],
+                        })
+                        const result = this.getPagingData(responseOfFindAndCountAll, page, limit);
+                        data = result;
+                    }
+                    else {
+                        const responseOfFindAndCountAll = await this.crudService.findAll(modelClass, {
+                            attributes: [
+                                'team_name',
+                                [db.fn('COUNT', db.col('student.student_id')), 'student_count']
+                            ],
+                            where: {
+                                [Op.and]: [
+                                    whereClauseStatusPart,
+                                    condition,
+                                    stateFilter.liter
+                                ]
+                            },
+                            include: [
+                                {
+                                    model: mentor,
+                                    attributes: [
+                                        'full_name'
+                                    ],
+                                    include: {
+                                        where: stateFilter.whereClause,
+                                        required: false,
+                                        model: organization,
+                                        attributes: [
+                                            "organization_name",
+                                            'organization_code',
+                                            "district",
+                                            "state"
+                                        ]
+                                    }
+
+                                },
+                                {
+                                    model: user,
+                                    attributes: [
+                                        'username'
+                                    ]
+                                },
+                                {
+                                    model: student,
+                                    attributes: [],
+                                    required: false
+                                }
+                            ],
+                            group: ['team.team_id'],
+                            limit, offset,
+                            order: [["created_at", "DESC"]],
+                        })
+                        data = responseOfFindAndCountAll;
+                    }
+
                 } catch (error: any) {
                     return res.status(500).send(dispatcher(res, data, 'error'))
                 }
