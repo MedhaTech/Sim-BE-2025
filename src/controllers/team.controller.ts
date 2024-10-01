@@ -64,7 +64,7 @@ export default class TeamController extends BaseController {
             if (mentorData.dataValues.reg_status !== '3') {
                 return res.status(404).send(dispatcher(res, null, 'error', speeches.USER_REG_STATUS));
             }
-            if(mentorData.dataValues.organization.status !=="ACTIVE"){
+            if (mentorData.dataValues.organization.status !== "ACTIVE") {
                 return res.status(401).send(dispatcher(res, 'organization inactive', 'error', speeches.USER_RISTRICTED, 401))
             }
             result.data['Teacher_name'] = mentorData.dataValues.full_name;
@@ -250,8 +250,11 @@ export default class TeamController extends BaseController {
                 });
             } else {
                 try {
-                    const responseOfFindAndCountAll = await this.crudService.findAndCountAll(modelClass, {
-                        attributes: attributesNeeded,
+                    const responseOfFindAndCountAll = await this.crudService.findAll(modelClass, {
+                        attributes: attributesNeeded = [
+                            'team_name',
+                            [db.fn('COUNT', db.col('student.student_id')), 'student_count']
+                        ],
                         where: {
                             [Op.and]: [
                                 whereClauseStatusPart,
@@ -263,7 +266,6 @@ export default class TeamController extends BaseController {
                             {
                                 model: mentor,
                                 attributes: [
-                                    'mentor_id',
                                     'full_name'
                                 ],
                                 include: {
@@ -273,13 +275,8 @@ export default class TeamController extends BaseController {
                                     attributes: [
                                         "organization_name",
                                         'organization_code',
-                                        "unique_code",
-                                        "pin_code",
-                                        "category",
-                                        "city",
                                         "district",
-                                        "state",
-                                        'address'
+                                        "state"
                                     ]
                                 }
 
@@ -289,12 +286,18 @@ export default class TeamController extends BaseController {
                                 attributes: [
                                     'username'
                                 ]
+                            },
+                            {
+                                model: student,
+                                attributes: [],
+                                required: false
                             }
-                        ], limit, offset,
+                        ],
+                        group: ['team.team_id'],
+                        limit, offset,
                         order: [["created_at", "DESC"]],
                     })
-                    const result = this.getPagingData(responseOfFindAndCountAll, page, limit);
-                    data = result;
+                    data = responseOfFindAndCountAll;
                 } catch (error: any) {
                     return res.status(500).send(dispatcher(res, data, 'error'))
                 }
