@@ -672,7 +672,7 @@ FROM
                     FROM
                         user_topic_progress
                     GROUP BY user_id
-                    HAVING COUNT(*) >= 31) AS temp ON st.user_id = temp.user_id WHERE og.status='ACTIVE' && og.state='${state}';`, { type: QueryTypes.SELECT });
+                    HAVING COUNT(*) >= ${baseConfig.STUDENT_COURSE}) AS temp ON st.user_id = temp.user_id WHERE og.status='ACTIVE' && og.state='${state}';`, { type: QueryTypes.SELECT });
                 started = await db.query(`SELECT 
                     count(st.student_id) as studentCoursestartted
                 FROM
@@ -705,7 +705,7 @@ FROM
                     FROM
                         user_topic_progress
                     GROUP BY user_id
-                    HAVING COUNT(*) >= 31) AS temp ON st.user_id = temp.user_id WHERE og.status='ACTIVE';`, { type: QueryTypes.SELECT });
+                    HAVING COUNT(*) >= ${baseConfig.STUDENT_COURSE}) AS temp ON st.user_id = temp.user_id WHERE og.status='ACTIVE';`, { type: QueryTypes.SELECT });
                 started = await db.query(`SELECT 
                     count(st.student_id) as studentCoursestartted
                 FROM
@@ -722,8 +722,6 @@ FROM
                     FROM
                         user_topic_progress ) AS temp ON st.user_id = temp.user_id WHERE og.status='ACTIVE';`, { type: QueryTypes.SELECT });
             }
-
-
             result['StudentCoursesCompletedCount'] = Object.values(StudentCoursesCompletedCount[0]).toString()
             result['started'] = Object.values(started[0]).toString()
             res.status(200).send(dispatcher(res, result, 'done'))
@@ -994,40 +992,40 @@ FROM
             const { state } = newREQQuery
             if (state) {
                 result = await db.query(`SELECT 
-    count(mentor_id) as mentorCoursesCompletedCount
+    COUNT(state) AS mentorCoursesCompletedCount
 FROM
     organizations AS og
-        left JOIN
+        INNER JOIN
     (SELECT 
-        organization_code, cou, mentor_id
+        organization_code, cou
     FROM
         mentors AS mn
-    JOIN (SELECT 
-        user_id, COUNT(*) AS cou
+    INNER JOIN (SELECT 
+        user_id, COUNT(mentor_topic_progress_id) AS cou
     FROM
         mentor_topic_progress
     GROUP BY user_id
-    HAVING COUNT(*) >= ${baseConfig.MENTOR_COURSE}) AS t ON mn.user_id = t.user_id) AS c ON c.organization_code = og.organization_code
+    HAVING cou >= 6) AS t ON mn.user_id = t.user_id) AS c ON c.organization_code = og.organization_code
 WHERE
-    og.status = 'ACTIVE' && state = '${state}' group by state`, { type: QueryTypes.SELECT })
+    og.status = 'ACTIVE' && og.state = '${state}'`, { type: QueryTypes.SELECT })
             } else {
                 result = await db.query(`SELECT 
-    count(mentor_id) as mentorCoursesCompletedCount
+    COUNT(state) AS mentorCoursesCompletedCount
 FROM
     organizations AS og
-        left JOIN
+        INNER JOIN
     (SELECT 
-        organization_code, cou, mentor_id
+        organization_code, cou
     FROM
         mentors AS mn
-    JOIN (SELECT 
-        user_id, COUNT(*) AS cou
+    INNER JOIN (SELECT 
+        user_id, COUNT(mentor_topic_progress_id) AS cou
     FROM
         mentor_topic_progress
     GROUP BY user_id
-    HAVING COUNT(*) >= ${baseConfig.MENTOR_COURSE}) AS t ON mn.user_id = t.user_id) AS c ON c.organization_code = og.organization_code
+    HAVING cou >= ${baseConfig.MENTOR_COURSE}) AS t ON mn.user_id = t.user_id) AS c ON c.organization_code = og.organization_code
 WHERE
-    og.status = 'ACTIVE';`, { type: QueryTypes.SELECT })
+    og.status = 'ACTIVE' `, { type: QueryTypes.SELECT })
             }
 
             res.status(200).send(dispatcher(res, result, 'done'))

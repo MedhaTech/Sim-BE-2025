@@ -334,7 +334,7 @@ export default class MentorController extends BaseController {
                 if (mentorData.dataValues.reg_status !== '3') {
                     return res.status(404).send(dispatcher(res, null, 'error', speeches.USER_REG_STATUS));
                 }
-                if(mentorData.dataValues.organization.status !=="ACTIVE"){
+                if(mentorData.dataValues.organization.status === "INACTIVE"){
                     return res.status(401).send(dispatcher(res, 'organization inactive', 'error', speeches.USER_RISTRICTED, 401))
                 }
                 result.data['mentor_id'] = mentorData.dataValues.mentor_id;
