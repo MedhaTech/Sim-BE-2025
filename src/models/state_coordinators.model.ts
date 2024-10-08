@@ -18,6 +18,7 @@ export class state_coordinators extends Model<InferAttributes<state_coordinators
     declare role: string;
     declare whatapp_link: string;
     declare ideaSubmission: number;
+    declare certificate: number;
     declare mentor_note: string;
     declare student_note: string;
 }
@@ -47,6 +48,9 @@ state_coordinators.init({
         type: DataTypes.STRING
     },
     ideaSubmission: {
+        type: DataTypes.INTEGER
+    },
+    certificate: {
         type: DataTypes.INTEGER
     },
     mentor_note: {
