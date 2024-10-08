@@ -222,7 +222,7 @@ FROM
     JOIN users AS u ON m.user_id = u.user_id
     JOIN organizations AS o ON m.organization_code = o.organization_code
     WHERE
-        state LIKE ${stateFilter} AS combined_usernames;`, { type: QueryTypes.SELECT });
+        state LIKE ${stateFilter}) AS combined_usernames;`, { type: QueryTypes.SELECT });
             data = summary;
             const usernameArray = data[0].all_usernames;
             let arrayOfUsernames = usernameArray.split(', ');
