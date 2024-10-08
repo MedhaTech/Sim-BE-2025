@@ -41,6 +41,7 @@ export default class StudentController extends BaseController {
         this.router.get(`${this.path}/:student_user_id/badges`, this.getStudentBadges.bind(this));
         //this.router.post(`${this.path}/stuIdeaSubmissionEmail`, this.stuIdeaSubmissionEmail.bind(this));
         this.router.get(`${this.path}/studentsList/:teamId`, this.getStudentsList.bind(this));
+        this.router.get(`${this.path}/IsCertificate`, this.getCertificate.bind(this));
         super.initializeRoutes();
     }
     protected async getData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
@@ -720,6 +721,36 @@ export default class StudentController extends BaseController {
             return res.status(200).send(dispatcher(res, data, 'success'));
         } catch (error) {
             next(error);
+        }
+    }
+    protected async getCertificate(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STATE') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
+        }
+        try {
+            let result: any = {};
+            let newREQQuery: any = {}
+            if (req.query.Data) {
+                let newQuery: any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery = JSON.parse(newQuery);
+            } else if (Object.keys(req.query).length !== 0) {
+                return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
+            }
+            const { team_id } = newREQQuery
+
+            result = await db.query(`SELECT 
+    cr.status, AVG(e.overall) as score
+FROM
+    challenge_responses AS cr
+        JOIN
+    evaluator_ratings AS e ON cr.challenge_response_id = e.challenge_response_id
+WHERE
+    cr.team_id = ${team_id}`, { type: QueryTypes.SELECT });
+
+            res.status(200).send(dispatcher(res, result, 'done'))
+        }
+        catch (err) {
+            next(err)
         }
     }
 }
