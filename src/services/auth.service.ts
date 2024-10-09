@@ -242,7 +242,7 @@ export default class authService {
                 where: {
                     organization_code: organization_code,
                     status: {
-                        [Op.or]: ['INACTIVE','ACTIVE', 'NEW']
+                        [Op.or]: ['INACTIVE', 'ACTIVE', 'NEW']
                     }
                 },
                 include: {
@@ -1261,7 +1261,7 @@ export default class authService {
                 Eligible_school: 0,
                 reg_school: 0,
                 ATL_Reg_Count: 0,
-                Others_Reg_Count:0,
+                Others_Reg_Count: 0,
                 NONATL_Reg_Count: 0,
                 Female: 0,
                 Male: 0,
@@ -1340,6 +1340,36 @@ export default class authService {
             return [...data, totalall]
         } catch (err) {
             return err
+        }
+    }
+    //evaluator restpassword
+    async evaluatorResetPassword(requestBody: any) {
+        let result: any = {};
+        let eval_res: any;
+        try {
+            eval_res = await this.crudService.findOne(user, {
+                where: { username: requestBody.username }
+            });
+            if (!eval_res) {
+                result['error'] = speeches.USER_NOT_FOUND;
+                return result;
+            }
+            const user_data = await this.crudService.findOnePassword(user, {
+                where: { user_id: eval_res.dataValues.user_id }
+            });
+
+            let hashString = await this.generateCryptEncryption(requestBody.mobile)
+            const user_res: any = await this.crudService.updateAndFind(user, {
+                password: await bcrypt.hashSync(hashString, process.env.SALT || baseConfig.SALT)
+            }, { where: { user_id: user_data.dataValues.user_id } })
+            result['data'] = {
+                username: user_res.dataValues.username,
+                user_id: user_res.dataValues.user_id
+            };
+            return result;
+        } catch (error) {
+            result['error'] = error;
+            return result;
         }
     }
 }
