@@ -46,12 +46,8 @@ export const evaluatorResetPasswordSchema = Joi.object().keys({
 
 export const evaluatorUpdateSchema = Joi.object().keys({
     status: Joi.string().valid(...Object.values(constents.common_status_flags.list)),
-    username: Joi.string().trim().min(1).required().email().messages({
-        'string.empty': speeches.USER_USERNAME_REQUIRED
-    }),
+    username: Joi.string().trim().min(1).email(),
     mobile: Joi.string(),
-    full_name: Joi.string().trim().min(1).regex(constents.ALPHA_NUMERIC_PATTERN).required().messages({
-        'string.empty': speeches.USER_FULLNAME_REQUIRED
-    }),
+    full_name: Joi.string().trim().min(1).regex(constents.ALPHA_NUMERIC_PATTERN),
     district: Joi.string()
 });
