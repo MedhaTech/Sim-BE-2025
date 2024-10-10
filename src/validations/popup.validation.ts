@@ -17,7 +17,7 @@ export const popupUpdateSchema = Joi.object().keys({
         'string.empty': speeches.COMMON_STATUS_REQUIRED
     }),
     on_off: Joi.string().regex(constents.ALPHA_NUMERIC_PATTERN),
-    url: Joi.string(),
+    url: Joi.any(),
     role: Joi.string().regex(constents.ALPHA_NUMERIC_PATTERN),
     type: Joi.string().regex(constents.ALPHA_NUMERIC_PATTERN),
     navigate:Joi.string().regex(constents.ALPHA_NUMERIC_PATTERN_PLUS_SLASH),
