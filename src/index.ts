@@ -29,6 +29,9 @@ import MentorAttachmentController from "./controllers/mentorAttachment.controlle
 import ReportController from "./controllers/report.controller";
 import ChallengeResponsesController from "./controllers/challenge_response.controller";
 import EmailController from "./controllers/email.controller";
+import EvaluatorRatingController from "./controllers/evaluator_rating.controller";
+import EvaluatorController from "./controllers/evulator.controller";
+import EvaluationProcess from "./controllers/evaluation_process.controller";
 
 
 // validating env variables
@@ -63,7 +66,10 @@ try {
         new MentorAttachmentController,
         new ReportController,
         new ChallengeResponsesController,
-        new EmailController
+        new EmailController,
+        new EvaluatorController,
+        new EvaluationProcess,
+        new EvaluatorRatingController
 
     ], Number(process.env.APP_PORT));
     // starting app

@@ -211,21 +211,15 @@ export default class AdminController extends BaseController {
             if (state !== 'All States' && state !== undefined) {
                 stateFilter = `'${state}'`
             }
-            const summary = await db.query(`SELECT 
-    GROUP_CONCAT(username
-        SEPARATOR ', ') AS all_usernames
-FROM
-    (SELECT DISTINCT
+            const summary = await db.query(`SELECT DISTINCT
         u.username
     FROM
         mentors AS m
     JOIN users AS u ON m.user_id = u.user_id
     JOIN organizations AS o ON m.organization_code = o.organization_code
     WHERE
-        state LIKE ${stateFilter}) AS combined_usernames;`, { type: QueryTypes.SELECT });
-            data = summary;
-            const usernameArray = data[0].all_usernames;
-            let arrayOfUsernames = usernameArray.split(', ');
+        state LIKE ${stateFilter}`, { type: QueryTypes.SELECT });
+            const arrayOfUsernames = await this.authService.ConverListemail(summary);
             const result = await this.authService.triggerBulkEmail(arrayOfUsernames, msg, subject);
             return res.status(200).send(dispatcher(res, result, 'Email sent'));
         } catch (error) {
