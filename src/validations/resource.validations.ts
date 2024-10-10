@@ -34,6 +34,6 @@ export const resourceUpdateSchema = Joi.object().keys({
     description: Joi.string().required().messages({
         'string.empty': speeches.ID_REQUIRED
     }),
-    attachments: Joi.string(),
+    attachments: Joi.any(),
     state: Joi.string().regex(constents.ALPHA_NUMERIC_PATTERN)
 });

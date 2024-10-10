@@ -28,8 +28,8 @@ export const latest_newsUpdateSchema = Joi.object().keys({
     details: Joi.string().required().messages({
         'string.empty': speeches.ID_REQUIRED
     }),
-    url: Joi.string(),
-    file_name: Joi.string(),
+    url: Joi.any(),
+    file_name: Joi.any(),
     new_status: Joi.string().regex(constents.ALPHA_NUMERIC_PATTERN),
     state: Joi.string().regex(constents.ALPHA_NUMERIC_PATTERN)
 });
