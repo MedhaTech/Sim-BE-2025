@@ -1372,4 +1372,17 @@ export default class authService {
             return result;
         }
     }
+    //converting list email to array of values
+    async ConverListemail(data: any) {
+        try {
+            let arrayofemail: any = [];
+            data.map((value: any) => {
+                arrayofemail.push(value.username);
+            })
+            return arrayofemail
+        }
+        catch (err) {
+            return err
+        }
+    }
 }
