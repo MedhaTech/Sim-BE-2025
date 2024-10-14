@@ -552,7 +552,7 @@ FROM
             const { mentor_id } = newREQQuery
             if (mentor_id) {
                 result = await db.query(`SELECT 
-    COUNT(*) AS idea_count
+    COUNT(*) AS acceptedCount
 FROM
     challenge_responses
         JOIN
