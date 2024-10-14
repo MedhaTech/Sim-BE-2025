@@ -52,6 +52,7 @@ export default class DashboardController extends BaseController {
         this.router.get(`${this.path}/quizscores`, this.getUserQuizScores.bind(this));
         //singledashboard mentor api's 
         this.router.get(`${this.path}/ideaCount`, this.getideaCount.bind(this));
+        this.router.get(`${this.path}/acceptedCount`, this.getMentorAcceptedCount.bind(this));
         this.router.get(`${this.path}/mentorpercentage`, this.getmentorpercentage.bind(this));
         this.router.get(`${this.path}/mentorSurveyStatus`, this.getmentorSurveyStatus.bind(this));
         this.router.get(`${this.path}/whatappLink`, this.getWhatappLink.bind(this));
@@ -528,6 +529,37 @@ FROM
             const { mentor_id } = newREQQuery
             if (mentor_id) {
                 result = await db.query(`SELECT count(*) as idea_count FROM challenge_responses join teams on challenge_responses.team_id = teams.team_id where mentor_id = ${mentor_id} && challenge_responses.status = 'SUBMITTED';`, { type: QueryTypes.SELECT });
+            }
+            res.status(200).send(dispatcher(res, result, 'done'))
+        }
+        catch (err) {
+            next(err)
+        }
+    }
+    protected async getMentorAcceptedCount(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
+        }
+        try {
+            let result: any = {};
+            let newREQQuery: any = {}
+            if (req.query.Data) {
+                let newQuery: any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery = JSON.parse(newQuery);
+            } else if (Object.keys(req.query).length !== 0) {
+                return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
+            }
+            const { mentor_id } = newREQQuery
+            if (mentor_id) {
+                result = await db.query(`SELECT 
+    COUNT(*) AS acceptedCount
+FROM
+    challenge_responses
+        JOIN
+    teams ON challenge_responses.team_id = teams.team_id
+WHERE
+    mentor_id = ${mentor_id}
+        && challenge_responses.status = 'SUBMITTED' and challenge_responses.verified_status = 'ACCEPTED';`, { type: QueryTypes.SELECT });
             }
             res.status(200).send(dispatcher(res, result, 'done'))
         }
