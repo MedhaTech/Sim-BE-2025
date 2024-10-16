@@ -207,21 +207,19 @@ export default class AdminController extends BaseController {
             const payload = this.autoFillTrackingColumns(req, res, email);
             await this.crudService.create(email, payload);
             let data: any = {}
-            const summary = await db.query(`SELECT 
-    GROUP_CONCAT(username
-        SEPARATOR ', ') AS all_usernames
-FROM
-    (SELECT DISTINCT
+            let stateFilter: any = `'%%'`
+            if (state !== 'All States' && state !== undefined) {
+                stateFilter = `'${state}'`
+            }
+            const summary = await db.query(`SELECT DISTINCT
         u.username
     FROM
         mentors AS m
     JOIN users AS u ON m.user_id = u.user_id
     JOIN organizations AS o ON m.organization_code = o.organization_code
     WHERE
-        state = '${state}') AS combined_usernames;`, { type: QueryTypes.SELECT });
-            data = summary;
-            const usernameArray = data[0].all_usernames;
-            let arrayOfUsernames = usernameArray.split(', ');
+        state LIKE ${stateFilter}`, { type: QueryTypes.SELECT });
+            const arrayOfUsernames = await this.authService.ConverListemail(summary);
             const result = await this.authService.triggerBulkEmail(arrayOfUsernames, msg, subject);
             return res.status(200).send(dispatcher(res, result, 'Email sent'));
         } catch (error) {

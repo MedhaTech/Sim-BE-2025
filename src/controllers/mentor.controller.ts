@@ -238,7 +238,7 @@ export default class MentorController extends BaseController {
             const newParamId = await this.authService.decryptGlobal(req.params.id);
             where[`${this.model}_id`] = newParamId;
             const modelLoaded = await this.loadModel(model);
-            
+
             if (req.body.username) {
                 var pass = req.body.username.trim();
                 var myArray = pass.split("@");
@@ -334,7 +334,7 @@ export default class MentorController extends BaseController {
                 if (mentorData.dataValues.reg_status !== '3') {
                     return res.status(404).send(dispatcher(res, null, 'error', speeches.USER_REG_STATUS));
                 }
-                if(mentorData.dataValues.organization.status === "INACTIVE"){
+                if (mentorData.dataValues.organization.status === "INACTIVE") {
                     return res.status(401).send(dispatcher(res, 'organization inactive', 'error', speeches.USER_RISTRICTED, 401))
                 }
                 result.data['mentor_id'] = mentorData.dataValues.mentor_id;
@@ -405,7 +405,7 @@ export default class MentorController extends BaseController {
 
             //get team details
             const teamResult: any = await team.findAll({
-                attributes: ["team_id"],
+                attributes: ["team_id", "user_id"],
                 where: { mentor_id: mentor_id },
                 raw: true
             })
@@ -419,6 +419,10 @@ export default class MentorController extends BaseController {
             const arrayOfteams = teamResult.map((teamSingleresult: any) => {
                 return teamSingleresult.team_id;
             })
+            const arrayOfuserIdteams = teamResult.map((teamSingleresult: any) => {
+                return teamSingleresult.user_id;
+            })
+
             if (arrayOfteams && arrayOfteams.length > 0) {
                 const studentUserIds = await student.findAll({
                     where: { team_id: arrayOfteams },
@@ -446,11 +450,16 @@ export default class MentorController extends BaseController {
                 }
 
                 const resultTeamDelete = await this.crudService.delete(team, { where: { team_id: arrayOfteams } })
+                const resultTeamuserDelete = await this.crudService.delete(user, { where: { user_id: arrayOfuserIdteams } })
+
                 // if(!resultTeamDelete){
                 //     throw internal("error while deleting team")
                 // }
                 if (resultTeamDelete instanceof Error) {
                     throw resultTeamDelete
+                }
+                if (resultTeamuserDelete instanceof Error) {
+                    throw resultTeamuserDelete
                 }
             }
             let resultmentorDelete: any = {};
@@ -733,6 +742,38 @@ export default class MentorController extends BaseController {
             }
             if (totalnumber.count > 9) {
                 await this.authService.addbadgesformentor(mentor_user_id, ['inspirational_mentor'])
+            }
+
+            const badgethree = await db.query(`SELECT 
+    CASE 
+        WHEN (SELECT COUNT(*) FROM challenge_responses 
+              JOIN teams ON challenge_responses.team_id = teams.team_id 
+              WHERE mentor_id = ${newREQQuery.mentor_id} AND challenge_responses.status = 'SUBMITTED') = 
+             (SELECT COUNT(*) FROM teams WHERE mentor_id = ${newREQQuery.mentor_id}) 
+        AND (SELECT COUNT(*) FROM teams WHERE mentor_id = ${newREQQuery.mentor_id}) != 0
+        THEN 'YES'
+        ELSE 'NO' 
+    END AS creative_guide;
+`, { type: QueryTypes.SELECT })
+
+            if (Object.values(badgethree[0]).toString() === 'YES') {
+                await this.authService.addbadgesformentor(mentor_user_id, ['creative_guide'])
+            }
+            const badgefour = await db.query(`SELECT 
+    CASE 
+        WHEN badges LIKE '%"creative_guide":{"completed":"YES"}%'
+            AND badges LIKE '%"inspirational_mentor":{"completed":"YES"}%'
+        THEN 'YES'
+        ELSE 'NO'
+    END AS innovative_leader
+FROM
+    mentors
+WHERE
+    mentor_id = ${newREQQuery.mentor_id};
+            `, { type: QueryTypes.SELECT })
+
+            if (Object.values(badgefour[0]).toString() === 'YES') {
+                await this.authService.addbadgesformentor(mentor_user_id, ['innovative_leader'])
             }
 
             let mentorBadgesObj: any = await this.authService.getMentorBadges(mentor_user_id);
