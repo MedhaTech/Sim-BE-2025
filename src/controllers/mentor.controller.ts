@@ -405,7 +405,7 @@ export default class MentorController extends BaseController {
 
             //get team details
             const teamResult: any = await team.findAll({
-                attributes: ["team_id"],
+                attributes: ["team_id","user_id"],
                 where: { mentor_id: mentor_id },
                 raw: true
             })
@@ -419,6 +419,10 @@ export default class MentorController extends BaseController {
             const arrayOfteams = teamResult.map((teamSingleresult: any) => {
                 return teamSingleresult.team_id;
             })
+            const arrayOfuserIdteams = teamResult.map((teamSingleresult: any) => {
+                return teamSingleresult.user_id;
+            })
+
             if (arrayOfteams && arrayOfteams.length > 0) {
                 const studentUserIds = await student.findAll({
                     where: { team_id: arrayOfteams },
@@ -446,11 +450,16 @@ export default class MentorController extends BaseController {
                 }
 
                 const resultTeamDelete = await this.crudService.delete(team, { where: { team_id: arrayOfteams } })
+                const resultTeamuserDelete = await this.crudService.delete(user, { where: { user_id: arrayOfuserIdteams } })
+                
                 // if(!resultTeamDelete){
                 //     throw internal("error while deleting team")
                 // }
                 if (resultTeamDelete instanceof Error) {
                     throw resultTeamDelete
+                }
+                if (resultTeamuserDelete instanceof Error) {
+                    throw resultTeamuserDelete
                 }
             }
             let resultmentorDelete: any = {};
