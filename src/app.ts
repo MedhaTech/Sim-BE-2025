@@ -21,7 +21,7 @@ import { translationMiddleware } from "./middlewares/translation.middleware";
 import TranslationService from "./services/translation.service";
 import DashboardMapStatsJob from "./jobs/dashboardMapStats.jobs";
 // import BadgesJob from "./jobs/badges.jobs";
-import DashboardStateMapStatsJob from "./jobs/dashboardStateMapStats.jobs";
+//import DashboardStateMapStatsJob from "./jobs/dashboardStateMapStats.jobs";
 import DashboardTNMapStatsJob from "./jobs/dashboardTNMapStats.jobs";
 
 /**
@@ -98,7 +98,7 @@ export default class App {
         const cronManager = CronManager.getInstance()
         cronManager.addJob(new DashboardMapStatsJob())
         // cronManager.addJob(new BadgesJob())
-        cronManager.addJob(new DashboardStateMapStatsJob())
+        // cronManager.addJob(new DashboardStateMapStatsJob())
         cronManager.addJob(new DashboardTNMapStatsJob())
         cronManager.startAll();
     }
