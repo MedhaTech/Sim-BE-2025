@@ -16,6 +16,7 @@ import { challengeResponsesSchema, challengeResponsesUpdateSchema, initiateIdeaS
 import { evaluation_process } from "../models/evaluation_process.model";
 import { evaluator_rating } from "../models/evaluator_rating.model";
 import { baseConfig } from "../configs/base.config";
+import { evaluator } from "../models/evaluator.model";
 
 export default class ChallengeResponsesController extends BaseController {
 
@@ -657,7 +658,7 @@ export default class ChallengeResponsesController extends BaseController {
                 return res.status(406).send(dispatcher(res, challengeRes, 'error', speeches.DATA_EXIST))
             }
             req.body.challenge_id = challenge_id,
-            req.body.team_id = team_id
+                req.body.team_id = team_id
             req.body.created_by = user_id
             let result: any = await this.crudService.create(challenge_response, req.body);
             if (!result) {
@@ -750,7 +751,7 @@ export default class ChallengeResponsesController extends BaseController {
             if (model) {
                 this.model = model;
             };
-            const { status,verified_status } = req.body;
+            const { status, verified_status } = req.body;
 
             const newParamId: any = await this.authService.decryptGlobal(req.params.id);
             let newREQQuery: any = {}
@@ -765,13 +766,13 @@ export default class ChallengeResponsesController extends BaseController {
             let newFormat = (newDate.getFullYear()) + "-" + (1 + newDate.getMonth()) + "-" + newDate.getUTCDate() + ' ' + newDate.getHours() + ':' + newDate.getMinutes() + ':' + newDate.getSeconds();
             if (status === 'SUBMITTED') {
                 req.body['submitted_at'] = newFormat.trim()
-                req.body.verified_status=''
-                req.body.verified_at=''
-                req.body.mentor_rejected_reason=''
+                req.body.verified_status = ''
+                req.body.verified_at = ''
+                req.body.mentor_rejected_reason = ''
             } else if (!nameChange) {
                 req.body['submitted_at'] = ''
             }
-            if (verified_status){
+            if (verified_status) {
                 req.body['verified_at'] = newFormat.trim()
             }
 
@@ -979,16 +980,23 @@ export default class ChallengeResponsesController extends BaseController {
             let activeState = await this.crudService.findOne(evaluation_process, {
                 attributes: ['state'], where: { [Op.and]: [{ status: 'ACTIVE' }, { level_name: 'L1' }] }
             });
+            let activeStateforEvaluator = await this.crudService.findOne(evaluator, {
+                attributes: ['state'], where: { [Op.and]: [{ status: 'ACTIVE' }, { user_id: evaluator_user_id }] }
+            });
+            ;
             let states = activeState.dataValues.state;
             const convertToStateArray = states.split(",");
+            const convertToStateArrayforEvaluator = activeStateforEvaluator.dataValues.state.split(",");
+            const commonStateforL1 = convertToStateArray.filter((value: any) => convertToStateArrayforEvaluator.includes(value));
+            const commonValuesString = commonStateforL1.join(',');
             const paramStatus: any = newREQQuery.status;
             let boolStatusWhereClauseRequired = false;
 
             if (paramStatus && (paramStatus in constents.challenges_flags.list)) {
-                whereClauseStatusPart = { "status": paramStatus, state: { [Op.in]: convertToStateArray } };
+                whereClauseStatusPart = { "status": paramStatus, state: { [Op.in]: commonStateforL1 } };
                 boolStatusWhereClauseRequired = true;
             } else {
-                whereClauseStatusPart = { "status": "SUBMITTED", state: { [Op.in]: convertToStateArray } };
+                whereClauseStatusPart = { "status": "SUBMITTED", state: { [Op.in]: commonStateforL1 } };
                 boolStatusWhereClauseRequired = true;
             };
 
@@ -996,7 +1004,7 @@ export default class ChallengeResponsesController extends BaseController {
 
             let level = newREQQuery.level;
             if (level && typeof level == 'string') {
-                let statesArray = states.replace(/,/g, "','")
+                let statesArray = commonValuesString.replace(/,/g, "','")
                 switch (level) {
                     case 'L1':
                         attributesNeedFetch = [
@@ -1060,8 +1068,12 @@ export default class ChallengeResponsesController extends BaseController {
                             attributes: ['state'], where: { [Op.and]: [{ status: 'ACTIVE' }, { level_name: 'L2' }] }
                         });
                         let states = activeState.dataValues.state
+                        const convertToStateArray = states.split(",");
+                        const convertToStateArrayforEvaluator = activeStateforEvaluator.dataValues.state.split(",");
+                        const commonStateforL2 = convertToStateArray.filter((value: any) => convertToStateArrayforEvaluator.includes(value));
+                        const commonValuesString = commonStateforL2.join(',');
                         if (states !== null) {
-                            let statesArray = states.replace(/,/g, "','")
+                            let statesArray = commonValuesString.replace(/,/g, "','")
                             challengeResponse = await db.query("SELECT challenge_responses.challenge_response_id, challenge_responses.challenge_id, challenge_responses.theme, challenge_responses.team_id, challenge_responses.title,challenge_responses.problem_statement,challenge_responses.causes,challenge_responses.effects,challenge_responses.community,challenge_responses.facing,challenge_responses.solution,challenge_responses.stakeholders,challenge_responses.problem_solving,challenge_responses.feedback,challenge_responses.prototype_image,challenge_responses.prototype_link,challenge_responses.workbook,challenge_responses.language, challenge_responses.initiated_by,  challenge_responses.created_at, challenge_responses.submitted_at,    challenge_responses.status, challenge_responses.state,challenge_responses.focus_area,(SELECT COUNT(*) FROM challenge_responses AS idea WHERE idea.evaluation_status = 'SELECTEDROUND1') AS 'overAllIdeas', (SELECT COUNT(*) - SUM(CASE WHEN FIND_IN_SET('" + evaluator_user_id.toString() + "', evals) > 0 THEN 1 ELSE 0 END) FROM l1_accepted WHERE l1_accepted.state IN ('" + statesArray + "')) AS 'openIdeas', (SELECT COUNT(*) FROM evaluator_ratings AS A WHERE A.evaluator_id = " + evaluator_user_id.toString() + ") AS 'evaluatedIdeas' FROM l1_accepted AS l1_accepted LEFT OUTER JOIN challenge_responses AS challenge_responses ON l1_accepted.challenge_response_id = challenge_responses.challenge_response_id WHERE l1_accepted.state IN ('" + statesArray + "') AND NOT FIND_IN_SET(" + evaluator_user_id.toString() + ", l1_accepted.evals) ORDER BY RAND() LIMIT 1", { type: QueryTypes.SELECT });
                         } else {
                             challengeResponse = await db.query(`SELECT challenge_responses.challenge_response_id, challenge_responses.challenge_id, challenge_responses.theme, challenge_responses.team_id, challenge_responses.title,challenge_responses.problem_statement,challenge_responses.causes,challenge_responses.effects,challenge_responses.community,challenge_responses.facing,challenge_responses.solution,challenge_responses.stakeholders,challenge_responses.problem_solving,challenge_responses.feedback,challenge_responses.prototype_image,challenge_responses.prototype_link,challenge_responses.workbook,challenge_responses.language, challenge_responses.initiated_by,  challenge_responses.created_at, challenge_responses.submitted_at,    challenge_responses.status, challenge_responses.state,challenge_responses.focus_area,(SELECT COUNT(*) FROM challenge_responses AS idea WHERE idea.evaluation_status = 'SELECTEDROUND1') AS 'overAllIdeas', (SELECT COUNT(*) - SUM(CASE WHEN FIND_IN_SET(${evaluator_user_id.toString()}, evals) > 0 THEN 1 ELSE 0 END) FROM l1_accepted) AS 'openIdeas', (SELECT COUNT(*) FROM evaluator_ratings AS A WHERE A.evaluator_id = ${evaluator_user_id.toString()}) AS 'evaluatedIdeas' FROM l1_accepted AS l1_accepted LEFT OUTER JOIN challenge_responses AS challenge_responses ON l1_accepted.challenge_response_id = challenge_responses.challenge_response_id WHERE NOT FIND_IN_SET(${evaluator_user_id.toString()}, l1_accepted.evals) ORDER BY RAND() LIMIT 1`, { type: QueryTypes.SELECT });

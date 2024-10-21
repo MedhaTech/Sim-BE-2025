@@ -16,7 +16,8 @@ export const evaluatorRegSchema = Joi.object().keys({
     mobile : Joi.string().regex(constents.ONLY_DIGIT_PATTERN),
     password: Joi.string().required().messages({
         'string.empty': speeches.USER_PASSWORD_REQUIRED
-    })
+    }),
+    state: Joi.string(),
 });
 
 export const evaluatorLoginSchema = Joi.object().keys({
@@ -49,5 +50,5 @@ export const evaluatorUpdateSchema = Joi.object().keys({
     username: Joi.string().trim().min(1).email(),
     mobile: Joi.string(),
     full_name: Joi.string().trim().min(1).regex(constents.ALPHA_NUMERIC_PATTERN),
-    district: Joi.string()
+    state: Joi.string()
 });
