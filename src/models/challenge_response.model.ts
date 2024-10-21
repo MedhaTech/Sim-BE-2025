@@ -23,7 +23,7 @@ export class challenge_response extends Model<InferAttributes<challenge_response
     declare updated_by: number;
     declare updated_at: Date;
     declare theme: String;
-    declare focus_area : String;
+    declare focus_area: String;
     declare title: String;
     declare problem_statement: String;
     declare causes: String;
@@ -40,6 +40,7 @@ export class challenge_response extends Model<InferAttributes<challenge_response
     declare verified_status: Enumerator;
     declare verified_at: Date;
     declare mentor_rejected_reason: String;
+    declare language: String;
 }
 
 challenge_response.init(
@@ -125,6 +126,9 @@ challenge_response.init(
             type: DataTypes.STRING
         },
         mentor_rejected_reason: {
+            type: DataTypes.STRING
+        },
+        language: {
             type: DataTypes.STRING
         },
         team_id: {

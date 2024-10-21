@@ -40,7 +40,7 @@ export default class EvaluatorController extends BaseController {
         }
         return super.getData(req, res, next, [],
             [
-                "evaluator_id", "district", "mobile", "status",
+                "evaluator_id", "state", "mobile", "status",
             ], {
             attributes: [
                 "user_id",

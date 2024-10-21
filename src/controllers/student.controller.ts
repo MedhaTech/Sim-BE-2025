@@ -562,25 +562,11 @@ export default class StudentController extends BaseController {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
         }
         try {
-            let newREParams: any = {};
-            if (req.params) {
-                const newParams: any = await this.authService.decryptGlobal(req.params);
-                newREParams = JSON.parse(newParams);
-            } else {
-                newREParams = req.params
-            }
-            const { model, student_user_id } = newREParams;
-            const user_id = res.locals.user_id
-            if (model) {
-                this.model = model;
-            };
-            const where: any = {};
-            where[`${this.model}_id`] = newREParams.id;
-            const modelLoaded = await this.loadModel(model);
-            const payload = this.autoFillTrackingColumns(req, res, modelLoaded);
-            payload["certificate"] = new Date().toLocaleString();
+            const payload : any = {};
+            const id: any = await this.authService.decryptGlobal(req.params.student_user_id);
+            payload["certificate"] = new Date();
             const updateCertificate = await this.crudService.updateAndFind(student, payload, {
-                where: { student_id: student_user_id }
+                where: { user_id : id }
             });
             if (!updateCertificate) {
                 throw internal()
