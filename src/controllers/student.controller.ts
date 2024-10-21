@@ -576,7 +576,6 @@ export default class StudentController extends BaseController {
             }
             return res.status(200).send(dispatcher(res, updateCertificate, 'Certificate Updated'));
         } catch (error) {
-            console.log(error)
             next(error);
         }
     }
