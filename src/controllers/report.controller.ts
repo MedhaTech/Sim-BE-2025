@@ -1223,6 +1223,7 @@ GROUP BY user_id`, { type: QueryTypes.SELECT });
     prototype_image,
     prototype_link,
     workbook,
+    language,
     verified_status,
     verified_at,
     mentor_rejected_reason
