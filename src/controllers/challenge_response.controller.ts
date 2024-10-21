@@ -157,6 +157,7 @@ export default class ChallengeResponsesController extends BaseController {
                                     "prototype_image",
                                     "prototype_link",
                                     "workbook",
+                                    "language",
                                     "initiated_by",
                                     "created_at",
                                     "submitted_at",
@@ -206,6 +207,7 @@ export default class ChallengeResponsesController extends BaseController {
                                     "prototype_image",
                                     "prototype_link",
                                     "workbook",
+                                    "language",
                                     "initiated_by",
                                     "created_at",
                                     "submitted_at",
@@ -281,6 +283,7 @@ export default class ChallengeResponsesController extends BaseController {
                         "prototype_image",
                         "prototype_link",
                         "workbook",
+                        "language",
                         "initiated_by",
                         "created_at",
                         "submitted_at",
@@ -346,6 +349,7 @@ export default class ChallengeResponsesController extends BaseController {
                                     "prototype_image",
                                     "prototype_link",
                                     "workbook",
+                                    "language",
                                     "initiated_by",
                                     "created_at",
                                     "submitted_at",
@@ -430,6 +434,7 @@ export default class ChallengeResponsesController extends BaseController {
                                     "prototype_image",
                                     "prototype_link",
                                     "workbook",
+                                    "language",
                                     "initiated_by",
                                     "created_at",
                                     "submitted_at",
@@ -544,6 +549,7 @@ export default class ChallengeResponsesController extends BaseController {
                             "prototype_image",
                             "prototype_link",
                             "workbook",
+                            "language",
                             "initiated_by",
                             "created_at",
                             "submitted_at",
@@ -827,6 +833,7 @@ export default class ChallengeResponsesController extends BaseController {
                     "prototype_image",
                     "prototype_link",
                     "workbook",
+                    "language",
                     "verified_status",
                     "verified_at",
                     "mentor_rejected_reason",
@@ -894,6 +901,7 @@ export default class ChallengeResponsesController extends BaseController {
                     "prototype_image",
                     "prototype_link",
                     "workbook",
+                    "language",
                     "challenge_response_id",
                     "verified_status",
                     "verified_at",
@@ -1010,6 +1018,7 @@ export default class ChallengeResponsesController extends BaseController {
                             `prototype_image`,
                             `prototype_link`,
                             `workbook`,
+                            "language",
                             `initiated_by`,
                             "created_at",
                             "submitted_at",
@@ -1053,9 +1062,9 @@ export default class ChallengeResponsesController extends BaseController {
                         let states = activeState.dataValues.state
                         if (states !== null) {
                             let statesArray = states.replace(/,/g, "','")
-                            challengeResponse = await db.query("SELECT challenge_responses.challenge_response_id, challenge_responses.challenge_id, challenge_responses.theme, challenge_responses.team_id, challenge_responses.title,challenge_responses.problem_statement,challenge_responses.causes,challenge_responses.effects,challenge_responses.community,challenge_responses.facing,challenge_responses.solution,challenge_responses.stakeholders,challenge_responses.problem_solving,challenge_responses.feedback,challenge_responses.prototype_image,challenge_responses.prototype_link,challenge_responses.workbook, challenge_responses.initiated_by,  challenge_responses.created_at, challenge_responses.submitted_at,    challenge_responses.status, challenge_responses.state,challenge_responses.focus_area,(SELECT COUNT(*) FROM challenge_responses AS idea WHERE idea.evaluation_status = 'SELECTEDROUND1') AS 'overAllIdeas', (SELECT COUNT(*) - SUM(CASE WHEN FIND_IN_SET('" + evaluator_user_id.toString() + "', evals) > 0 THEN 1 ELSE 0 END) FROM l1_accepted WHERE l1_accepted.state IN ('" + statesArray + "')) AS 'openIdeas', (SELECT COUNT(*) FROM evaluator_ratings AS A WHERE A.evaluator_id = " + evaluator_user_id.toString() + ") AS 'evaluatedIdeas' FROM l1_accepted AS l1_accepted LEFT OUTER JOIN challenge_responses AS challenge_responses ON l1_accepted.challenge_response_id = challenge_responses.challenge_response_id WHERE l1_accepted.state IN ('" + statesArray + "') AND NOT FIND_IN_SET(" + evaluator_user_id.toString() + ", l1_accepted.evals) ORDER BY RAND() LIMIT 1", { type: QueryTypes.SELECT });
+                            challengeResponse = await db.query("SELECT challenge_responses.challenge_response_id, challenge_responses.challenge_id, challenge_responses.theme, challenge_responses.team_id, challenge_responses.title,challenge_responses.problem_statement,challenge_responses.causes,challenge_responses.effects,challenge_responses.community,challenge_responses.facing,challenge_responses.solution,challenge_responses.stakeholders,challenge_responses.problem_solving,challenge_responses.feedback,challenge_responses.prototype_image,challenge_responses.prototype_link,challenge_responses.workbook,challenge_responses.language, challenge_responses.initiated_by,  challenge_responses.created_at, challenge_responses.submitted_at,    challenge_responses.status, challenge_responses.state,challenge_responses.focus_area,(SELECT COUNT(*) FROM challenge_responses AS idea WHERE idea.evaluation_status = 'SELECTEDROUND1') AS 'overAllIdeas', (SELECT COUNT(*) - SUM(CASE WHEN FIND_IN_SET('" + evaluator_user_id.toString() + "', evals) > 0 THEN 1 ELSE 0 END) FROM l1_accepted WHERE l1_accepted.state IN ('" + statesArray + "')) AS 'openIdeas', (SELECT COUNT(*) FROM evaluator_ratings AS A WHERE A.evaluator_id = " + evaluator_user_id.toString() + ") AS 'evaluatedIdeas' FROM l1_accepted AS l1_accepted LEFT OUTER JOIN challenge_responses AS challenge_responses ON l1_accepted.challenge_response_id = challenge_responses.challenge_response_id WHERE l1_accepted.state IN ('" + statesArray + "') AND NOT FIND_IN_SET(" + evaluator_user_id.toString() + ", l1_accepted.evals) ORDER BY RAND() LIMIT 1", { type: QueryTypes.SELECT });
                         } else {
-                            challengeResponse = await db.query(`SELECT challenge_responses.challenge_response_id, challenge_responses.challenge_id, challenge_responses.theme, challenge_responses.team_id, challenge_responses.title,challenge_responses.problem_statement,challenge_responses.causes,challenge_responses.effects,challenge_responses.community,challenge_responses.facing,challenge_responses.solution,challenge_responses.stakeholders,challenge_responses.problem_solving,challenge_responses.feedback,challenge_responses.prototype_image,challenge_responses.prototype_link,challenge_responses.workbook, challenge_responses.initiated_by,  challenge_responses.created_at, challenge_responses.submitted_at,    challenge_responses.status, challenge_responses.state,challenge_responses.focus_area,(SELECT COUNT(*) FROM challenge_responses AS idea WHERE idea.evaluation_status = 'SELECTEDROUND1') AS 'overAllIdeas', (SELECT COUNT(*) - SUM(CASE WHEN FIND_IN_SET(${evaluator_user_id.toString()}, evals) > 0 THEN 1 ELSE 0 END) FROM l1_accepted) AS 'openIdeas', (SELECT COUNT(*) FROM evaluator_ratings AS A WHERE A.evaluator_id = ${evaluator_user_id.toString()}) AS 'evaluatedIdeas' FROM l1_accepted AS l1_accepted LEFT OUTER JOIN challenge_responses AS challenge_responses ON l1_accepted.challenge_response_id = challenge_responses.challenge_response_id WHERE NOT FIND_IN_SET(${evaluator_user_id.toString()}, l1_accepted.evals) ORDER BY RAND() LIMIT 1`, { type: QueryTypes.SELECT });
+                            challengeResponse = await db.query(`SELECT challenge_responses.challenge_response_id, challenge_responses.challenge_id, challenge_responses.theme, challenge_responses.team_id, challenge_responses.title,challenge_responses.problem_statement,challenge_responses.causes,challenge_responses.effects,challenge_responses.community,challenge_responses.facing,challenge_responses.solution,challenge_responses.stakeholders,challenge_responses.problem_solving,challenge_responses.feedback,challenge_responses.prototype_image,challenge_responses.prototype_link,challenge_responses.workbook,challenge_responses.language, challenge_responses.initiated_by,  challenge_responses.created_at, challenge_responses.submitted_at,    challenge_responses.status, challenge_responses.state,challenge_responses.focus_area,(SELECT COUNT(*) FROM challenge_responses AS idea WHERE idea.evaluation_status = 'SELECTEDROUND1') AS 'overAllIdeas', (SELECT COUNT(*) - SUM(CASE WHEN FIND_IN_SET(${evaluator_user_id.toString()}, evals) > 0 THEN 1 ELSE 0 END) FROM l1_accepted) AS 'openIdeas', (SELECT COUNT(*) FROM evaluator_ratings AS A WHERE A.evaluator_id = ${evaluator_user_id.toString()}) AS 'evaluatedIdeas' FROM l1_accepted AS l1_accepted LEFT OUTER JOIN challenge_responses AS challenge_responses ON l1_accepted.challenge_response_id = challenge_responses.challenge_response_id WHERE NOT FIND_IN_SET(${evaluator_user_id.toString()}, l1_accepted.evals) ORDER BY RAND() LIMIT 1`, { type: QueryTypes.SELECT });
                         }
                         const evaluatedIdeas = await db.query(`SELECT COUNT(*) as evaluatedIdeas FROM evaluator_ratings AS A WHERE A.evaluator_id = ${evaluator_user_id.toString()}`, { type: QueryTypes.SELECT })
                         let throwMessage = {
@@ -1152,6 +1161,7 @@ export default class ChallengeResponsesController extends BaseController {
                                 "prototype_image",
                                 "prototype_link",
                                 "workbook",
+                                "language",
                                 "initiated_by",
                                 "created_at",
                                 "submitted_at",
@@ -1215,6 +1225,7 @@ export default class ChallengeResponsesController extends BaseController {
                                 "prototype_image",
                                 "prototype_link",
                                 "workbook",
+                                "language",
                                 "initiated_by",
                                 "created_at",
                                 "submitted_at",
@@ -1366,6 +1377,7 @@ export default class ChallengeResponsesController extends BaseController {
                     "prototype_image",
                     "prototype_link",
                     "workbook",
+                    "language",
                     "initiated_by",
                     "created_at",
                     "submitted_at",
