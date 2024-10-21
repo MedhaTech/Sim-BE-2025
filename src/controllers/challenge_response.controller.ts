@@ -391,6 +391,7 @@ export default class ChallengeResponsesController extends BaseController {
                                         condition,
                                         whereClauseStatusPart,
                                         additionalFilter,
+                                        { verified_status: { [Op.is]: 'ACCEPTED' } }
                                     ]
                                 }, limit, offset,
                             });
@@ -1034,11 +1035,11 @@ export default class ChallengeResponsesController extends BaseController {
                             `state`,
                             `focus_area`,
                             [
-                                db.literal(`( SELECT count(*) FROM challenge_responses as idea where idea.status = 'SUBMITTED')`),
+                                db.literal(`(SELECT count(*) FROM challenge_responses as idea where idea.verified_status <> 'null' and idea.verified_status <> '')`),
                                 'overAllIdeas'
                             ],
                             [
-                                db.literal(`( SELECT count(*) FROM challenge_responses as idea where idea.evaluation_status is null AND idea.status = 'SUBMITTED' AND idea.state IN ('${statesArray}'))`),
+                                db.literal(`( SELECT count(*) FROM challenge_responses as idea where idea.evaluation_status is null AND idea.verified_status = 'ACCEPTED' AND idea.state IN ('${statesArray}'))`),
                                 'openIdeas'
                             ],
                             [
@@ -1048,7 +1049,8 @@ export default class ChallengeResponsesController extends BaseController {
                             whereClause = {
                                 [Op.and]: [
                                     whereClauseStatusPart,
-                                    { evaluation_status: { [Op.is]: null } }
+                                    { evaluation_status: { [Op.is]: null } },
+                                    { verified_status: { [Op.is]: 'ACCEPTED' } }
                                 ]
                             }
                         challengeResponse = await this.crudService.findOne(challenge_response, {
