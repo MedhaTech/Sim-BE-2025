@@ -391,7 +391,7 @@ export default class ChallengeResponsesController extends BaseController {
                                         condition,
                                         whereClauseStatusPart,
                                         additionalFilter,
-                                        { verified_status: { [Op.is]: 'ACCEPTED' } }
+                                        { verified_status: 'ACCEPTED' }
                                     ]
                                 }, limit, offset,
                             });
@@ -1050,7 +1050,7 @@ export default class ChallengeResponsesController extends BaseController {
                                 [Op.and]: [
                                     whereClauseStatusPart,
                                     { evaluation_status: { [Op.is]: null } },
-                                    { verified_status: { [Op.is]: 'ACCEPTED' } }
+                                    { verified_status: 'ACCEPTED' }
                                 ]
                             }
                         challengeResponse = await this.crudService.findOne(challenge_response, {
