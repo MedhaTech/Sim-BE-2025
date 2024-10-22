@@ -220,8 +220,24 @@ export default class AdminController extends BaseController {
     WHERE
         state LIKE ${stateFilter}`, { type: QueryTypes.SELECT });
             const arrayOfUsernames = await this.authService.ConverListemail(summary);
-            const result = await this.authService.triggerBulkEmail(arrayOfUsernames, msg, subject);
-            return res.status(200).send(dispatcher(res, result, 'Email sent'));
+            let resultdata = [];
+            if (arrayOfUsernames.length > 49) {
+                function splitArray(arr: any, chunkSize: any) {
+                    let result = [];
+                    for (let i = 0; i < arr.length; i += chunkSize) {
+                        result.push(arr.slice(i, i + chunkSize));
+                    }
+                    return result;
+                }
+                let splitArrays = splitArray(arrayOfUsernames, 49);
+                splitArrays.map(async (smallarrayofusername, i) => {
+                    resultdata = await this.authService.triggerBulkEmail(smallarrayofusername, msg, subject);
+                })
+            } else {
+                resultdata.push(await this.authService.triggerBulkEmail(arrayOfUsernames, msg, subject))
+            }
+
+            return res.status(200).send(dispatcher(res, resultdata, 'Email sent'));
         } catch (error) {
             next(error);
         }
