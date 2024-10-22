@@ -40,7 +40,9 @@ export default class ReportController extends BaseController {
         this.router.get(`${this.path}/L2ReportTable2`, this.getL2ReportTable2.bind(this));
         this.router.get(`${this.path}/L3ReportTable1`, this.getL3ReportTable1.bind(this));
         this.router.get(`${this.path}/L3ReportTable2`, this.getL3ReportTable2.bind(this));
-
+        this.router.get(`${this.path}/L1deatilreport`, this.getL1Report.bind(this));
+        this.router.get(`${this.path}/L2deatilreport`, this.getL2Report.bind(this));
+        this.router.get(`${this.path}/L3deatilreport`, this.getL3Report.bind(this));
 
     }
     protected async mentorsummary(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
@@ -1459,31 +1461,31 @@ FROM
                 where['state'] = state
             }
             try {
-                data = await this.crudService.findAll(organization,{
+                data = await this.crudService.findAll(organization, {
                     attributes: [
-                      "organization_name",
-                      "organization_code",
-                      "city",
-                      "district",
-                      "category",
-                      "state",
-                      "country",
-                      "address",
-                      "pin_code",
-                      "principal_name",
-                      "principal_mobile",
-                      "principal_email",
-                      [db.fn('COUNT', db.col('mentor.mentor_id')), 'mentor_reg']
+                        "organization_name",
+                        "organization_code",
+                        "city",
+                        "district",
+                        "category",
+                        "state",
+                        "country",
+                        "address",
+                        "pin_code",
+                        "principal_name",
+                        "principal_mobile",
+                        "principal_email",
+                        [db.fn('COUNT', db.col('mentor.mentor_id')), 'mentor_reg']
                     ],
                     include: [{
-                      model: mentor,  // Assuming 'Mentors' is the related model
-                      attributes: [],  // No need to fetch mentor data, just count
-                      required: false  // LEFT JOIN to include organizations with no mentors
+                        model: mentor,  // Assuming 'Mentors' is the related model
+                        attributes: [],  // No need to fetch mentor data, just count
+                        required: false  // LEFT JOIN to include organizations with no mentors
                     }],
                     where,
                     group: ['organization.organization_code']
-                  });
-                  
+                });
+
             } catch (error: any) {
                 console.log(error)
                 next(error)
@@ -1541,21 +1543,21 @@ FROM
         }
     }
     protected async getL1ReportTable1(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'EADMIN'){
-            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'EADMIN') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
         }
         try {
             let data: any = {}
-            let newREQQuery : any = {}
-            if(req.query.Data){
-                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
-                newREQQuery  = JSON.parse(newQuery);
-            }else if(Object.keys(req.query).length !== 0){
-                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
+            let newREQQuery: any = {}
+            if (req.query.Data) {
+                let newQuery: any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery = JSON.parse(newQuery);
+            } else if (Object.keys(req.query).length !== 0) {
+                return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
             }
             const state = newREQQuery.state;
             let wherefilter = '';
-            if(state){
+            if (state) {
                 wherefilter = `WHERE org.state= '${state}'`;
             }
             const summary = await db.query(`SELECT 
@@ -1578,11 +1580,11 @@ FROM
             FROM
                 challenge_responses AS cal
             WHERE
-                cal.status = 'SUBMITTED'
+                cal.status = 'SUBMITTED' && cal.verified_status = 'ACCEPTED' 
             GROUP BY state) AS t2 ON org.state = t2.state
             ${wherefilter}
         GROUP BY org.state`, { type: QueryTypes.SELECT });
-            data=summary;
+            data = summary;
             if (!data) {
                 throw notFound(speeches.DATA_NOT_FOUND)
             }
@@ -1595,8 +1597,8 @@ FROM
         }
     }
     protected async getL1ReportTable2(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'EADMIN'){
-            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'EADMIN') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
         }
         try {
             let data: any = {}
@@ -1617,7 +1619,7 @@ FROM
         WHERE
             cal.status = 'SUBMITTED'
         GROUP BY evaluated_by`, { type: QueryTypes.SELECT });
-            data=summary;
+            data = summary;
             if (!data) {
                 throw notFound(speeches.DATA_NOT_FOUND)
             }
@@ -1630,8 +1632,8 @@ FROM
         }
     }
     protected async getL2ReportTable1(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'EADMIN'){
-            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'EADMIN') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
         }
         try {
             let data: any = {}
@@ -1644,7 +1646,7 @@ FROM
             evaluator_ratings
         GROUP BY challenge_response_id;
         `, { type: QueryTypes.SELECT });
-            data=summary;
+            data = summary;
             if (!data) {
                 throw notFound(speeches.DATA_NOT_FOUND)
             }
@@ -1657,8 +1659,8 @@ FROM
         }
     }
     protected async getL2ReportTable2(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'EADMIN'){
-            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'EADMIN') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
         }
         try {
             let data: any = {}
@@ -1669,7 +1671,7 @@ FROM
                 JOIN
             evaluators ON evaluator_ratings.evaluator_id = evaluators.user_id
         GROUP BY user_id;`, { type: QueryTypes.SELECT });
-            data=summary;
+            data = summary;
             if (!data) {
                 throw notFound(speeches.DATA_NOT_FOUND)
             }
@@ -1682,8 +1684,8 @@ FROM
         }
     }
     protected async getL3ReportTable1(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'EADMIN'){
-            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'EADMIN') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
         }
         try {
             let data: any = {}
@@ -1700,7 +1702,7 @@ FROM
 WHERE
     final_result <> 'null'
 GROUP BY challenge_response_id;`, { type: QueryTypes.SELECT });
-            data=summary;
+            data = summary;
             if (!data) {
                 throw notFound(speeches.DATA_NOT_FOUND)
             }
@@ -1713,21 +1715,21 @@ GROUP BY challenge_response_id;`, { type: QueryTypes.SELECT });
         }
     }
     protected async getL3ReportTable2(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'EADMIN'){
-            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'EADMIN') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
         }
         try {
             let data: any = {}
-            let newREQQuery : any = {}
-            if(req.query.Data){
-                let newQuery : any = await this.authService.decryptGlobal(req.query.Data);
-                newREQQuery  = JSON.parse(newQuery);
-            }else if(Object.keys(req.query).length !== 0){
-                return res.status(400).send(dispatcher(res,'','error','Bad Request',400));
+            let newREQQuery: any = {}
+            if (req.query.Data) {
+                let newQuery: any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery = JSON.parse(newQuery);
+            } else if (Object.keys(req.query).length !== 0) {
+                return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
             }
             const state = newREQQuery.state;
             let wherefilter = '';
-            if(state){
+            if (state) {
                 wherefilter = `WHERE org.state= '${state}'`;
             }
             const summary = await db.query(`SELECT 
@@ -1753,7 +1755,391 @@ GROUP BY challenge_response_id;`, { type: QueryTypes.SELECT });
             GROUP BY state) AS t2 ON org.state = t2.state
             ${wherefilter}
         GROUP BY org.state`, { type: QueryTypes.SELECT });
-            data=summary;
+            data = summary;
+            if (!data) {
+                throw notFound(speeches.DATA_NOT_FOUND)
+            }
+            if (data instanceof Error) {
+                throw data
+            }
+            res.status(200).send(dispatcher(res, data, "success"))
+        } catch (err) {
+            next(err)
+        }
+    }
+    protected async getL1Report(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'EADMIN') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
+        }
+        try {
+            let data: any = {}
+            let newREQQuery: any = {}
+            if (req.query.Data) {
+                let newQuery: any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery = JSON.parse(newQuery);
+            } else if (Object.keys(req.query).length !== 0) {
+                return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
+            }
+            const { state, district, sdg, category } = newREQQuery;
+            let districtFilter: any = `'%%'`
+            let categoryFilter: any = `'%%'`
+            let stateFilter: any = `'%%'`
+            let themesFilter: any = `'%%'`
+            if (district !== 'All Districts' && district !== undefined) {
+                districtFilter = `'${district}'`
+            }
+            if (category !== 'All Categories' && category !== undefined) {
+                categoryFilter = `'${category}'`
+            }
+            if (state !== 'All States' && state !== undefined) {
+                stateFilter = `'${state}'`
+            }
+            if (sdg !== 'All Themes' && sdg !== undefined) {
+                themesFilter = `'${sdg}'`
+            }
+            const summary = await db.query(`SELECT 
+                challenge_response_id,
+                cr.team_id,
+                cr.status,
+                theme,
+                focus_area,
+                cr.title,
+                problem_statement,
+                causes,
+                effects,
+                community,
+                facing,
+                solution,
+                stakeholders,
+                problem_solving,
+                feedback,
+                prototype_image,
+                prototype_link,
+                workbook,
+                language,
+                verified_status,
+                verified_at,
+                mentor_rejected_reason,
+                evaluation_status
+            FROM
+                challenge_responses as cr join teams as t on cr.team_id = t.team_id join mentors as m on t.mentor_id = m.mentor_id join organizations as org on m.organization_code = org.organization_code
+            WHERE
+               org.status = 'ACTIVE' && evaluation_status in ('REJECTEDROUND1','SELECTEDROUND1') && org.state LIKE ${stateFilter} && org.district LIKE ${districtFilter} && org.category LIKE ${categoryFilter} && cr.theme LIKE ${themesFilter};`, { type: QueryTypes.SELECT });
+            const teamData = await db.query(`SELECT 
+                team_id, team_name,team_email, mentor_id,user_id as teamuserId
+            FROM
+                teams`, { type: QueryTypes.SELECT });
+            const mentorData = await db.query(`SELECT 
+                    mn.mentor_id,
+                    mn.user_id as mentorUserId,
+                    og.organization_code,
+                    og.organization_name,
+                    og.district,
+                    og.category,
+                    og.pin_code,
+                    og.address,
+                    mn.full_name,
+                    mn.mobile,
+                    og.state,
+                    mn.gender,
+                    og.unique_code
+                FROM
+                    (mentors AS mn)
+                        LEFT JOIN
+                    organizations AS og ON mn.organization_code = og.organization_code
+                WHERE
+                    og.status = 'ACTIVE';`, { type: QueryTypes.SELECT });
+            const mentorUsername = await db.query(`SELECT 
+                               user_id, username
+                           FROM
+                               users
+                           WHERE
+                               role = 'MENTOR'`, { type: QueryTypes.SELECT });
+            const teamUsername = await db.query(`SELECT 
+                                user_id as teamuserId, username as teamUsername
+                            FROM
+                                users
+                            WHERE
+                                role = 'TEAM'`, { type: QueryTypes.SELECT });
+            const student_names = await db.query(`SELECT 
+                      GROUP_CONCAT(full_name
+                              SEPARATOR ', ') AS names,
+                          team_id
+                  FROM
+                      students
+                  GROUP BY team_id`, { type: QueryTypes.SELECT });
+            data['summary'] = summary;
+            data['teamData'] = teamData;
+            data['teamUsername'] = teamUsername;
+            data['mentorData'] = mentorData;
+            data['mentorUsername'] = mentorUsername;
+            data['student_names'] = student_names;
+            if (!data) {
+                throw notFound(speeches.DATA_NOT_FOUND)
+            }
+            if (data instanceof Error) {
+                throw data
+            }
+            res.status(200).send(dispatcher(res, data, "success"))
+        } catch (err) {
+            console.log(err)
+            next(err)
+        }
+    }
+    protected async getL2Report(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'EADMIN') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
+        }
+        try {
+            let data: any = {}
+            let newREQQuery: any = {}
+            if (req.query.Data) {
+                let newQuery: any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery = JSON.parse(newQuery);
+            } else if (Object.keys(req.query).length !== 0) {
+                return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
+            }
+            const { state, district, sdg, category } = newREQQuery;
+            let districtFilter: any = `'%%'`
+            let categoryFilter: any = `'%%'`
+            let stateFilter: any = `'%%'`
+            let themesFilter: any = `'%%'`
+            if (district !== 'All Districts' && district !== undefined) {
+                districtFilter = `'${district}'`
+            }
+            if (category !== 'All Categories' && category !== undefined) {
+                categoryFilter = `'${category}'`
+            }
+            if (state !== 'All States' && state !== undefined) {
+                stateFilter = `'${state}'`
+            }
+            if (sdg !== 'All Themes' && sdg !== undefined) {
+                themesFilter = `'${sdg}'`
+            }
+            const summary = await db.query(`SELECT 
+                challenge_response_id,
+                cr.team_id,
+                cr.status,
+                theme,
+                focus_area,
+                cr.title,
+                problem_statement,
+                causes,
+                effects,
+                community,
+                facing,
+                solution,
+                stakeholders,
+                problem_solving,
+                feedback,
+                prototype_image,
+                prototype_link,
+                workbook,
+                language,
+                verified_status,
+                verified_at,
+                mentor_rejected_reason,
+                final_result
+            FROM
+                challenge_responses as cr join teams as t on cr.team_id = t.team_id join mentors as m on t.mentor_id = m.mentor_id join organizations as org on m.organization_code = org.organization_code
+            WHERE
+               org.status = 'ACTIVE' && evaluation_status = 'SELECTEDROUND1' && org.state LIKE ${stateFilter} && org.district LIKE ${districtFilter} && org.category LIKE ${categoryFilter} && cr.theme LIKE ${themesFilter};`, { type: QueryTypes.SELECT });
+            const teamData = await db.query(`SELECT 
+                team_id, team_name,team_email, mentor_id,user_id as teamuserId
+            FROM
+                teams`, { type: QueryTypes.SELECT });
+            const mentorData = await db.query(`SELECT 
+                    mn.mentor_id,
+                    mn.user_id as mentorUserId,
+                    og.organization_code,
+                    og.organization_name,
+                    og.district,
+                    og.category,
+                    og.pin_code,
+                    og.address,
+                    mn.full_name,
+                    mn.mobile,
+                    og.state,
+                    mn.gender,
+                    og.unique_code
+                FROM
+                    (mentors AS mn)
+                        LEFT JOIN
+                    organizations AS og ON mn.organization_code = og.organization_code
+                WHERE
+                    og.status = 'ACTIVE';`, { type: QueryTypes.SELECT });
+            const mentorUsername = await db.query(`SELECT 
+                               user_id, username
+                           FROM
+                               users
+                           WHERE
+                               role = 'MENTOR'`, { type: QueryTypes.SELECT });
+            const teamUsername = await db.query(`SELECT 
+                                user_id as teamuserId, username as teamUsername
+                            FROM
+                                users
+                            WHERE
+                                role = 'TEAM'`, { type: QueryTypes.SELECT });
+            const student_names = await db.query(`SELECT 
+                      GROUP_CONCAT(full_name
+                              SEPARATOR ', ') AS names,
+                          team_id
+                  FROM
+                      students
+                  GROUP BY team_id`, { type: QueryTypes.SELECT });
+            const evaluatorRatingValues = await db.query(`SELECT 
+challenge_response_id,
+    AVG(overall) AS overall_score,
+    AVG(param_1) AS novelty,
+    AVG(param_3) AS feasibility,
+    AVG(param_4) AS scalability,
+    AVG(param_5) AS sustainability,
+    AVG(param_2) AS useful,
+    COUNT(challenge_response_id) AS eval_count,
+    (AVG(param_1) + AVG(param_2)) / 2 AS quality_score,
+    (AVG(param_3) + AVG(param_4) + AVG(param_5)) / 3 AS feasibility_score
+FROM
+    evaluator_ratings
+GROUP BY challenge_response_id`, { type: QueryTypes.SELECT });
+            data['summary'] = summary;
+            data['teamData'] = teamData;
+            data['teamUsername'] = teamUsername;
+            data['mentorData'] = mentorData;
+            data['mentorUsername'] = mentorUsername;
+            data['student_names'] = student_names;
+            data['evaluatorRatingValues'] = evaluatorRatingValues;
+            if (!data) {
+                throw notFound(speeches.DATA_NOT_FOUND)
+            }
+            if (data instanceof Error) {
+                throw data
+            }
+            res.status(200).send(dispatcher(res, data, "success"))
+        } catch (err) {
+            next(err)
+        }
+    }
+    protected async getL3Report(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'EADMIN') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
+        }
+        try {
+            let data: any = {}
+            let newREQQuery: any = {}
+            if (req.query.Data) {
+                let newQuery: any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery = JSON.parse(newQuery);
+            } else if (Object.keys(req.query).length !== 0) {
+                return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
+            }
+            const { state, district, sdg, category } = newREQQuery;
+            let districtFilter: any = `'%%'`
+            let categoryFilter: any = `'%%'`
+            let stateFilter: any = `'%%'`
+            let themesFilter: any = `'%%'`
+            if (district !== 'All Districts' && district !== undefined) {
+                districtFilter = `'${district}'`
+            }
+            if (category !== 'All Categories' && category !== undefined) {
+                categoryFilter = `'${category}'`
+            }
+            if (state !== 'All States' && state !== undefined) {
+                stateFilter = `'${state}'`
+            }
+            if (sdg !== 'All Themes' && sdg !== undefined) {
+                themesFilter = `'${sdg}'`
+            }
+            const summary = await db.query(`SELECT 
+                challenge_response_id,
+                cr.team_id,
+                cr.status,
+                theme,
+                focus_area,
+                cr.title,
+                problem_statement,
+                causes,
+                effects,
+                community,
+                facing,
+                solution,
+                stakeholders,
+                problem_solving,
+                feedback,
+                prototype_image,
+                prototype_link,
+                workbook,
+                language,
+                verified_status,
+                verified_at,
+                mentor_rejected_reason,
+                final_result
+            FROM
+                challenge_responses as cr join teams as t on cr.team_id = t.team_id join mentors as m on t.mentor_id = m.mentor_id join organizations as org on m.organization_code = org.organization_code
+            WHERE
+               org.status = 'ACTIVE' && final_result <>'null' && org.state LIKE ${stateFilter} && org.district LIKE ${districtFilter} && org.category LIKE ${categoryFilter} && cr.theme LIKE ${themesFilter};`, { type: QueryTypes.SELECT });
+            const teamData = await db.query(`SELECT 
+                team_id, team_name,team_email, mentor_id,user_id as teamuserId
+            FROM
+                teams`, { type: QueryTypes.SELECT });
+            const mentorData = await db.query(`SELECT 
+                    mn.mentor_id,
+                    mn.user_id as mentorUserId,
+                    og.organization_code,
+                    og.organization_name,
+                    og.district,
+                    og.category,
+                    og.pin_code,
+                    og.address,
+                    mn.full_name,
+                    mn.mobile,
+                    og.state,
+                    mn.gender,
+                    og.unique_code
+                FROM
+                    (mentors AS mn)
+                        LEFT JOIN
+                    organizations AS og ON mn.organization_code = og.organization_code
+                WHERE
+                    og.status = 'ACTIVE';`, { type: QueryTypes.SELECT });
+            const mentorUsername = await db.query(`SELECT 
+                               user_id, username
+                           FROM
+                               users
+                           WHERE
+                               role = 'MENTOR'`, { type: QueryTypes.SELECT });
+            const teamUsername = await db.query(`SELECT 
+                                user_id as teamuserId, username as teamUsername
+                            FROM
+                                users
+                            WHERE
+                                role = 'TEAM'`, { type: QueryTypes.SELECT });
+            const student_names = await db.query(`SELECT 
+                      GROUP_CONCAT(full_name
+                              SEPARATOR ', ') AS names,
+                          team_id
+                  FROM
+                      students
+                  GROUP BY team_id`, { type: QueryTypes.SELECT });
+            const evaluatorRatingValues = await db.query(`SELECT 
+challenge_response_id,
+    AVG(overall) AS overall_score,
+    AVG(param_1) AS novelty,
+    AVG(param_3) AS feasibility,
+    AVG(param_4) AS scalability,
+    AVG(param_5) AS sustainability,
+    AVG(param_2) AS useful,
+    (AVG(param_1) + AVG(param_2)) / 2 AS quality_score,
+    (AVG(param_3) + AVG(param_4) + AVG(param_5)) / 3 AS feasibility_score
+FROM
+    evaluator_ratings
+GROUP BY challenge_response_id`, { type: QueryTypes.SELECT });
+            data['summary'] = summary;
+            data['teamData'] = teamData;
+            data['teamUsername'] = teamUsername;
+            data['mentorData'] = mentorData;
+            data['mentorUsername'] = mentorUsername;
+            data['student_names'] = student_names;
+            data['evaluatorRatingValues'] = evaluatorRatingValues;
             if (!data) {
                 throw notFound(speeches.DATA_NOT_FOUND)
             }

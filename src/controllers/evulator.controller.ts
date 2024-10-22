@@ -111,6 +111,11 @@ export default class EvaluatorController extends BaseController {
         } else if (result.error) {
             return res.status(401).send(dispatcher(res, result.error, 'error', speeches.USER_RISTRICTED, 401));
         } else {
+            const evalutorDetails = await this.crudService.findOne(evaluator, { where: { user_id: result.data.user_id } });
+            if (!evalutorDetails || evalutorDetails instanceof Error) {
+                return res.status(404).send(dispatcher(res, null, 'error', speeches.USER_REG_STATUS));
+            }
+            result.data['evaluator_id'] = evalutorDetails.dataValues.evaluator_id;
             return res.status(200).send(dispatcher(res, result.data, 'success', speeches.USER_LOGIN_SUCCESS));
         }
     }
