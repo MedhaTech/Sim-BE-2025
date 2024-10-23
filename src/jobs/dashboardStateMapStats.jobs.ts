@@ -8,9 +8,7 @@ export default class DashboardStateMapStatsJob extends BaseJobs {
     service: DashboardStateService = new DashboardStateService;
     protected init() {
         this.name = 'dashboard_state_map_stats';
-
-        this.period = "0 */6 * * *" // every 6 hours 
-
+        this.period = "0 3 * * *" // Every Day at 3 AM
     };
 
     public async executeJob() {
