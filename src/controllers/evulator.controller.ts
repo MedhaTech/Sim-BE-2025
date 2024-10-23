@@ -6,7 +6,7 @@ import dispatcher from '../utils/dispatch.util';
 import authService from '../services/auth.service';
 import BaseController from './base.controller';
 import ValidationsHolder from '../validations/validationHolder';
-import { evaluatorRegSchema,evaluatorUpdateSchema } from '../validations/evaluator.validationa';
+import { evaluatorRegSchema, evaluatorUpdateSchema } from '../validations/evaluator.validationa';
 import { evaluator } from '../models/evaluator.model';
 import { user } from '../models/user.model';
 import { badRequest, notFound, unauthorized } from 'boom';
@@ -26,7 +26,7 @@ export default class EvaluatorController extends BaseController {
         this.validations = new ValidationsHolder(evaluatorRegSchema, evaluatorUpdateSchema);
     }
     protected initializeRoutes(): void {
-        this.router.post(`${this.path}/register`, validationMiddleware(evaluatorRegSchema),this.register.bind(this));
+        this.router.post(`${this.path}/register`, validationMiddleware(evaluatorRegSchema), this.register.bind(this));
         this.router.post(`${this.path}/login`, this.login.bind(this));
         this.router.get(`${this.path}/logout`, this.logout.bind(this));
         this.router.put(`${this.path}/changePassword`, this.changePassword.bind(this));;
@@ -35,12 +35,12 @@ export default class EvaluatorController extends BaseController {
     };
 
     protected getData(req: Request, res: Response, next: NextFunction) {
-        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'EADMIN' && res.locals.role !== 'EVALUATOR'){
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'EADMIN' && res.locals.role !== 'EVALUATOR') {
             throw unauthorized(speeches.ROLE_ACCES_DECLINE)
         }
         return super.getData(req, res, next, [],
             [
-                "evaluator_id", "district", "mobile", "status",
+                "evaluator_id", "state", "mobile", "status",
             ], {
             attributes: [
                 "user_id",
@@ -52,8 +52,8 @@ export default class EvaluatorController extends BaseController {
     }
 
     protected async updateData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'EADMIN' && res.locals.role !== 'EVALUATOR'){
-            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'EADMIN' && res.locals.role !== 'EVALUATOR') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
         }
         try {
             const { model, id } = req.params;
@@ -95,7 +95,9 @@ export default class EvaluatorController extends BaseController {
         if (!req.body.role || req.body.role !== 'EVALUATOR') {
             return res.status(406).send(dispatcher(res, null, 'error', speeches.USER_ROLE_REQUIRED, 406));
         };
+
         const payload = this.autoFillTrackingColumns(req, res, evaluator);
+        payload['state'] = "Andaman and Nicobar Islands,Andhra Pradesh,Arunachal Pradesh,Assam,Bihar,Chandigarh,Chhattisgarh,Dadra and Nagar Haveli and Daman and Diu,Delhi,Goa,Gujarat,Haryana,Himachal Pradesh,Jammu and Kashmir,Jharkhand,Karnataka,Kerala,Ladakh,Lakshadweep,Madhya Pradesh,Maharashtra,Manipur,Meghalaya,Mizoram,Nagaland,Odisha,Puducherry,Punjab,Rajasthan,Sikkim,Tamil Nadu,Telangana,Tripura,Uttar Pradesh,Uttarakhand,West Bengal"
         const result = await this.authService.register(payload);
         if (result.user_res) return res.status(406).send(dispatcher(res, result.user_res.dataValues, 'error', speeches.EVALUATOR_EXISTS, 406));
         return res.status(201).send(dispatcher(res, result.profile.dataValues, 'success', speeches.USER_REGISTERED_SUCCESSFULLY, 201));
@@ -109,6 +111,11 @@ export default class EvaluatorController extends BaseController {
         } else if (result.error) {
             return res.status(401).send(dispatcher(res, result.error, 'error', speeches.USER_RISTRICTED, 401));
         } else {
+            const evalutorDetails = await this.crudService.findOne(evaluator, { where: { user_id: result.data.user_id } });
+            if (!evalutorDetails || evalutorDetails instanceof Error) {
+                return res.status(404).send(dispatcher(res, null, 'error', speeches.USER_REG_STATUS));
+            }
+            result.data['evaluator_id'] = evalutorDetails.dataValues.evaluator_id;
             return res.status(200).send(dispatcher(res, result.data, 'success', speeches.USER_LOGIN_SUCCESS));
         }
     }
@@ -123,8 +130,8 @@ export default class EvaluatorController extends BaseController {
     }
 
     private async changePassword(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'EVALUATOR'){
-            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'EVALUATOR') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
         }
         const result = await this.authService.changePassword(req.body, res);
         if (!result) {
@@ -140,11 +147,11 @@ export default class EvaluatorController extends BaseController {
     }
 
     private async resetPassword(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'EADMIN'){
-            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'EADMIN') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
         }
         try {
-            const {mobile,username} = req.body;
+            const { mobile, username } = req.body;
             if (!mobile) {
                 throw badRequest(speeches.MOBILE_NUMBER_REQUIRED);
             }
@@ -152,7 +159,7 @@ export default class EvaluatorController extends BaseController {
                 throw badRequest(speeches.USER_EMAIL_REQUIRED);
             }
             const result = await this.authService.evaluatorResetPassword(req.body);
-             if (result.error) {
+            if (result.error) {
                 return res.status(404).send(dispatcher(res, result.error, 'error', result.error));
             } else {
                 return res.status(202).send(dispatcher(res, result.data, 'accepted', 'The password has been reset', 202));

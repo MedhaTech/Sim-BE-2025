@@ -8,9 +8,7 @@ export default class DashboardTNMapStatsJob extends BaseJobs {
     service: DashboardTNService = new DashboardTNService;
     protected init() {
         this.name = 'dashboard_TN_map_stats';
-
-        this.period = "0 */6 * * *" // every 6 hours 
-
+        this.period = "0 3 * * *" // Every Day at 3 AM
     };
 
     public async executeJob() {
