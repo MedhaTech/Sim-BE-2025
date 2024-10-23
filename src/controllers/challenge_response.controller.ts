@@ -530,6 +530,16 @@ export default class ChallengeResponsesController extends BaseController {
                             break;
                     }
                 } else {
+                    
+                    let submitedWhereCodition = {}
+                    if (whereClauseStatusPart.status === 'SUBMITTED') {
+                        submitedWhereCodition = {  verified_status: 'ACCEPTED'  }
+                    }
+                    if (whereClauseStatusPart.status === 'DRAFT') {
+                        submitedWhereCodition = { verified_status: { [Op.ne]: 'ACCEPTED'} }
+                        whereClauseStatusPart = {status: { [Op.in]: ['SUBMITTED', 'DRAFT'] } }
+                    }
+                    
                     responseOfFindAndCountAll = await this.crudService.findAndCountAll(modelClass, {
                         attributes: [
                             "challenge_response_id",
@@ -561,7 +571,7 @@ export default class ChallengeResponsesController extends BaseController {
                             "status",
                             "rejected_reason",
                             "rejected_reasonSecond",
-                            "final_result", "district",
+                            "final_result", "district","verified_status",
                             [
                                 db.literal(`(SELECT full_name FROM users As s WHERE s.user_id =  \`challenge_response\`.\`evaluated_by\` )`), 'evaluated_name'
                             ],
@@ -598,6 +608,7 @@ export default class ChallengeResponsesController extends BaseController {
                                 condition,
                                 whereClauseStatusPart,
                                 additionalFilter,
+                                submitedWhereCodition
                             ]
                         }, limit, offset,
                     });
@@ -674,7 +685,7 @@ export default class ChallengeResponsesController extends BaseController {
         }
     }
     protected async updateData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'EVALUATOR'){
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'EVALUATOR' && res.locals.role !== 'EADMIN' ){
             return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
         }
         try {
