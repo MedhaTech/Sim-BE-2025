@@ -673,6 +673,44 @@ export default class ChallengeResponsesController extends BaseController {
             next(err)
         }
     }
+    protected async updateData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'EVALUATOR'){
+            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        }
+        try {
+            const { model, id } = req.params;
+            if (model) {
+                this.model = model;
+            };
+
+            // redirecting status field to evaluater_status field and removing status from the request body;
+            req.body['evaluation_status'] = req.body.status;
+            delete req.body.status;
+
+            //date format 
+            let newDate = new Date();
+            let newFormat = (newDate.getFullYear()) + "-" + (1 + newDate.getMonth()) + "-" + newDate.getUTCDate() + ' ' + newDate.getHours() + ':' + newDate.getMinutes() + ':' + newDate.getSeconds();
+
+            const user_id = res.locals.user_id
+            const where: any = {};
+            const newParamId = await this.authService.decryptGlobal(req.params.id);
+            where[`${this.model}_id`] = newParamId;
+            const modelLoaded = await this.loadModel(model);
+            const payload = this.autoFillTrackingColumns(req, res, modelLoaded);
+            payload['evaluated_by'] = user_id
+            payload['evaluated_at'] = newFormat.trim();
+            const data = await this.crudService.update(modelLoaded, payload, { where: where });
+            if (!data) {
+                throw badRequest()
+            }
+            if (data instanceof Error) {
+                throw data;
+            }
+            return res.status(200).send(dispatcher(res, data, 'updated'));
+        } catch (error) {
+            next(error);
+        }
+    };
     protected async handleAttachment(req: Request, res: Response, next: NextFunction) {
         if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'TEAM') {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
