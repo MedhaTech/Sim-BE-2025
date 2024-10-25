@@ -450,6 +450,7 @@ export default class authService {
             } else {
                 const otpOBJ = await this.triggerEmail(requestBody.email, 3, 'no');
                 passwordNeedToBeUpdated['otp'] = otpOBJ.otp;
+                passwordNeedToBeUpdated['messageId'] = otpOBJ.messageId
                 if (passwordNeedToBeUpdated instanceof Error) {
                     throw passwordNeedToBeUpdated;
                 }
