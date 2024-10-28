@@ -38,6 +38,7 @@ export default class ReportController extends BaseController {
         this.router.get(`${this.path}/L1ReportTable2`, this.getL1ReportTable2.bind(this));
         this.router.get(`${this.path}/L2ReportTable1`, this.getL2ReportTable1.bind(this));
         this.router.get(`${this.path}/L2ReportTable2`, this.getL2ReportTable2.bind(this));
+        this.router.get(`${this.path}/L2ReportTable3`, this.getL2ReportTable3.bind(this));
         this.router.get(`${this.path}/L3ReportTable1`, this.getL3ReportTable1.bind(this));
         this.router.get(`${this.path}/L3ReportTable2`, this.getL3ReportTable2.bind(this));
         this.router.get(`${this.path}/L1deatilreport`, this.getL1Report.bind(this));
@@ -1655,6 +1656,92 @@ FROM
             }
             res.status(200).send(dispatcher(res, data, "success"))
         } catch (err) {
+            next(err)
+        }
+    }
+    protected async getL2ReportTable3(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'EADMIN') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
+        }
+        try {
+            let data: any = {}
+            let newREQQuery: any = {}
+            if (req.query.Data) {
+                let newQuery: any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery = JSON.parse(newQuery);
+            } else if (Object.keys(req.query).length !== 0) {
+                return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
+            }
+            const state = newREQQuery.state;
+            let wherefilter = '';
+            if (state) {
+                wherefilter = `WHERE org.state= '${state}'`;
+            }
+            const summary = await db.query(`SELECT 
+    org.state,
+    COALESCE(count_1to3,0) as count_1to3,
+    COALESCE(count_3to5,0) as count_3to5,
+    COALESCE(count_5to6,0) as count_5to6,
+    COALESCE(count_6to7,0) as count_6to7,
+    COALESCE(count_7to8,0) as count_7to8,
+    COALESCE(count_8to9,0) as count_8to9,
+    COALESCE(count_9to10,0) as count_9to10
+FROM
+    organizations AS org
+        LEFT JOIN
+    (SELECT 
+        state,
+            COUNT(CASE
+                WHEN
+                    average_score >= 1
+                        AND average_score <= 3
+                THEN
+                    1
+            END) AS count_1to3,
+            COUNT(CASE
+                WHEN average_score > 3 AND average_score <= 5 THEN 1
+            END) AS count_3to5,
+            COUNT(CASE
+                WHEN average_score > 5 AND average_score <= 6 THEN 1
+            END) AS count_5to6,
+            COUNT(CASE
+                WHEN average_score > 6 AND average_score <= 7 THEN 1
+            END) AS count_6to7,
+            COUNT(CASE
+                WHEN average_score > 7 AND average_score <= 8 THEN 1
+            END) AS count_7to8,
+            COUNT(CASE
+                WHEN average_score > 8 AND average_score <= 9 THEN 1
+            END) AS count_8to9,
+            COUNT(CASE
+                WHEN
+                    average_score > 9
+                        AND average_score <= 10
+                THEN
+                    1
+            END) AS count_9to10
+    FROM
+        (SELECT 
+        challenge_response_id, AVG(overall) AS average_score
+    FROM
+        Aim_db.evaluator_ratings
+    GROUP BY challenge_response_id
+    HAVING COUNT(challenge_response_id) >= 2) AS subquery
+    JOIN challenge_responses AS cal ON subquery.challenge_response_id = cal.challenge_response_id
+    GROUP BY state) AS final_count ON org.state = final_count.state
+     ${wherefilter}
+GROUP BY org.state
+        `, { type: QueryTypes.SELECT });
+            data = summary;
+            if (!data) {
+                throw notFound(speeches.DATA_NOT_FOUND)
+            }
+            if (data instanceof Error) {
+                throw data
+            }
+            res.status(200).send(dispatcher(res, data, "success"))
+        }
+        catch (err) {
             next(err)
         }
     }
