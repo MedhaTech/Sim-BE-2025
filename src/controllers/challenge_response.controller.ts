@@ -360,7 +360,7 @@ export default class ChallengeResponsesController extends BaseController {
                                     "status",
                                     "rejected_reason",
                                     "rejected_reasonSecond",
-                                    "final_result", "district",
+                                    "final_result", "district","verified_status","verified_at",
                                     [
                                         db.literal(`(SELECT full_name FROM users As s WHERE s.user_id =  \`challenge_response\`.\`evaluated_by\` )`), 'evaluated_name'
                                     ],
@@ -446,7 +446,7 @@ export default class ChallengeResponsesController extends BaseController {
                                     "status",
                                     "rejected_reason",
                                     "rejected_reasonSecond",
-                                    "final_result", "district",
+                                    "final_result", "district","verified_status","verified_at",
                                     [
                                         db.literal(`(SELECT full_name FROM users As s WHERE s.user_id =  \`challenge_response\`.\`evaluated_by\` )`), 'evaluated_name'
                                     ],
@@ -571,7 +571,7 @@ export default class ChallengeResponsesController extends BaseController {
                             "status",
                             "rejected_reason",
                             "rejected_reasonSecond",
-                            "final_result", "district","verified_status",
+                            "final_result", "district","verified_status","verified_at",
                             [
                                 db.literal(`(SELECT full_name FROM users As s WHERE s.user_id =  \`challenge_response\`.\`evaluated_by\` )`), 'evaluated_name'
                             ],
@@ -793,7 +793,7 @@ export default class ChallengeResponsesController extends BaseController {
         }
     }
     protected async updateAnyFields(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'TEAM' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STATE') {
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'TEAM' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STATE' && res.locals.role !== 'EADMIN') {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
         }
         try {
