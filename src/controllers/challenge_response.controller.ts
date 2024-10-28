@@ -360,7 +360,7 @@ export default class ChallengeResponsesController extends BaseController {
                                     "status",
                                     "rejected_reason",
                                     "rejected_reasonSecond",
-                                    "final_result", "district",
+                                    "final_result", "district","verified_status","verified_at",
                                     [
                                         db.literal(`(SELECT full_name FROM users As s WHERE s.user_id =  \`challenge_response\`.\`evaluated_by\` )`), 'evaluated_name'
                                     ],
@@ -446,7 +446,7 @@ export default class ChallengeResponsesController extends BaseController {
                                     "status",
                                     "rejected_reason",
                                     "rejected_reasonSecond",
-                                    "final_result", "district",
+                                    "final_result", "district","verified_status","verified_at",
                                     [
                                         db.literal(`(SELECT full_name FROM users As s WHERE s.user_id =  \`challenge_response\`.\`evaluated_by\` )`), 'evaluated_name'
                                     ],
@@ -571,7 +571,7 @@ export default class ChallengeResponsesController extends BaseController {
                             "status",
                             "rejected_reason",
                             "rejected_reasonSecond",
-                            "final_result", "district","verified_status",
+                            "final_result", "district","verified_status","verified_at",
                             [
                                 db.literal(`(SELECT full_name FROM users As s WHERE s.user_id =  \`challenge_response\`.\`evaluated_by\` )`), 'evaluated_name'
                             ],
