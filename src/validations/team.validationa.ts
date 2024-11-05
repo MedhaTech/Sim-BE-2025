@@ -10,7 +10,7 @@ export const teamSchema = Joi.object().keys({
     team_name: Joi.string().trim().min(1).regex(constents.ALPHA_NUMERIC_PATTERN).required().messages({
         'string.empty': speeches.NAME_REQUIRED
     }),
-    team_email: Joi.string().email()
+    team_email: Joi.string().email().allow(null).allow('')
 });
 
 export const teamUpdateSchema = Joi.object().keys({
@@ -18,7 +18,7 @@ export const teamUpdateSchema = Joi.object().keys({
     team_name: Joi.string().trim().min(1).regex(constents.ALPHA_NUMERIC_PATTERN).required().messages({
         'string.empty': speeches.NAME_REQUIRED
     }),
-    team_email: Joi.string().email()
+    team_email: Joi.string().email().allow(null).allow('')
 });
 
 export const teamChangePasswordSchema = Joi.object().keys({
