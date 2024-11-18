@@ -1867,7 +1867,7 @@ GROUP BY challenge_response_id;`, { type: QueryTypes.SELECT });
             } else if (Object.keys(req.query).length !== 0) {
                 return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
             }
-            const { state, district, sdg, category } = newREQQuery;
+            const { state, district, theme, category } = newREQQuery;
             let districtFilter: any = `'%%'`
             let categoryFilter: any = `'%%'`
             let stateFilter: any = `'%%'`
@@ -1881,8 +1881,8 @@ GROUP BY challenge_response_id;`, { type: QueryTypes.SELECT });
             if (state !== 'All States' && state !== undefined) {
                 stateFilter = `'${state}'`
             }
-            if (sdg !== 'All Themes' && sdg !== undefined) {
-                themesFilter = `'${sdg}'`
+            if (theme !== 'All Themes' && theme !== undefined) {
+                themesFilter = `'${theme}'`
             }
             const summary = await db.query(`SELECT 
                 challenge_response_id,
@@ -1986,7 +1986,7 @@ GROUP BY challenge_response_id;`, { type: QueryTypes.SELECT });
             } else if (Object.keys(req.query).length !== 0) {
                 return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
             }
-            const { state, district, sdg, category } = newREQQuery;
+            const { state, district, theme, category } = newREQQuery;
             let districtFilter: any = `'%%'`
             let categoryFilter: any = `'%%'`
             let stateFilter: any = `'%%'`
@@ -2000,8 +2000,8 @@ GROUP BY challenge_response_id;`, { type: QueryTypes.SELECT });
             if (state !== 'All States' && state !== undefined) {
                 stateFilter = `'${state}'`
             }
-            if (sdg !== 'All Themes' && sdg !== undefined) {
-                themesFilter = `'${sdg}'`
+            if (theme !== 'All Themes' && theme !== undefined) {
+                themesFilter = `'${theme}'`
             }
             const summary = await db.query(`SELECT 
                 challenge_response_id,
@@ -2119,7 +2119,7 @@ GROUP BY challenge_response_id`, { type: QueryTypes.SELECT });
             } else if (Object.keys(req.query).length !== 0) {
                 return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
             }
-            const { state, district, sdg, category } = newREQQuery;
+            const { state, district, theme, category } = newREQQuery;
             let districtFilter: any = `'%%'`
             let categoryFilter: any = `'%%'`
             let stateFilter: any = `'%%'`
@@ -2133,8 +2133,8 @@ GROUP BY challenge_response_id`, { type: QueryTypes.SELECT });
             if (state !== 'All States' && state !== undefined) {
                 stateFilter = `'${state}'`
             }
-            if (sdg !== 'All Themes' && sdg !== undefined) {
-                themesFilter = `'${sdg}'`
+            if (theme !== 'All Themes' && theme !== undefined) {
+                themesFilter = `'${theme}'`
             }
             const summary = await db.query(`SELECT 
                 challenge_response_id,
