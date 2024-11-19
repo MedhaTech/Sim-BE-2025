@@ -42,6 +42,7 @@ export default class StudentController extends BaseController {
         //this.router.post(`${this.path}/stuIdeaSubmissionEmail`, this.stuIdeaSubmissionEmail.bind(this));
         this.router.get(`${this.path}/studentsList/:teamId`, this.getStudentsList.bind(this));
         this.router.get(`${this.path}/IsCertificate`, this.getCertificate.bind(this));
+        this.router.get(`${this.path}/certificateDates`, this.getCertificateDates.bind(this));
         super.initializeRoutes();
     }
     protected async getData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
@@ -733,6 +734,21 @@ FROM
 WHERE
     cr.team_id = ${team_id}`, { type: QueryTypes.SELECT });
 
+            res.status(200).send(dispatcher(res, result, 'done'))
+        }
+        catch (err) {
+            next(err)
+        }
+    }
+    protected async getCertificateDates(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STATE' && res.locals.role !== 'STUDENT' && res.locals.role !== 'TEAM') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
+        }
+        try {
+            let result: any = {};
+            const user_id = res.locals.user_id
+            result['postSurvey'] = await db.query(`SELECT created_at FROM quiz_survey_responses where quiz_survey_id = 4 && user_id = ${user_id};`, { type: QueryTypes.SELECT });
+            result["course"] = await db.query(`SELECT created_at FROM user_topic_progress where course_topic_id = ${baseConfig.STUDENT_COURSE} && user_id = ${user_id};`, { type: QueryTypes.SELECT });
             res.status(200).send(dispatcher(res, result, 'done'))
         }
         catch (err) {
