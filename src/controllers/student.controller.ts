@@ -42,7 +42,7 @@ export default class StudentController extends BaseController {
         //this.router.post(`${this.path}/stuIdeaSubmissionEmail`, this.stuIdeaSubmissionEmail.bind(this));
         this.router.get(`${this.path}/studentsList/:teamId`, this.getStudentsList.bind(this));
         this.router.get(`${this.path}/IsCertificate`, this.getCertificate.bind(this));
-        this.router.get(`${this.path}/certificateDates`, this.getCertificateDates.bind(this));
+        this.router.get(`${this.path}/certificateDates/:userId`, this.getCertificateDates.bind(this));
         super.initializeRoutes();
     }
     protected async getData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
@@ -542,7 +542,7 @@ export default class StudentController extends BaseController {
             if (allBadgesResult instanceof Error) {
                 throw allBadgesResult;
             }
-            // console.log(studentBadgesObj);
+
             for (var i = 0; i < allBadgesResult.length; i++) {
                 const currBadge: any = allBadgesResult[i];
                 if (studentBadgesObj.hasOwnProperty("" + currBadge.slug)) {
@@ -563,11 +563,11 @@ export default class StudentController extends BaseController {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
         }
         try {
-            const payload : any = {};
+            const payload: any = {};
             const id: any = await this.authService.decryptGlobal(req.params.student_user_id);
             payload["certificate"] = new Date();
             const updateCertificate = await this.crudService.updateAndFind(student, payload, {
-                where: { user_id : id }
+                where: { user_id: id }
             });
             if (!updateCertificate) {
                 throw internal()
@@ -643,10 +643,8 @@ export default class StudentController extends BaseController {
             let data: any;
             const where: any = {};
             const { teamId } = req.params;
-            console.log(teamId);
             if (teamId) {
                 const newParamId = await this.authService.decryptGlobal(req.params.teamId);
-                console.log(newParamId);
                 where[`team_id`] = newParamId;
                 data = await this.crudService.findAll(student, {
                     attributes: {
@@ -746,9 +744,9 @@ WHERE
         }
         try {
             let result: any = {};
-            const user_id = res.locals.user_id
-            result['postSurvey'] = await db.query(`SELECT created_at FROM quiz_survey_responses where quiz_survey_id = 4 && user_id = ${user_id};`, { type: QueryTypes.SELECT });
-            result["course"] = await db.query(`SELECT created_at FROM user_topic_progress where course_topic_id = ${baseConfig.STUDENT_COURSE} && user_id = ${user_id};`, { type: QueryTypes.SELECT });
+            const newParamId = await this.authService.decryptGlobal(req.params.userId);
+            result['postSurvey'] = await db.query(`SELECT created_at FROM quiz_survey_responses where quiz_survey_id = 4 && user_id = ${newParamId};`, { type: QueryTypes.SELECT });
+            result["course"] = await db.query(`SELECT created_at FROM user_topic_progress where course_topic_id = ${baseConfig.STUDENT_COURSE} && user_id = ${newParamId};`, { type: QueryTypes.SELECT });
             res.status(200).send(dispatcher(res, result, 'done'))
         }
         catch (err) {
