@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import bcrypt from 'bcrypt';
 import { speeches } from '../configs/speeches.config';
 import dispatcher from '../utils/dispatch.util';
 import authService from '../services/auth.service';
@@ -31,6 +32,7 @@ export default class AdminController extends BaseController {
         this.router.put(`${this.path}/changePassword`, this.changePassword.bind(this));
         this.router.get(`${this.path}/knowqueryparm`, this.getknowqueryparm.bind(this));
         this.router.post(`${this.path}/createqueryparm`, this.getcreatequeryparm.bind(this));
+        this.router.post(`${this.path}/encryptedPassword`, this.encryptedPassword.bind(this));
         this.router.post(`${this.path}/bulkEmail`, validationMiddleware(adminbulkemail), this.bulkEmail.bind(this));
         super.initializeRoutes();
     }
@@ -176,7 +178,6 @@ export default class AdminController extends BaseController {
             }
             return res.status(200).send(dispatcher(res, newREQQuery, 'success'));
         } catch (error) {
-            console.log(error)
             next(error);
         }
 
@@ -241,5 +242,28 @@ export default class AdminController extends BaseController {
         } catch (error) {
             next(error);
         }
+    }
+    private async encryptedPassword(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if (res.locals.role !== 'ADMIN') {
+            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        }
+        try {
+            let result = {}
+            if (req.body.convertCount === 'single') {
+                result = await bcrypt.hashSync(await this.authService.generateCryptEncryption(req.body.value), '$2a$10$iXP5unZT6syNFAlPYvzoPu')
+            } else if (req.body.convertCount === 'multi') {
+                result = await Promise.all(
+                    req.body.value.map(async (i: any) => {
+                        const encryptedValue = await this.authService.generateCryptEncryption(i);
+                        const hashedValue = await bcrypt.hash(encryptedValue, '$2a$10$iXP5unZT6syNFAlPYvzoPu');
+                        return { [i]: hashedValue };
+                    })
+                );
+            }
+            return res.status(200).send(dispatcher(res, result, 'success'));
+        } catch (error) {
+            next(error);
+        }
+
     }
 };
