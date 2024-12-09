@@ -309,8 +309,38 @@ export default class ChallengeResponsesController extends BaseController {
                             where,
                             condition
                         ]
+                    },
+                    include: {
+                        model: evaluator_rating,
+                        required: false,
+                        attributes: [
+                            'evaluator_rating_id',
+                            'evaluator_id',
+                            'challenge_response_id',
+                            'status',
+                            'level',
+                            'param_1',
+                            'param_2',
+                            'param_3',
+                            'param_4',
+                            'param_5',
+                            'comments',
+                            'overall',
+                            'submitted_at',
+                            "created_at",
+                            [
+                                db.literal(`(SELECT full_name FROM users As s WHERE s.user_id = evaluator_ratings.created_by)`), 'rated_evaluated_name'
+                            ]
+                        ]
                     }
                 });
+                if (!data || data instanceof Error) {
+                    if (data != null) {
+                        throw notFound(data.message)
+                    } else {
+                        throw notFound()
+                    }
+                }
             } catch (error) {
                 return res.status(500).send(dispatcher(res, data, 'error'))
             }
