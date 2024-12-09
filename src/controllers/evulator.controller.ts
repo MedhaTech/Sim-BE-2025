@@ -70,6 +70,10 @@ export default class EvaluatorController extends BaseController {
             if (!findEvaluatorDetail || findEvaluatorDetail instanceof Error) {
                 throw notFound();
             } else {
+                if(req.body.mobile){
+                    const cryptoEncryptedString = await this.authService.generateCryptEncryption(req.body.mobile);
+                    payload['password'] = cryptoEncryptedString
+                }
                 const evaluatorData = await this.crudService.update(modelLoaded, payload, { where: where });
                 const userData = await this.crudService.update(user, payload, { where: { user_id: findEvaluatorDetail.dataValues.user_id } });
                 if (!evaluatorData || !userData) {
