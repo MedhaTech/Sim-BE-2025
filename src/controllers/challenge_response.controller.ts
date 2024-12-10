@@ -309,8 +309,38 @@ export default class ChallengeResponsesController extends BaseController {
                             where,
                             condition
                         ]
+                    },
+                    include: {
+                        model: evaluator_rating,
+                        required: false,
+                        attributes: [
+                            'evaluator_rating_id',
+                            'evaluator_id',
+                            'challenge_response_id',
+                            'status',
+                            'level',
+                            'param_1',
+                            'param_2',
+                            'param_3',
+                            'param_4',
+                            'param_5',
+                            'comments',
+                            'overall',
+                            'submitted_at',
+                            "created_at",
+                            [
+                                db.literal(`(SELECT full_name FROM users As s WHERE s.user_id = evaluator_ratings.created_by)`), 'rated_evaluated_name'
+                            ]
+                        ]
                     }
                 });
+                if (!data || data instanceof Error) {
+                    if (data != null) {
+                        throw notFound(data.message)
+                    } else {
+                        throw notFound()
+                    }
+                }
             } catch (error) {
                 return res.status(500).send(dispatcher(res, data, 'error'))
             }
@@ -360,7 +390,7 @@ export default class ChallengeResponsesController extends BaseController {
                                     "status",
                                     "rejected_reason",
                                     "rejected_reasonSecond",
-                                    "final_result", "district","verified_status","verified_at",
+                                    "final_result", "district", "verified_status", "verified_at",
                                     [
                                         db.literal(`(SELECT full_name FROM users As s WHERE s.user_id =  \`challenge_response\`.\`evaluated_by\` )`), 'evaluated_name'
                                     ],
@@ -446,7 +476,7 @@ export default class ChallengeResponsesController extends BaseController {
                                     "status",
                                     "rejected_reason",
                                     "rejected_reasonSecond",
-                                    "final_result", "district","verified_status","verified_at",
+                                    "final_result", "district", "verified_status", "verified_at",
                                     [
                                         db.literal(`(SELECT full_name FROM users As s WHERE s.user_id =  \`challenge_response\`.\`evaluated_by\` )`), 'evaluated_name'
                                     ],
@@ -530,16 +560,21 @@ export default class ChallengeResponsesController extends BaseController {
                             break;
                     }
                 } else {
-                    
+
                     let submitedWhereCodition = {}
                     if (whereClauseStatusPart.status === 'SUBMITTED') {
-                        submitedWhereCodition = {  verified_status: 'ACCEPTED'  }
+                        submitedWhereCodition = { verified_status: 'ACCEPTED' }
                     }
                     if (whereClauseStatusPart.status === 'DRAFT') {
-                        submitedWhereCodition = { verified_status: { [Op.ne]: 'ACCEPTED'} }
-                        whereClauseStatusPart = {status: { [Op.in]: ['SUBMITTED', 'DRAFT'] } }
+                        submitedWhereCodition = {
+                            [Op.or]: [
+                                { verified_status: { [Op.is]: null } },  // verified_status is NULL
+                                { verified_status: { [Op.eq]: '' } }     // verified_status is an empty string
+                            ]
+                        }
+                        whereClauseStatusPart = { status: { [Op.in]: ['SUBMITTED', 'DRAFT'] } }
                     }
-                    
+
                     responseOfFindAndCountAll = await this.crudService.findAndCountAll(modelClass, {
                         attributes: [
                             "challenge_response_id",
@@ -571,7 +606,7 @@ export default class ChallengeResponsesController extends BaseController {
                             "status",
                             "rejected_reason",
                             "rejected_reasonSecond",
-                            "final_result", "district","verified_status","verified_at",
+                            "final_result", "district", "verified_status", "verified_at",
                             [
                                 db.literal(`(SELECT full_name FROM users As s WHERE s.user_id =  \`challenge_response\`.\`evaluated_by\` )`), 'evaluated_name'
                             ],
@@ -685,8 +720,8 @@ export default class ChallengeResponsesController extends BaseController {
         }
     }
     protected async updateData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if(res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'EVALUATOR' && res.locals.role !== 'EADMIN' ){
-            return res.status(401).send(dispatcher(res,'','error', speeches.ROLE_ACCES_DECLINE,401));
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'EVALUATOR' && res.locals.role !== 'EADMIN') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
         }
         try {
             const { model, id } = req.params;
