@@ -42,7 +42,7 @@ export const UpdateAnyFieldSchema = Joi.object().keys({
     rejected_reasonSecond: Joi.string(),
     district: Joi.string(),
     state: Joi.string(),
-    final_result: Joi.number(),
+    final_result: Joi.string(),
     language: Joi.string()
 });
 export const initiateIdeaSchema = Joi.object().keys({
