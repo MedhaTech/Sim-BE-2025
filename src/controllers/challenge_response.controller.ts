@@ -870,7 +870,7 @@ export default class ChallengeResponsesController extends BaseController {
                 req.body.verified_status = ''
                 req.body.verified_at = ''
                 req.body.mentor_rejected_reason = ''
-            } else if (!nameChange) {
+            } else if (status === 'DRAFT') {
                 req.body['submitted_at'] = ''
             }
             if (verified_status) {
