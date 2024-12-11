@@ -13,6 +13,8 @@ import { badRequest, notFound, unauthorized } from 'boom';
 import db from "../utils/dbconnection.util"
 import { evaluation_process } from '../models/evaluation_process.model';
 import validationMiddleware from '../middlewares/validation.middleware';
+import { baseConfig } from '../configs/base.config';
+import bcrypt from 'bcrypt';
 
 export default class EvaluatorController extends BaseController {
     model = "evaluator";
@@ -72,7 +74,7 @@ export default class EvaluatorController extends BaseController {
             } else {
                 if(req.body.mobile){
                     const cryptoEncryptedString = await this.authService.generateCryptEncryption(req.body.mobile);
-                    payload['password'] = cryptoEncryptedString
+                    payload['password'] = await bcrypt.hashSync(cryptoEncryptedString, process.env.SALT || baseConfig.SALT)
                 }
                 const evaluatorData = await this.crudService.update(modelLoaded, payload, { where: where });
                 const userData = await this.crudService.update(user, payload, { where: { user_id: findEvaluatorDetail.dataValues.user_id } });
