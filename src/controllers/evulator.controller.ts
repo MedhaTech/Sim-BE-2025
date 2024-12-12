@@ -36,21 +36,39 @@ export default class EvaluatorController extends BaseController {
         super.initializeRoutes();
     };
 
-    protected getData(req: Request, res: Response, next: NextFunction) {
+    protected async getData(req: Request, res: Response, next: NextFunction) {
         if (res.locals.role !== 'ADMIN' && res.locals.role !== 'EADMIN' && res.locals.role !== 'EVALUATOR') {
             throw unauthorized(speeches.ROLE_ACCES_DECLINE)
         }
-        return super.getData(req, res, next, [],
-            [
-                "evaluator_id", "state", "mobile", "status",
-            ], {
+        let data: any;
+        const { model } = req.params;
+        if (model) {
+            this.model = model;
+        };
+        const modelClass = await this.loadModel(model).catch(error => {
+            next(error)
+        });
+        data = await this.crudService.findAll(modelClass, {
             attributes: [
-                "user_id",
-                "username",
-                "full_name"
-            ], model: user, required: false
+                "evaluator_id", "state", "mobile", "status",
+            ],
+            include: {
+                model: user,
+                attributes: [
+                    "user_id",
+                    "username",
+                    "full_name"
+                ]
+            }
+        })
+        if (!data || data instanceof Error) {
+            if (data != null) {
+                throw notFound(data.message)
+            } else {
+                throw notFound()
+            }
         }
-        );
+        return res.status(200).send(dispatcher(res, data, 'success'));
     }
 
     protected async updateData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
@@ -72,7 +90,7 @@ export default class EvaluatorController extends BaseController {
             if (!findEvaluatorDetail || findEvaluatorDetail instanceof Error) {
                 throw notFound();
             } else {
-                if(req.body.mobile){
+                if (req.body.mobile) {
                     const cryptoEncryptedString = await this.authService.generateCryptEncryption(req.body.mobile);
                     payload['password'] = await bcrypt.hashSync(cryptoEncryptedString, process.env.SALT || baseConfig.SALT)
                 }
