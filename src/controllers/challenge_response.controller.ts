@@ -561,7 +561,7 @@ export default class ChallengeResponsesController extends BaseController {
                                             db.literal(`(SELECT  JSON_ARRAYAGG(evaluator_id) FROM  evaluator_ratings as rating WHERE rating.challenge_response_id = \`challenge_response\`.\`challenge_response_id\`)`), 'evaluator_id'
                                         ],
                                         [
-                                            db.literal(`(SELECT full_name FROM users As s WHERE s.user_id = evaluator_ratings.created_by)`), 'rated_evaluated_name'
+                                            db.literal(`(SELECT  JSON_ARRAYAGG(full_name) FROM  evaluator_ratings as rating join users as u on rating.evaluator_id = u.user_id WHERE rating.challenge_response_id = \`challenge_response\`.\`challenge_response_id\`)`), 'rated_evaluated_name'
                                         ]
                                     ]
                                 }],
@@ -1501,7 +1501,7 @@ export default class ChallengeResponsesController extends BaseController {
                     "status",
                     "rejected_reason",
                     "rejected_reasonSecond",
-                    "final_result", "district", "state", "focus_area",
+                    "final_result", "district", "state", "focus_area","verified_status", "verified_at",
                     [
                         db.literal(`(SELECT full_name FROM users As s WHERE s.user_id =  \`challenge_response\`.\`evaluated_by\` )`), 'evaluated_name'
                     ],
@@ -1584,9 +1584,9 @@ export default class ChallengeResponsesController extends BaseController {
                         [
                             db.literal(`(SELECT  JSON_ARRAYAGG(evaluator_id) FROM  evaluator_ratings as rating WHERE rating.challenge_response_id = \`challenge_response\`.\`challenge_response_id\`)`), 'evaluator_id'
                         ],
-                        // [
-                        //     db.literal(`(SELECT full_name FROM users As s WHERE s.user_id = evaluator_ratings.created_by)`), 'rated_evaluated_name'
-                        // ]
+                        [
+                            db.literal(`(SELECT  JSON_ARRAYAGG(full_name) FROM  evaluator_ratings as rating join users as u on rating.evaluator_id = u.user_id WHERE rating.challenge_response_id = \`challenge_response\`.\`challenge_response_id\`)`), 'rated_evaluated_name'
+                        ]
                     ]
                 }], limit, offset, subQuery: false
             });
