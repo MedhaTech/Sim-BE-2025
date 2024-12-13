@@ -1437,6 +1437,7 @@ export default class ChallengeResponsesController extends BaseController {
             let data: any;
             const paramStatus: any = newREQQuery.status;
             const district: any = newREQQuery.district;
+            const state: any = newREQQuery.state;
             const theme: any = newREQQuery.theme;
             const level: any = newREQQuery.level;
             const { page, size } = newREQQuery;
@@ -1464,6 +1465,9 @@ export default class ChallengeResponsesController extends BaseController {
             }
             if (theme) {
                 whereClauseStatusPart["theme"] = theme && typeof theme == 'string' ? theme : {}
+            }
+            if (state) {
+                whereClauseStatusPart['state'] = state && typeof state == 'string' ? state : {}
             }
             if (district) {
                 whereClauseStatusPart["district"] = district && typeof district == 'string' ? district : {}
