@@ -15,6 +15,7 @@ import { evaluation_process } from '../models/evaluation_process.model';
 import validationMiddleware from '../middlewares/validation.middleware';
 import { baseConfig } from '../configs/base.config';
 import bcrypt from 'bcrypt';
+import { Op } from 'sequelize';
 
 export default class EvaluatorController extends BaseController {
     model = "evaluator";
@@ -41,26 +42,50 @@ export default class EvaluatorController extends BaseController {
             throw unauthorized(speeches.ROLE_ACCES_DECLINE)
         }
         let data: any;
-        const { model } = req.params;
+        const { model, id } = req.params;
         if (model) {
             this.model = model;
         };
         const modelClass = await this.loadModel(model).catch(error => {
             next(error)
         });
-        data = await this.crudService.findAll(modelClass, {
-            attributes: [
-                "evaluator_id", "state", "mobile", "status",
-            ],
-            include: {
-                model: user,
+        const where: any = {};
+        if (id) {
+            const deValue: any = await this.authService.decryptGlobal(req.params.id);
+            where[`${this.model}_id`] = JSON.parse(deValue);
+            data = await this.crudService.findOne(modelClass, {
                 attributes: [
-                    "user_id",
-                    "username",
-                    "full_name"
-                ]
-            }
-        })
+                    "evaluator_id", "state", "mobile", "status",
+                ],
+                where: {
+                    [Op.and]: [
+                        where
+                    ]
+                },
+                include: {
+                    model: user,
+                    attributes: [
+                        "user_id",
+                        "username",
+                        "full_name"
+                    ]
+                }
+            })
+        } else {
+            data = await this.crudService.findAll(modelClass, {
+                attributes: [
+                    "evaluator_id", "state", "mobile", "status",
+                ],
+                include: {
+                    model: user,
+                    attributes: [
+                        "user_id",
+                        "username",
+                        "full_name"
+                    ]
+                }
+            })
+        }
         if (!data || data instanceof Error) {
             if (data != null) {
                 throw notFound(data.message)
