@@ -1867,11 +1867,12 @@ GROUP BY challenge_response_id;`, { type: QueryTypes.SELECT });
             } else if (Object.keys(req.query).length !== 0) {
                 return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
             }
-            const { state, district, theme, category } = newREQQuery;
+            const { state, district, theme, category,evaluation_status } = newREQQuery;
             let districtFilter: any = `'%%'`
             let categoryFilter: any = `'%%'`
             let stateFilter: any = `'%%'`
             let themesFilter: any = `'%%'`
+            let evaluationstatusFilter:any = `'%%'`
             if (district !== 'All Districts' && district !== undefined) {
                 districtFilter = `'${district}'`
             }
@@ -1883,6 +1884,9 @@ GROUP BY challenge_response_id;`, { type: QueryTypes.SELECT });
             }
             if (theme !== 'All Themes' && theme !== undefined) {
                 themesFilter = `'${theme}'`
+            }
+            if (evaluation_status !== 'Both' && evaluation_status !== undefined) {
+                evaluationstatusFilter = `'${evaluation_status}'`
             }
             const summary = await db.query(`SELECT 
                 challenge_response_id,
@@ -1911,7 +1915,7 @@ GROUP BY challenge_response_id;`, { type: QueryTypes.SELECT });
             FROM
                 challenge_responses as cr join teams as t on cr.team_id = t.team_id join mentors as m on t.mentor_id = m.mentor_id join organizations as org on m.organization_code = org.organization_code
             WHERE
-               org.status = 'ACTIVE' && evaluation_status in ('REJECTEDROUND1','SELECTEDROUND1') && org.state LIKE ${stateFilter} && org.district LIKE ${districtFilter} && org.category LIKE ${categoryFilter} && cr.theme LIKE ${themesFilter};`, { type: QueryTypes.SELECT });
+               org.status = 'ACTIVE' && evaluation_status in ('REJECTEDROUND1','SELECTEDROUND1') && org.state LIKE ${stateFilter} && org.district LIKE ${districtFilter} && org.category LIKE ${categoryFilter} && cr.theme LIKE ${themesFilter} && cr.evaluation_status LIKE ${evaluationstatusFilter};`, { type: QueryTypes.SELECT });
             const teamData = await db.query(`SELECT 
                 team_id, team_name,team_email, mentor_id,user_id as teamuserId
             FROM
