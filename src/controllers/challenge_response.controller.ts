@@ -561,7 +561,7 @@ export default class ChallengeResponsesController extends BaseController {
                                             db.literal(`(SELECT  JSON_ARRAYAGG(evaluator_id) FROM  evaluator_ratings as rating WHERE rating.challenge_response_id = \`challenge_response\`.\`challenge_response_id\`)`), 'evaluator_id'
                                         ],
                                         [
-                                            db.literal(`(SELECT full_name FROM users As s WHERE s.user_id = evaluator_ratings.created_by)`), 'rated_evaluated_name'
+                                            db.literal(`(SELECT  JSON_ARRAYAGG(full_name) FROM  evaluator_ratings as rating join users as u on rating.evaluator_id = u.user_id WHERE rating.challenge_response_id = \`challenge_response\`.\`challenge_response_id\`)`), 'rated_evaluated_name'
                                         ]
                                     ]
                                 }],
@@ -585,7 +585,8 @@ export default class ChallengeResponsesController extends BaseController {
                         submitedWhereCodition = {
                             [Op.or]: [
                                 { verified_status: { [Op.is]: null } },  // verified_status is NULL
-                                { verified_status: { [Op.eq]: '' } }     // verified_status is an empty string
+                                { verified_status: { [Op.eq]: '' } },   // verified_status is an empty string
+                                { verified_status: { [Op.eq]: 'REJECTED' } }
                             ]
                         }
                         whereClauseStatusPart = { status: { [Op.in]: ['SUBMITTED', 'DRAFT'] } }
@@ -1162,7 +1163,15 @@ export default class ChallengeResponsesController extends BaseController {
                             throw challengeResponse
                         }
                         if (!challengeResponse) {
-                            throw notFound("All challenge has been accepted, no more challenge to display");
+                            const evaluatedIdeas = await db.query(`SELECT count(*) as evaluatedIdeas FROM challenge_responses as idea where idea.evaluated_by = ${evaluator_user_id.toString()}`, { type: QueryTypes.SELECT })
+                            let throwMessage = {
+                                message: 'All challenge has been accepted, no more challenge to display',
+                                //@ts-ignore
+                                evaluatedIdeas: evaluatedIdeas[0].evaluatedIdeas
+                            };
+                            return res.status(200).send(dispatcher(res, throwMessage, 'success'));
+                            
+                        //throw notFound("All challenge has been accepted, no more challenge to display");
                         };
                         break;
                     case 'L2':
@@ -1437,6 +1446,7 @@ export default class ChallengeResponsesController extends BaseController {
             let data: any;
             const paramStatus: any = newREQQuery.status;
             const district: any = newREQQuery.district;
+            const state: any = newREQQuery.state;
             const theme: any = newREQQuery.theme;
             const level: any = newREQQuery.level;
             const { page, size } = newREQQuery;
@@ -1464,6 +1474,9 @@ export default class ChallengeResponsesController extends BaseController {
             }
             if (theme) {
                 whereClauseStatusPart["theme"] = theme && typeof theme == 'string' ? theme : {}
+            }
+            if (state) {
+                whereClauseStatusPart['state'] = state && typeof state == 'string' ? state : {}
             }
             if (district) {
                 whereClauseStatusPart["district"] = district && typeof district == 'string' ? district : {}
@@ -1501,7 +1514,7 @@ export default class ChallengeResponsesController extends BaseController {
                     "status",
                     "rejected_reason",
                     "rejected_reasonSecond",
-                    "final_result", "district", "state", "focus_area",
+                    "final_result", "district", "state", "focus_area","verified_status", "verified_at",
                     [
                         db.literal(`(SELECT full_name FROM users As s WHERE s.user_id =  \`challenge_response\`.\`evaluated_by\` )`), 'evaluated_name'
                     ],
@@ -1584,9 +1597,9 @@ export default class ChallengeResponsesController extends BaseController {
                         [
                             db.literal(`(SELECT  JSON_ARRAYAGG(evaluator_id) FROM  evaluator_ratings as rating WHERE rating.challenge_response_id = \`challenge_response\`.\`challenge_response_id\`)`), 'evaluator_id'
                         ],
-                        // [
-                        //     db.literal(`(SELECT full_name FROM users As s WHERE s.user_id = evaluator_ratings.created_by)`), 'rated_evaluated_name'
-                        // ]
+                        [
+                            db.literal(`(SELECT  JSON_ARRAYAGG(full_name) FROM  evaluator_ratings as rating join users as u on rating.evaluator_id = u.user_id WHERE rating.challenge_response_id = \`challenge_response\`.\`challenge_response_id\`)`), 'rated_evaluated_name'
+                        ]
                     ]
                 }], limit, offset, subQuery: false
             });

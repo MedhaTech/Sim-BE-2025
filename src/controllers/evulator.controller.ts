@@ -15,6 +15,7 @@ import { evaluation_process } from '../models/evaluation_process.model';
 import validationMiddleware from '../middlewares/validation.middleware';
 import { baseConfig } from '../configs/base.config';
 import bcrypt from 'bcrypt';
+import { Op } from 'sequelize';
 
 export default class EvaluatorController extends BaseController {
     model = "evaluator";
@@ -36,21 +37,63 @@ export default class EvaluatorController extends BaseController {
         super.initializeRoutes();
     };
 
-    protected getData(req: Request, res: Response, next: NextFunction) {
+    protected async getData(req: Request, res: Response, next: NextFunction) {
         if (res.locals.role !== 'ADMIN' && res.locals.role !== 'EADMIN' && res.locals.role !== 'EVALUATOR') {
             throw unauthorized(speeches.ROLE_ACCES_DECLINE)
         }
-        return super.getData(req, res, next, [],
-            [
-                "evaluator_id", "state", "mobile", "status",
-            ], {
-            attributes: [
-                "user_id",
-                "username",
-                "full_name"
-            ], model: user, required: false
+        let data: any;
+        const { model, id } = req.params;
+        if (model) {
+            this.model = model;
+        };
+        const modelClass = await this.loadModel(model).catch(error => {
+            next(error)
+        });
+        const where: any = {};
+        if (id) {
+            const deValue: any = await this.authService.decryptGlobal(req.params.id);
+            where[`${this.model}_id`] = JSON.parse(deValue);
+            data = await this.crudService.findOne(modelClass, {
+                attributes: [
+                    "evaluator_id", "state", "mobile", "status",
+                ],
+                where: {
+                    [Op.and]: [
+                        where
+                    ]
+                },
+                include: {
+                    model: user,
+                    attributes: [
+                        "user_id",
+                        "username",
+                        "full_name"
+                    ]
+                }
+            })
+        } else {
+            data = await this.crudService.findAll(modelClass, {
+                attributes: [
+                    "evaluator_id", "state", "mobile", "status",
+                ],
+                include: {
+                    model: user,
+                    attributes: [
+                        "user_id",
+                        "username",
+                        "full_name"
+                    ]
+                }
+            })
         }
-        );
+        if (!data || data instanceof Error) {
+            if (data != null) {
+                throw notFound(data.message)
+            } else {
+                throw notFound()
+            }
+        }
+        return res.status(200).send(dispatcher(res, data, 'success'));
     }
 
     protected async updateData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
@@ -72,7 +115,7 @@ export default class EvaluatorController extends BaseController {
             if (!findEvaluatorDetail || findEvaluatorDetail instanceof Error) {
                 throw notFound();
             } else {
-                if(req.body.mobile){
+                if (req.body.mobile) {
                     const cryptoEncryptedString = await this.authService.generateCryptEncryption(req.body.mobile);
                     payload['password'] = await bcrypt.hashSync(cryptoEncryptedString, process.env.SALT || baseConfig.SALT)
                 }
