@@ -585,7 +585,8 @@ export default class ChallengeResponsesController extends BaseController {
                         submitedWhereCodition = {
                             [Op.or]: [
                                 { verified_status: { [Op.is]: null } },  // verified_status is NULL
-                                { verified_status: { [Op.eq]: '' } }     // verified_status is an empty string
+                                { verified_status: { [Op.eq]: '' } },   // verified_status is an empty string
+                                { verified_status: { [Op.eq]: 'REJECTED' } }
                             ]
                         }
                         whereClauseStatusPart = { status: { [Op.in]: ['SUBMITTED', 'DRAFT'] } }
