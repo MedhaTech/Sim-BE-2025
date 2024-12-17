@@ -1885,7 +1885,7 @@ GROUP BY challenge_response_id;`, { type: QueryTypes.SELECT });
             if (theme !== 'All Themes' && theme !== undefined) {
                 themesFilter = `'${theme}'`
             }
-            if (evaluation_status !== 'Both' && theme !== undefined) {
+            if (evaluation_status !== 'Both' && evaluation_status !== undefined) {
                 evaluationstatusFilter = `'${evaluation_status}'`
             }
             const summary = await db.query(`SELECT 
