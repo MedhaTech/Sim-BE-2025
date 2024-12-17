@@ -1163,7 +1163,15 @@ export default class ChallengeResponsesController extends BaseController {
                             throw challengeResponse
                         }
                         if (!challengeResponse) {
-                            throw notFound("All challenge has been accepted, no more challenge to display");
+                            const evaluatedIdeas = await db.query(`SELECT count(*) as evaluatedIdeas FROM challenge_responses as idea where idea.evaluated_by = ${evaluator_user_id.toString()}`, { type: QueryTypes.SELECT })
+                            let throwMessage = {
+                                message: 'All challenge has been accepted, no more challenge to display',
+                                //@ts-ignore
+                                evaluatedIdeas: evaluatedIdeas[0].evaluatedIdeas
+                            };
+                            return res.status(200).send(dispatcher(res, throwMessage, 'success'));
+                            
+                        //throw notFound("All challenge has been accepted, no more challenge to display");
                         };
                         break;
                     case 'L2':
