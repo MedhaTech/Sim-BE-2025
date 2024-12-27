@@ -336,22 +336,22 @@ FROM
         try {
             let response: any = {};
             const PendingForApproval = await db.query("SELECT count(challenge_response_id) as 'PendingForApproval' FROM challenge_responses where status = 'SUBMITTED' && (verified_status IS NULL OR verified_status = '')", { type: QueryTypes.SELECT });
-            const submitted_count = await db.query("SELECT count(challenge_response_id) as 'submitted_count' FROM challenge_responses where status = 'SUBMITTED' && verified_status='ACCEPTED'", { type: QueryTypes.SELECT });
+            const mentorAcceptedCount = await db.query("SELECT count(challenge_response_id) as 'submitted_count' FROM challenge_responses where status = 'SUBMITTED' && verified_status='ACCEPTED'", { type: QueryTypes.SELECT });
+            const submitted_count = await db.query("SELECT count(challenge_response_id) as 'submitted_count' FROM challenge_responses where status = 'SUBMITTED'", { type: QueryTypes.SELECT });
             const selected_round_one_count = await db.query("SELECT count(challenge_response_id) as 'selected_round_one_count' FROM challenge_responses where evaluation_status = 'SELECTEDROUND1'", { type: QueryTypes.SELECT });
             const rejected_round_one_count = await db.query("SELECT count(challenge_response_id) as 'rejected_round_one_count' FROM challenge_responses where evaluation_status = 'REJECTEDROUND1'", { type: QueryTypes.SELECT });
             const l2_yet_to_processed = await db.query("SELECT COUNT(*) AS l2_yet_to_processed FROM l1_accepted;", { type: QueryTypes.SELECT });
             const l2_processed = await db.query(`SELECT challenge_response_id, count(challenge_response_id) AS l2_processed FROM evaluator_ratings group by challenge_response_id HAVING COUNT(challenge_response_id) >= ${baseConfig.EVAL_FOR_L2}`, { type: QueryTypes.SELECT });
-            const draft_count = await db.query(`SELECT COUNT(challenge_response_id) AS 'draft_count'
-FROM challenge_responses
-WHERE (status IN ('SUBMITTED', 'DRAFT'))
-  AND (verified_status IS NULL OR verified_status LIKE '' OR verified_status = 'REJECTED');
-`, { type: QueryTypes.SELECT });
+            const draft_count = await db.query(`SELECT COUNT(challenge_response_id) AS 'draft_count' FROM challenge_responses WHERE status = 'DRAFT';`,{ type: QueryTypes.SELECT });
             const final_challenges = await db.query("SELECT count(challenge_response_id) as 'final_challenges' FROM evaluation_results where status = 'ACTIVE'", { type: QueryTypes.SELECT });
             const l1_yet_to_process = await db.query(`SELECT COUNT(challenge_response_id) AS l1YetToProcess FROM challenge_responses WHERE (status = 'SUBMITTED' AND verified_status='ACCEPTED') AND evaluation_status is NULL OR evaluation_status = ''`, { type: QueryTypes.SELECT });
             const final_evaluation_challenge = await db.query(`SELECT COUNT(challenge_response_id) FROM challenge_responses WHERE final_result = '0'`, { type: QueryTypes.SELECT });
             const final_evaluation_final = await db.query(`SELECT COUNT(challenge_response_id) FROM challenge_responses WHERE final_result = '1'`, { type: QueryTypes.SELECT });
             if (PendingForApproval instanceof Error) {
                 throw PendingForApproval
+            }
+            if (mentorAcceptedCount instanceof Error) {
+                throw mentorAcceptedCount
             }
             if (submitted_count instanceof Error) {
                 throw submitted_count
@@ -383,6 +383,8 @@ WHERE (status IN ('SUBMITTED', 'DRAFT'))
             if (final_evaluation_final instanceof Error) {
                 throw final_evaluation_final
             };
+            mentorAcceptedCount
+            response['mentorAcceptedCount'] = Object.values(mentorAcceptedCount[0]).toString();
             response['PendingForApproval'] = Object.values(PendingForApproval[0]).toString();
             response['draft_count'] = Object.values(draft_count[0]).toString();
             response['submitted_count'] = Object.values(submitted_count[0]).toString()
