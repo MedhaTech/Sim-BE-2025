@@ -578,18 +578,9 @@ export default class ChallengeResponsesController extends BaseController {
                 } else {
 
                     let submitedWhereCodition = {}
-                    if (whereClauseStatusPart.status === 'SUBMITTED') {
+                    if (paramStatus === 'ACCEPTED') {
                         submitedWhereCodition = { verified_status: 'ACCEPTED' }
-                    }
-                    if (whereClauseStatusPart.status === 'DRAFT') {
-                        submitedWhereCodition = {
-                            [Op.or]: [
-                                { verified_status: { [Op.is]: null } },  // verified_status is NULL
-                                { verified_status: { [Op.eq]: '' } },   // verified_status is an empty string
-                                { verified_status: { [Op.eq]: 'REJECTED' } }
-                            ]
-                        }
-                        whereClauseStatusPart = { status: { [Op.in]: ['SUBMITTED', 'DRAFT'] } }
+                        whereClauseStatusPart = { status: 'SUBMITTED' }
                     }
 
                     responseOfFindAndCountAll = await this.crudService.findAndCountAll(modelClass, {
