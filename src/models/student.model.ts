@@ -14,6 +14,7 @@ export class student extends Model<InferAttributes<student>, InferCreationAttrib
     declare Grade: string;
     declare Gender: string;
     declare badges: string;
+    declare email: string;
     declare disability: string;
     declare certificate: number;
     declare status: Enumerator;
@@ -52,6 +53,9 @@ student.init(
         Gender: {
             type: DataTypes.STRING,
             allowNull: true
+        },
+        email: {
+            type: DataTypes.STRING
         },
         disability: {
             type: DataTypes.STRING

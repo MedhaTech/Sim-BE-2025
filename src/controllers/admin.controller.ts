@@ -256,7 +256,7 @@ export default class AdminController extends BaseController {
                     req.body.value.map(async (i: any) => {
                         const encryptedValue = await this.authService.generateCryptEncryption(i);
                         const hashedValue = await bcrypt.hash(encryptedValue, '$2a$10$iXP5unZT6syNFAlPYvzoPu');
-                        return { [i]: hashedValue };
+                        return `${i},${hashedValue}`;
                     })
                 );
             }

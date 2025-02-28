@@ -1724,7 +1724,7 @@ FROM
         (SELECT 
         challenge_response_id, AVG(overall) AS average_score
     FROM
-        Aim_db.evaluator_ratings
+        evaluator_ratings
     GROUP BY challenge_response_id
     HAVING COUNT(challenge_response_id) >= 2) AS subquery
     JOIN challenge_responses AS cal ON subquery.challenge_response_id = cal.challenge_response_id
