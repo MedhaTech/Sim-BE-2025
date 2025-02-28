@@ -1911,7 +1911,9 @@ GROUP BY challenge_response_id;`, { type: QueryTypes.SELECT });
                 verified_status,
                 verified_at,
                 mentor_rejected_reason,
-                evaluation_status
+                evaluation_status,
+                rejected_reason,
+                rejected_reasonSecond
             FROM
                 challenge_responses as cr join teams as t on cr.team_id = t.team_id join mentors as m on t.mentor_id = m.mentor_id join organizations as org on m.organization_code = org.organization_code
             WHERE
@@ -2088,7 +2090,8 @@ challenge_response_id,
     AVG(param_2) AS useful,
     COUNT(challenge_response_id) AS eval_count,
     (AVG(param_1) + AVG(param_2)) / 2 AS quality_score,
-    (AVG(param_3) + AVG(param_4) + AVG(param_5)) / 3 AS feasibility_score
+    (AVG(param_3) + AVG(param_4) + AVG(param_5)) / 3 AS feasibility_score,
+    JSON_ARRAYAGG(comments)
 FROM
     evaluator_ratings
 GROUP BY challenge_response_id`, { type: QueryTypes.SELECT });
