@@ -3,7 +3,7 @@ name: Deployment to DEV via jenkins
 
 on:
   push:
-    branches: [development , testing ] 
+    branches: development 
 jobs:
   
   Build:
@@ -27,25 +27,15 @@ jobs:
       - name: Deploy to  Development
         if: github.ref == 'refs/heads/development'
         env:
-          PRIVATE_KEY: ${{ secrets.ATL2_PRIVATE_KEY }}
-          HOSTNAME: ${{ secrets.ATL2_HOSTNAME }}
+          PRIVATE_KEY: ${{ secrets.sim_2025_PRIVATE_KEY }}
+          HOSTNAME: ${{ secrets.sim_2025_HOSTNAME }}
         run: |
           echo "$PRIVATE_KEY" > private_key && chmod 400 private_key
-          ssh -o StrictHostKeyChecking=no -i private_key ubuntu@${{secrets.ATL2_HOSTNAME}} '
-            cd /home/ubuntu/aim_be &&
+          ssh -o StrictHostKeyChecking=no -i private_key ubuntu@${{secrets.sim_2025_HOSTNAME}} '
+            cd /home/ubuntu/sim-2025-be &&
             sudo git pull origin development &&
             npm run build && pm2 stop all && pm2 delete all && npm run start:prod && pm2 save -f'
-      - name: Deploy to  Stage Env
-        if: github.ref == 'refs/heads/testing'
-        env:
-          PRIVATE_KEY: ${{ secrets.ATL2_STG_PRIVATE_KEY }}
-          HOSTNAME: ${{ secrets.ATL2_STG_HOSTNAME }}
-        run: |
-          echo "$PRIVATE_KEY" > private_key && chmod 400 private_key
-          ssh -o StrictHostKeyChecking=no -i private_key ubuntu@${{secrets.ATL2_STG_HOSTNAME}} '
-            cd aim2.0_be &&
-            sudo git pull origin testing &&
-            npm run build && pm2 stop all && pm2 delete all && npm run start:prod && pm2 save -f'
+      
 
             
 
