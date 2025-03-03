@@ -1,5 +1,5 @@
 
-name: Deployment to DEV
+name: Deployment to DEV via jenkins
 
 on:
   push:
