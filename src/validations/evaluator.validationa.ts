@@ -18,6 +18,8 @@ export const evaluatorRegSchema = Joi.object().keys({
         'string.empty': speeches.USER_PASSWORD_REQUIRED
     }),
     state: Joi.string(),
+    theme: Joi.string(),
+    language: Joi.string()
 });
 
 export const evaluatorLoginSchema = Joi.object().keys({
@@ -50,5 +52,7 @@ export const evaluatorUpdateSchema = Joi.object().keys({
     username: Joi.string().trim().min(1).email(),
     mobile: Joi.string(),
     full_name: Joi.string().trim().min(1).regex(constents.ALPHA_NUMERIC_PATTERN_HUD),
-    state: Joi.string()
+    state: Joi.string(),
+    theme: Joi.string(),
+    language: Joi.string()
 });
