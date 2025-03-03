@@ -11,6 +11,8 @@ export class evaluator extends Model<InferAttributes<evaluator>, InferCreationAt
     declare full_name: string;
     declare mobile: string;
     declare state: string;
+    declare language: string;
+    declare theme: string;
     declare status: Enumerator;
     declare created_by: number;
     declare created_at: Date;
@@ -38,6 +40,12 @@ export class evaluator extends Model<InferAttributes<evaluator>, InferCreationAt
         mobile: {
             type: DataTypes.STRING,
             unique: true
+        },
+        language: {
+            type: DataTypes.STRING
+        },
+        theme: {
+            type: DataTypes.STRING
         },
         status: {
             type: DataTypes.ENUM(...Object.values(constents.common_status_flags.list)),

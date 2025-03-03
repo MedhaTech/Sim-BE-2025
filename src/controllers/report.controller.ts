@@ -1604,22 +1604,22 @@ FROM
         try {
             let data: any = {}
             const summary = await db.query(`SELECT 
-            user_id,
-            full_name,
-            COUNT(evaluated_by) AS totalEvaluated,
-            COUNT(CASE
-                WHEN evaluation_status = 'SELECTEDROUND1' THEN 1
-            END) AS accepted,
-            COUNT(CASE
-                WHEN evaluation_status = 'REJECTEDROUND1' THEN 1
-            END) AS rejected
-        FROM
-            challenge_responses AS cal
-                JOIN
-            evaluators AS evl ON cal.evaluated_by = evl.user_id
-        WHERE
-            cal.status = 'SUBMITTED'
-        GROUP BY evaluated_by`, { type: QueryTypes.SELECT });
+    user_id,
+    full_name,
+    COUNT(CASE
+        WHEN cal.status = 'SUBMITTED' THEN 1
+    END) AS totalEvaluated,
+    COUNT(CASE
+        WHEN evaluation_status = 'SELECTEDROUND1' THEN 1
+    END) AS accepted,
+    COUNT(CASE
+        WHEN evaluation_status = 'REJECTEDROUND1' THEN 1
+    END) AS rejected
+FROM
+    evaluators AS evl
+        LEFT JOIN
+    challenge_responses AS cal ON evl.user_id = cal.evaluated_by
+GROUP BY evaluator_id`, { type: QueryTypes.SELECT });
             data = summary;
             if (!data) {
                 throw notFound(speeches.DATA_NOT_FOUND)
@@ -1752,12 +1752,14 @@ GROUP BY org.state
         try {
             let data: any = {}
             const summary = await db.query(`SELECT 
-            user_id, full_name, COUNT(*) as totalEvaluated
-        FROM
-            evaluator_ratings
-                JOIN
-            evaluators ON evaluator_ratings.evaluator_id = evaluators.user_id
-        GROUP BY user_id;`, { type: QueryTypes.SELECT });
+    user_id,
+    full_name,
+    COUNT(evaluator_rating_id) AS totalEvaluated
+FROM
+    evaluators
+        LEFT JOIN
+    evaluator_ratings ON evaluator_ratings.evaluator_id = evaluators.user_id
+GROUP BY evaluators.evaluator_id;`, { type: QueryTypes.SELECT });
             data = summary;
             if (!data) {
                 throw notFound(speeches.DATA_NOT_FOUND)
@@ -1867,12 +1869,12 @@ GROUP BY challenge_response_id;`, { type: QueryTypes.SELECT });
             } else if (Object.keys(req.query).length !== 0) {
                 return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
             }
-            const { state, district, theme, category,evaluation_status } = newREQQuery;
+            const { state, district, theme, category, evaluation_status } = newREQQuery;
             let districtFilter: any = `'%%'`
             let categoryFilter: any = `'%%'`
             let stateFilter: any = `'%%'`
             let themesFilter: any = `'%%'`
-            let evaluationstatusFilter:any = `'%%'`
+            let evaluationstatusFilter: any = `'%%'`
             if (district !== 'All Districts' && district !== undefined) {
                 districtFilter = `'${district}'`
             }

@@ -294,7 +294,7 @@ export default class ChallengeResponsesController extends BaseController {
                         "status",
                         "rejected_reason",
                         "rejected_reasonSecond",
-                        "district", "verified_status", "verified_at","final_result",
+                        "district", "verified_status", "verified_at", "final_result",
                         [
                             db.literal(`(SELECT full_name FROM users As s WHERE s.user_id =  \`challenge_response\`.\`evaluated_by\` )`), 'evaluated_name'
                         ],
@@ -1069,12 +1069,22 @@ export default class ChallengeResponsesController extends BaseController {
 
             let evaluator_user_id = newREQQuery.evaluator_user_id;
             if (!evaluator_user_id) throw unauthorized(speeches.ID_REQUIRED);
+            let additionalFilter: any = {};
+            const theme: any = newREQQuery.theme;
+            const language: any = newREQQuery.theme;
+
+            if (theme) {
+                additionalFilter['theme'] = theme && typeof theme == 'string' ? theme : {}
+            }
+            if (language) {
+                additionalFilter['language'] = language && typeof language == 'string' ? language : {}
+            }
 
             let activeState = await this.crudService.findOne(evaluation_process, {
                 attributes: ['state'], where: { [Op.and]: [{ status: 'ACTIVE' }, { level_name: 'L1' }] }
             });
             let activeStateforEvaluator = await this.crudService.findOne(evaluator, {
-                attributes: ['state'], where: { [Op.and]: [{ status: 'ACTIVE' }, { user_id: evaluator_user_id }] }
+                attributes: ['state'], where: { [Op.and]: [{ status: 'ACTIVE' }, { user_id: evaluator_user_id }, additionalFilter] }
             });
             ;
             let states = activeState.dataValues.state;
@@ -1161,8 +1171,8 @@ export default class ChallengeResponsesController extends BaseController {
                                 evaluatedIdeas: evaluatedIdeas[0].evaluatedIdeas
                             };
                             return res.status(200).send(dispatcher(res, throwMessage, 'success'));
-                            
-                        //throw notFound("All challenge has been accepted, no more challenge to display");
+
+                            //throw notFound("All challenge has been accepted, no more challenge to display");
                         };
                         break;
                     case 'L2':
@@ -1505,7 +1515,7 @@ export default class ChallengeResponsesController extends BaseController {
                     "status",
                     "rejected_reason",
                     "rejected_reasonSecond",
-                    "final_result", "district", "state", "focus_area","verified_status", "verified_at",
+                    "final_result", "district", "state", "focus_area", "verified_status", "verified_at",
                     [
                         db.literal(`(SELECT full_name FROM users As s WHERE s.user_id =  \`challenge_response\`.\`evaluated_by\` )`), 'evaluated_name'
                     ],
