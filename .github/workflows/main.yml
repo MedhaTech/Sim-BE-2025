@@ -34,7 +34,7 @@ jobs:
           ssh -o StrictHostKeyChecking=no -i private_key ubuntu@${{secrets.sim_2025_HOSTNAME}} '
             cd /home/ubuntu/sim-2025-be &&
             sudo git pull origin development &&
-            sudo npm run build && sudo pm2 stop all && sudo pm2 delete all && sudo npm run start:prod && sudo pm2 save -f'
+            sudo npm run build && pm2 stop all && pm2 delete all && npm run start:prod && pm2 save -f'
       
 
             
