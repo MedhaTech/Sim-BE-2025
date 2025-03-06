@@ -17,6 +17,7 @@ import { evaluation_process } from "../models/evaluation_process.model";
 import { evaluator_rating } from "../models/evaluator_rating.model";
 import { baseConfig } from "../configs/base.config";
 import { evaluator } from "../models/evaluator.model";
+import isodate from 'iso8601-duration';
 
 export default class ChallengeResponsesController extends BaseController {
 
@@ -39,6 +40,7 @@ export default class ChallengeResponsesController extends BaseController {
         this.router.get(`${this.path}/ideastatusbyteamId`, this.getideastatusbyteamid.bind(this));
         this.router.get(`${this.path}/schoolpdfideastatus`, this.getSchoolPdfIdeaStatus.bind(this));
         this.router.get(this.path + '/submittedDetailsforideapdf', this.getResponseideapdf.bind(this));
+        this.router.get(this.path + '/checkyoutubeurl', this.checkyoutubeurl.bind(this));
         super.initializeRoutes();
     }
 
@@ -1661,6 +1663,56 @@ export default class ChallengeResponsesController extends BaseController {
             mentor_id = ${newREQQuery.mentor_id}
         GROUP BY teams.team_id;`, { type: QueryTypes.SELECT });
             res.status(200).send(dispatcher(res, result, "success"))
+        } catch (error) {
+            next(error);
+        }
+    }
+    protected async checkyoutubeurl(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
+        }
+        try {
+            let newREQQuery: any = {}
+            if (req.query.Data) {
+                let newQuery: any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery = JSON.parse(newQuery);
+            } else if (Object.keys(req.query).length !== 0) {
+                return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
+            }
+            const id = newREQQuery.id
+            const urlStatus = `https://www.googleapis.com/youtube/v3/videos?part=status&id=${id}&key=AIzaSyCeghHKYFnQQSapJYDmNDc3LRFye41MQkw`
+            const videoStatus = await fetch(urlStatus, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+
+            const videoStatusresult = await videoStatus.json();
+            if (videoStatusresult.items.length > 0 && videoStatusresult.items[0].status.privacyStatus === 'public') {
+                const url = `https://www.googleapis.com/youtube/v3/videos?part=contentDetails&id=${id}&key=AIzaSyCeghHKYFnQQSapJYDmNDc3LRFye41MQkw`
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                const result = await response.json();
+                if (result.items.length > 0) {
+                    const duration: any = isodate.parse(result.items[0].contentDetails.duration)
+                    const durationInSeconds = duration.seconds + (duration.minutes * 60) + (duration.hours * 3600);
+                    if (durationInSeconds >= 180 && durationInSeconds <= 300) {
+                        return res.status(200).send(dispatcher(res, "VALID", 'success', 'Video is public and with in the length 3-5 minutes'));
+                    } else {
+                        return res.status(200).send(dispatcher(res, "INVALID", 'success', 'Video length not with in the 3-5 minutes'));
+                    }
+                } else {
+                    return res.status(200).send(dispatcher(res, 'INVALID', 'success'));
+                }
+            } else {
+                return res.status(200).send(dispatcher(res, "INVALID", 'success', 'Video is not Public'));
+            }
         } catch (error) {
             next(error);
         }
