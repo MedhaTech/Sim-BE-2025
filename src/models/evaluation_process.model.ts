@@ -8,6 +8,8 @@ export class evaluation_process extends Model<InferAttributes<evaluation_process
     declare no_of_evaluation: number;
     declare eval_schema: Enumerator;
     declare state: string;
+    declare language: string;
+    declare theme: string;
     declare status: Enumerator;
     declare created_by: number;
     declare created_at: Date;
@@ -36,6 +38,12 @@ export class evaluation_process extends Model<InferAttributes<evaluation_process
         state: {
             type: DataTypes.TEXT('long'),
             allowNull: false
+        },
+        language: {
+            type: DataTypes.STRING
+        },
+        theme: {
+            type: DataTypes.STRING
         },
         status: {
             type: DataTypes.ENUM(...Object.values(constents.common_status_flags.list)),

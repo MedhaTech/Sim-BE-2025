@@ -55,7 +55,7 @@ export default class EvaluatorController extends BaseController {
             where[`${this.model}_id`] = JSON.parse(deValue);
             data = await this.crudService.findOne(modelClass, {
                 attributes: [
-                    "evaluator_id", "state", "mobile", "status",
+                    "evaluator_id", "state", "mobile", "status","language","theme",
                 ],
                 where: {
                     [Op.and]: [
@@ -74,7 +74,7 @@ export default class EvaluatorController extends BaseController {
         } else {
             data = await this.crudService.findAll(modelClass, {
                 attributes: [
-                    "evaluator_id", "state", "mobile", "status",
+                    "evaluator_id", "state", "mobile", "status","language","theme",
                 ],
                 include: {
                     model: user,
