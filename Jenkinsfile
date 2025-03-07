@@ -12,6 +12,13 @@ pipeline {
                 git branch: 'development', url: 'https://github.com/MedhaTech/Sim-BE-2025.git' // Update with your repo 
             }
         }
+        stage('Verify Node.js') {
+            steps {
+                sh 'node -v'
+                sh 'npm -v'
+            }
+        }
+
         stage('Install Dependencies') {
             steps {
                 sh 'cd $APP_DIR && sudo npm install --force' 
