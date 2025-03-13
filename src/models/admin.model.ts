@@ -9,6 +9,7 @@ export class admin extends Model<InferAttributes<admin>, InferCreationAttributes
     declare admin_id: CreationOptional<number>;
     declare user_id: string;
     declare full_name: string;
+    declare permission: string;
     declare status: Enumerator;
     declare created_by: number;
     declare created_at: Date;
@@ -30,6 +31,9 @@ admin.init(
         full_name: {
             type: DataTypes.STRING,
             allowNull: false,
+        },
+        permission: {
+            type: DataTypes.STRING
         },
         status: {
             type: DataTypes.ENUM(...Object.values(constents.common_status_flags.list)),
