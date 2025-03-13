@@ -213,7 +213,7 @@ export const constents = {
     },
     default: "ALL"
   },
-  TEAMS_MAX_STUDENTS_ALLOWED: 3,
+  TEAMS_MAX_STUDENTS_ALLOWED: 5,
   ALPHA_NUMERIC_PATTERN: /^[a-zA-Z0-9 ]*$/,
   ALPHA_NUMERIC_PATTERN_HUD: /^[a-zA-Z0-9 -_.]*$/,
   ALPHA_NUMERIC_PATTERN_PLUS_SLASH: /^[a-zA-Z0-9 /]*$/,
