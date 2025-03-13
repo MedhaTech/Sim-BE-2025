@@ -761,7 +761,7 @@ export default class authService {
         try {
             const TEAMS_MAX_STUDENTS_ALLOWED: any = {
                 "Tamil Nadu": 5,
-                "default": 3
+                "default": 5
             }
             let studentResult: any = await student.findAll({ where: { team_id: argTeamId } })
             if (studentResult && studentResult instanceof Error) {
