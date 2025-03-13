@@ -129,6 +129,7 @@ export default class AdminController extends BaseController {
             return res.status(401).send(dispatcher(res, result.error, 'error', speeches.USER_RISTRICTED, 401));
         } else {
             adminDetails = await this.authService.getServiceDetails('admin', { user_id: result.data.user_id });
+            result.data['permission'] = adminDetails.dataValues.permission;
             if (!adminDetails) {
                 result.data['admin_id'] = null;
             } else {
