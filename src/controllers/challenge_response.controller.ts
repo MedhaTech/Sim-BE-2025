@@ -41,6 +41,7 @@ export default class ChallengeResponsesController extends BaseController {
         this.router.get(`${this.path}/schoolpdfideastatus`, this.getSchoolPdfIdeaStatus.bind(this));
         this.router.get(this.path + '/submittedDetailsforideapdf', this.getResponseideapdf.bind(this));
         this.router.get(this.path + '/checkyoutubeurl', this.checkyoutubeurl.bind(this));
+        this.router.get(this.path + '/CIDGroupsearch', this.CIDGroupsearch.bind(this));
         super.initializeRoutes();
     }
 
@@ -1713,6 +1714,42 @@ export default class ChallengeResponsesController extends BaseController {
             } else {
                 return res.status(200).send(dispatcher(res, "INVALID", 'success', 'Video is not Public'));
             }
+        } catch (error) {
+            next(error);
+        }
+    }
+    protected async CIDGroupsearch(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'EADMIN') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
+        }
+        try {
+            let newREQQuery: any = {}
+            if (req.query.Data) {
+                let newQuery: any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery = JSON.parse(newQuery);
+            } else if (Object.keys(req.query).length !== 0) {
+                return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
+            }
+            const cids = newREQQuery.cids
+            const result = await this.crudService.findAll(challenge_response, {
+                attributes: [
+                    "challenge_response_id", "theme", "title", "status", "evaluation_status"
+                ],
+
+                where: {
+                    challenge_response_id: {
+                        [Op.in]: cids
+                    }
+                }
+            })
+
+            if (!result) {
+                throw notFound()
+            };
+            if (result instanceof Error) {
+                throw result;
+            }
+            return res.status(200).send(dispatcher(res, result, 'success'));
         } catch (error) {
             next(error);
         }
