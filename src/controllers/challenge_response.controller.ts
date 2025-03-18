@@ -1072,45 +1072,49 @@ export default class ChallengeResponsesController extends BaseController {
 
             let evaluator_user_id = newREQQuery.evaluator_user_id;
             if (!evaluator_user_id) throw unauthorized(speeches.ID_REQUIRED);
-            let additionalFilter: any = {};
-            const theme: any = newREQQuery.theme;
-            const language: any = newREQQuery.theme;
-
-            if (theme) {
-                additionalFilter['theme'] = theme && typeof theme == 'string' ? theme : {}
-            }
-            if (language) {
-                additionalFilter['language'] = language && typeof language == 'string' ? language : {}
-            }
 
             let activeState = await this.crudService.findOne(evaluation_process, {
-                attributes: ['state'], where: { [Op.and]: [{ status: 'ACTIVE' }, { level_name: 'L1' }] }
+                attributes: ['state', 'language', 'theme'], where: { [Op.and]: [{ status: 'ACTIVE' }, { level_name: 'L1' }] }
             });
             let activeStateforEvaluator = await this.crudService.findOne(evaluator, {
-                attributes: ['state'], where: { [Op.and]: [{ status: 'ACTIVE' }, { user_id: evaluator_user_id }, additionalFilter] }
+                attributes: ['state', 'language', 'theme'], where: { [Op.and]: [{ status: 'ACTIVE' }, { user_id: evaluator_user_id }] }
             });
-            ;
+            
+            // State filter for L1
             let states = activeState.dataValues.state;
             const convertToStateArray = states.split(",");
             const convertToStateArrayforEvaluator = activeStateforEvaluator.dataValues.state.split(",");
             const commonStateforL1 = convertToStateArray.filter((value: any) => convertToStateArrayforEvaluator.includes(value));
             const commonValuesString = commonStateforL1.join(',');
+            // language filter for L1
+            const convertTolanguageArray = activeState.dataValues.language.split(",");
+            const convertTolanguageArrayforEvaluator = activeStateforEvaluator.dataValues.language.split(",");
+            const commonlanguageforL1 = convertTolanguageArray.filter((value: any) => convertTolanguageArrayforEvaluator.includes(value));
+            const commonlanguageString = commonlanguageforL1.join(',');
+            // theme filter  for L1
+            const convertTothemeArray = activeState.dataValues.theme.split(",");
+            const convertTothemeArrayforEvaluator = activeStateforEvaluator.dataValues.theme.split(",");
+            const commonthemeforL1 = convertTothemeArray.filter((value: any) => convertTothemeArrayforEvaluator.includes(value));
+            const commonthemeString = commonthemeforL1.join(',');
+
             const paramStatus: any = newREQQuery.status;
             let boolStatusWhereClauseRequired = false;
 
             if (paramStatus && (paramStatus in constents.challenges_flags.list)) {
-                whereClauseStatusPart = { "status": paramStatus, state: { [Op.in]: commonStateforL1 } };
+                whereClauseStatusPart = { "status": paramStatus, state: { [Op.in]: commonStateforL1 }, language: { [Op.in]: commonlanguageforL1 }, theme: { [Op.in]: commonthemeforL1 } };
                 boolStatusWhereClauseRequired = true;
             } else {
-                whereClauseStatusPart = { "status": "SUBMITTED", state: { [Op.in]: commonStateforL1 } };
+                whereClauseStatusPart = { "status": "SUBMITTED", state: { [Op.in]: commonStateforL1 }, language: { [Op.in]: commonlanguageforL1 }, theme: { [Op.in]: commonthemeforL1 } };
                 boolStatusWhereClauseRequired = true;
             };
 
             evaluator_id = { evaluated_by: evaluator_user_id }
-
             let level = newREQQuery.level;
+            
             if (level && typeof level == 'string') {
                 let statesArray = commonValuesString.replace(/,/g, "','")
+                let lanArray = commonlanguageString.replace(/,/g, "','")
+                let themeArray = commonthemeString.replace(/,/g, "','")
                 switch (level) {
                     case 'L1':
                         attributesNeedFetch = [
@@ -1144,7 +1148,7 @@ export default class ChallengeResponsesController extends BaseController {
                                 'overAllIdeas'
                             ],
                             [
-                                db.literal(`( SELECT count(*) FROM challenge_responses as idea where idea.evaluation_status is null AND idea.verified_status = 'ACCEPTED' AND idea.state IN ('${statesArray}'))`),
+                                db.literal(`( SELECT count(*) FROM challenge_responses as idea where idea.evaluation_status is null AND idea.verified_status = 'ACCEPTED' AND idea.state IN ('${statesArray}') AND idea.language IN ('${lanArray}') AND idea.theme IN ('${themeArray}'))`),
                                 'openIdeas'
                             ],
                             [
@@ -1180,16 +1184,32 @@ export default class ChallengeResponsesController extends BaseController {
                         break;
                     case 'L2':
                         let activeState = await this.crudService.findOne(evaluation_process, {
-                            attributes: ['state'], where: { [Op.and]: [{ status: 'ACTIVE' }, { level_name: 'L2' }] }
+                            attributes: ['state', 'language', 'theme'], where: { [Op.and]: [{ status: 'ACTIVE' }, { level_name: 'L2' }] }
                         });
+                        // State filter for L2
                         let states = activeState.dataValues.state
                         const convertToStateArray = states.split(",");
                         const convertToStateArrayforEvaluator = activeStateforEvaluator.dataValues.state.split(",");
                         const commonStateforL2 = convertToStateArray.filter((value: any) => convertToStateArrayforEvaluator.includes(value));
                         const commonValuesString = commonStateforL2.join(',');
+
+                        // language filter for L2
+                        const convertTolanguageArray = activeState.dataValues.language.split(",");
+                        const convertTolanguageArrayforEvaluator = activeStateforEvaluator.dataValues.language.split(",");
+                        const commonlanguageforL2 = convertTolanguageArray.filter((value: any) => convertTolanguageArrayforEvaluator.includes(value));
+                        const commonlanguageString = commonlanguageforL2.join(',');
+
+                        // theme filter for L2
+                        const convertTothemeArray = activeState.dataValues.theme.split(",");
+                        const convertTothemeArrayforEvaluator = activeStateforEvaluator.dataValues.theme.split(",");
+                        const commonthemeforL2 = convertTothemeArray.filter((value: any) => convertTothemeArrayforEvaluator.includes(value));
+                        const commonthemeString = commonthemeforL2.join(',');
+
                         if (states !== null) {
                             let statesArray = commonValuesString.replace(/,/g, "','")
-                            challengeResponse = await db.query("SELECT challenge_responses.challenge_response_id, challenge_responses.challenge_id, challenge_responses.theme, challenge_responses.team_id, challenge_responses.title,challenge_responses.problem_statement,challenge_responses.causes,challenge_responses.effects,challenge_responses.community,challenge_responses.facing,challenge_responses.solution,challenge_responses.stakeholders,challenge_responses.problem_solving,challenge_responses.feedback,challenge_responses.prototype_image,challenge_responses.prototype_link,challenge_responses.workbook,challenge_responses.language, challenge_responses.initiated_by,  challenge_responses.created_at, challenge_responses.submitted_at,    challenge_responses.status, challenge_responses.state,challenge_responses.focus_area,(SELECT COUNT(*) FROM challenge_responses AS idea WHERE idea.evaluation_status = 'SELECTEDROUND1') AS 'overAllIdeas', (SELECT COUNT(*) - SUM(CASE WHEN FIND_IN_SET('" + evaluator_user_id.toString() + "', evals) > 0 THEN 1 ELSE 0 END) FROM l1_accepted WHERE l1_accepted.state IN ('" + statesArray + "')) AS 'openIdeas', (SELECT COUNT(*) FROM evaluator_ratings AS A WHERE A.evaluator_id = " + evaluator_user_id.toString() + ") AS 'evaluatedIdeas' FROM l1_accepted AS l1_accepted LEFT OUTER JOIN challenge_responses AS challenge_responses ON l1_accepted.challenge_response_id = challenge_responses.challenge_response_id WHERE l1_accepted.state IN ('" + statesArray + "') AND NOT FIND_IN_SET(" + evaluator_user_id.toString() + ", l1_accepted.evals) ORDER BY RAND() LIMIT 1", { type: QueryTypes.SELECT });
+                            let lanArray = commonlanguageString.replace(/,/g, "','")
+                            let themeArray = commonthemeString.replace(/,/g, "','")
+                            challengeResponse = await db.query("SELECT challenge_responses.challenge_response_id, challenge_responses.challenge_id, challenge_responses.theme, challenge_responses.team_id, challenge_responses.title,challenge_responses.problem_statement,challenge_responses.causes,challenge_responses.effects,challenge_responses.community,challenge_responses.facing,challenge_responses.solution,challenge_responses.stakeholders,challenge_responses.problem_solving,challenge_responses.feedback,challenge_responses.prototype_image,challenge_responses.prototype_link,challenge_responses.workbook,challenge_responses.language, challenge_responses.initiated_by,  challenge_responses.created_at, challenge_responses.submitted_at,    challenge_responses.status, challenge_responses.state,challenge_responses.focus_area,(SELECT COUNT(*) FROM challenge_responses AS idea WHERE idea.evaluation_status = 'SELECTEDROUND1') AS 'overAllIdeas', (SELECT COUNT(*) - SUM(CASE WHEN FIND_IN_SET('" + evaluator_user_id.toString() + "', evals) > 0 THEN 1 ELSE 0 END) FROM l1_accepted WHERE l1_accepted.state IN ('" + statesArray + "') AND l1_accepted.language IN ('" + lanArray + "') AND l1_accepted.theme IN ('" + themeArray + "') ) AS 'openIdeas', (SELECT COUNT(*) FROM evaluator_ratings AS A WHERE A.evaluator_id = " + evaluator_user_id.toString() + ") AS 'evaluatedIdeas' FROM l1_accepted AS l1_accepted LEFT OUTER JOIN challenge_responses AS challenge_responses ON l1_accepted.challenge_response_id = challenge_responses.challenge_response_id WHERE l1_accepted.state IN ('" + statesArray + "') AND l1_accepted.language IN ('" + lanArray + "') AND l1_accepted.theme IN ('" + themeArray + "') AND NOT FIND_IN_SET(" + evaluator_user_id.toString() + ", l1_accepted.evals) ORDER BY RAND() LIMIT 1", { type: QueryTypes.SELECT });
                         } else {
                             challengeResponse = await db.query(`SELECT challenge_responses.challenge_response_id, challenge_responses.challenge_id, challenge_responses.theme, challenge_responses.team_id, challenge_responses.title,challenge_responses.problem_statement,challenge_responses.causes,challenge_responses.effects,challenge_responses.community,challenge_responses.facing,challenge_responses.solution,challenge_responses.stakeholders,challenge_responses.problem_solving,challenge_responses.feedback,challenge_responses.prototype_image,challenge_responses.prototype_link,challenge_responses.workbook,challenge_responses.language, challenge_responses.initiated_by,  challenge_responses.created_at, challenge_responses.submitted_at,    challenge_responses.status, challenge_responses.state,challenge_responses.focus_area,(SELECT COUNT(*) FROM challenge_responses AS idea WHERE idea.evaluation_status = 'SELECTEDROUND1') AS 'overAllIdeas', (SELECT COUNT(*) - SUM(CASE WHEN FIND_IN_SET(${evaluator_user_id.toString()}, evals) > 0 THEN 1 ELSE 0 END) FROM l1_accepted) AS 'openIdeas', (SELECT COUNT(*) FROM evaluator_ratings AS A WHERE A.evaluator_id = ${evaluator_user_id.toString()}) AS 'evaluatedIdeas' FROM l1_accepted AS l1_accepted LEFT OUTER JOIN challenge_responses AS challenge_responses ON l1_accepted.challenge_response_id = challenge_responses.challenge_response_id WHERE NOT FIND_IN_SET(${evaluator_user_id.toString()}, l1_accepted.evals) ORDER BY RAND() LIMIT 1`, { type: QueryTypes.SELECT });
                         }
@@ -1213,6 +1233,7 @@ export default class ChallengeResponsesController extends BaseController {
             }
             return res.status(200).send(dispatcher(res, challengeResponse, 'success'));
         } catch (error) {
+            console.log(error)
             next(error);
         }
     }
