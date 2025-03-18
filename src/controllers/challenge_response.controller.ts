@@ -1233,7 +1233,6 @@ export default class ChallengeResponsesController extends BaseController {
             }
             return res.status(200).send(dispatcher(res, challengeResponse, 'success'));
         } catch (error) {
-            console.log(error)
             next(error);
         }
     }
