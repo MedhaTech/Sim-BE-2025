@@ -55,7 +55,8 @@ export default class AdminController extends BaseController {
             const result = await this.crudService.findAll(admin, {
                 attributes: [
                     "admin_id",
-                    "status"
+                    "status",
+                    "permission"
                 ],
                 include: {
                     model: user,
