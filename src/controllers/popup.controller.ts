@@ -29,9 +29,17 @@ export default class popupController extends BaseController {
         }
 
         try {
+            let newREQQuery: any = {}
+            if (req.query.Data) {
+                let newQuery: any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery = JSON.parse(newQuery);
+            } else if (Object.keys(req.query).length !== 0) {
+                return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
+            }
+            let type = newREQQuery.type;
             const rawfiles: any = req.files;
             const files: any = Object.values(rawfiles);
-            const allowedTypes = ['image/jpeg', 'image/png'];
+            const allowedTypes = type === 'file' ? ['image/jpeg', 'image/png', 'application/msword', 'application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'] : ['image/jpeg', 'image/png'];
             if (!allowedTypes.includes(files[0].type)) {
                 return res.status(400).send(dispatcher(res, '', 'error', 'This file type not allowed', 400));
             }
@@ -114,8 +122,8 @@ export default class popupController extends BaseController {
                 data = await this.crudService.findAll(popup, {
                     where: [where]
                 })
-                if (data.length <= 0){
-                    where[`state`] = "All States" 
+                if (data.length <= 0) {
+                    where[`state`] = "All States"
                     data = await this.crudService.findAll(popup, {
                         where: [where]
                     })
