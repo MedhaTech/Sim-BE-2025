@@ -42,7 +42,7 @@ export default class ResourceController extends BaseController {
             const where: any = {};
             where[`status`] = "ACTIVE";
             if (state !== 'All States' && state !== undefined) {
-                where[`state`] = state;
+                where[`state`] = {[Op.in]: [state,'All States']}
             }
             if (role !== 'All roles' && role !== undefined) {
                 where[`role`] = role;
