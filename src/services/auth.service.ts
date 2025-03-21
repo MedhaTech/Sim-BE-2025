@@ -396,7 +396,6 @@ export default class authService {
             },
             Source: "sim-no-reply@inqui-lab.org", /* required */
             ReplyToAddresses: [],
-            ConfigurationSetName:'Stats-of-Email'
         };
         try {
             // Create the promise and SES service object
