@@ -42,6 +42,7 @@ export default class ChallengeResponsesController extends BaseController {
         this.router.get(this.path + '/submittedDetailsforideapdf', this.getResponseideapdf.bind(this));
         this.router.get(this.path + '/checkyoutubeurl', this.checkyoutubeurl.bind(this));
         this.router.get(this.path + '/CIDGroupsearch', this.CIDGroupsearch.bind(this));
+        this.router.put(this.path + '/CIDGroupUpdate', this.CIDGroupUpdate.bind(this));
         super.initializeRoutes();
     }
 
@@ -1079,7 +1080,7 @@ export default class ChallengeResponsesController extends BaseController {
             let activeStateforEvaluator = await this.crudService.findOne(evaluator, {
                 attributes: ['state', 'language', 'theme'], where: { [Op.and]: [{ status: 'ACTIVE' }, { user_id: evaluator_user_id }] }
             });
-            
+
             // State filter for L1
             let states = activeState.dataValues.state;
             const convertToStateArray = states.split(",");
@@ -1110,7 +1111,7 @@ export default class ChallengeResponsesController extends BaseController {
 
             evaluator_id = { evaluated_by: evaluator_user_id }
             let level = newREQQuery.level;
-            
+
             if (level && typeof level == 'string') {
                 let statesArray = commonValuesString.replace(/,/g, "','")
                 let lanArray = commonlanguageString.replace(/,/g, "','")
@@ -1770,6 +1771,35 @@ export default class ChallengeResponsesController extends BaseController {
                 throw result;
             }
             return res.status(200).send(dispatcher(res, result, 'success'));
+        } catch (error) {
+            next(error);
+        }
+    }
+    protected async CIDGroupUpdate(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'EADMIN') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
+        }
+        try {
+            const payload = this.autoFillTrackingColumns(req, res, challenge_response);
+            const result = await this.crudService.update(challenge_response,
+                payload,
+                {
+                    where: {
+                        challenge_response_id: {
+                            [Op.in]: req.body.cids
+                        }
+                    }
+                }
+            );
+    
+            if (!result) {
+                throw badRequest()
+            }
+            if (result instanceof Error) {
+                throw result;
+            }
+            return res.status(200).send(dispatcher(res, result, 'updated'));
+
         } catch (error) {
             next(error);
         }
