@@ -37,12 +37,12 @@ export default class ResourceController extends BaseController {
             } else if (Object.keys(req.query).length !== 0) {
                 return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
             }
-            let { role, state } = newREQQuery;
+            let { role, state, type } = newREQQuery;
             let data: any = {}
             const where: any = {};
             where[`status`] = "ACTIVE";
             if (state !== 'All States' && state !== undefined) {
-                where[`state`] = {[Op.in]: [state,'All States']}
+                where[`state`] = { [Op.in]: [state, 'All States'] }
             }
             if (role !== 'All roles' && role !== undefined) {
                 where[`role`] = role;
@@ -52,6 +52,21 @@ export default class ResourceController extends BaseController {
                 const newParamId = await this.authService.decryptGlobal(req.params.id);
                 where[`resource_id`] = newParamId;
                 data = await this.crudService.findOne(resource, {
+                    attributes: [
+                        "resource_id",
+                        "description",
+                        "role",
+                        "type",
+                        "attachments",
+                        "state"
+                    ],
+                    where: [where],
+                    order: [['resource_id', 'DESC']]
+                })
+            }
+            else if (type === 'state') {
+                where[`state`] = state
+                data = await this.crudService.findAll(resource, {
                     attributes: [
                         "resource_id",
                         "description",
