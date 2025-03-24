@@ -32,8 +32,9 @@ export default class EvaluatorController extends BaseController {
         this.router.post(`${this.path}/register`, validationMiddleware(evaluatorRegSchema), this.register.bind(this));
         this.router.post(`${this.path}/login`, this.login.bind(this));
         this.router.get(`${this.path}/logout`, this.logout.bind(this));
-        this.router.put(`${this.path}/changePassword`, this.changePassword.bind(this));;
+        this.router.put(`${this.path}/changePassword`, this.changePassword.bind(this));
         this.router.put(`${this.path}/resetPassword`, this.resetPassword.bind(this));
+        this.router.post(`${this.path}/bulkAdd`, this.bulkAdd.bind(this));
         super.initializeRoutes();
     };
 
@@ -55,7 +56,7 @@ export default class EvaluatorController extends BaseController {
             where[`${this.model}_id`] = JSON.parse(deValue);
             data = await this.crudService.findOne(modelClass, {
                 attributes: [
-                    "evaluator_id", "state", "mobile", "status","language","theme",
+                    "evaluator_id", "state", "mobile", "status", "language", "theme",
                 ],
                 where: {
                     [Op.and]: [
@@ -74,7 +75,7 @@ export default class EvaluatorController extends BaseController {
         } else {
             data = await this.crudService.findAll(modelClass, {
                 attributes: [
-                    "evaluator_id", "state", "mobile", "status","language","theme",
+                    "evaluator_id", "state", "mobile", "status", "language", "theme",
                 ],
                 include: {
                     model: user,
@@ -213,6 +214,40 @@ export default class EvaluatorController extends BaseController {
             } else {
                 return res.status(202).send(dispatcher(res, result.data, 'accepted', 'The password has been reset', 202));
             }
+        } catch (error) {
+            next(error)
+        }
+    }
+    private async bulkAdd(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'EADMIN') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
+        }
+        try {
+            const finalresult: any = {}
+            let countvariable = 0;
+            req.body.map(async (evaldata: any, index: any) => {
+                const payload: any = {};
+                payload['role'] = 'EVALUATOR';
+                payload['state'] = "Andaman and Nicobar Islands,Andhra Pradesh,Arunachal Pradesh,Assam,Bihar,Chandigarh,Chhattisgarh,Dadra and Nagar Haveli and Daman and Diu,Delhi,Goa,Gujarat,Haryana,Himachal Pradesh,Jammu and Kashmir,Jharkhand,Karnataka,Kerala,Ladakh,Lakshadweep,Madhya Pradesh,Maharashtra,Manipur,Meghalaya,Mizoram,Nagaland,Odisha,Puducherry,Punjab,Rajasthan,Sikkim,Tamil Nadu,Telangana,Tripura,Uttar Pradesh,Uttarakhand,West Bengal";
+                payload['language'] = "English,Hindi-हिन्दी,Kannada-ಕೆನಡಾ,Malayalam-മലയാളം,Other Language,Tamil-தமிழ்,Telugu-తెలుగు";
+                payload['theme'] = "Sustainable Development and Environment,Digital Transformation,Health and Well-being,Quality Education,Economic Empowerment,Smart and Resilient Communities,Agriculture and Rural Development,Others";
+                payload['full_name'] = evaldata.full_name;
+                payload['mobile'] = evaldata.mobile;
+                payload['username'] = evaldata.email;
+                payload['password'] = await this.authService.generateCryptEncryption(JSON.stringify(evaldata.mobile));
+
+                const result = await this.authService.register(payload);
+                if (result.user_res)
+                    finalresult[evaldata.full_name] = speeches.EVALUATOR_EXISTS;
+                else if (result.profile)
+                    finalresult[evaldata.full_name] = result.profile;
+                else
+                    finalresult[evaldata.full_name] = result.error;
+                countvariable += 1
+                if (req.body.length === countvariable) {
+                    return res.status(201).send(dispatcher(res, finalresult, 'success', speeches.USER_REGISTERED_SUCCESSFULLY, 201));
+                }
+            })
         } catch (error) {
             next(error)
         }
