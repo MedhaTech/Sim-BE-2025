@@ -15,6 +15,7 @@ export class mentor extends Model<InferAttributes<mentor>, InferCreationAttribut
     declare organization_code: string;
     declare full_name: string;
     declare mobile: string;
+    declare email: string;
     declare status: Enumerator;
     declare created_by: number;
     declare created_at: Date;
@@ -57,6 +58,10 @@ mentor.init(
             allowNull: false,
         },
         mobile: {
+            type: DataTypes.STRING,
+            unique: true
+        },
+        email: {
             type: DataTypes.STRING,
             unique: true
         },
