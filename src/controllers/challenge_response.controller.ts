@@ -1751,10 +1751,10 @@ export default class ChallengeResponsesController extends BaseController {
             } else if (Object.keys(req.query).length !== 0) {
                 return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
             }
-            const cids = newREQQuery.cids
+            const cids = JSON.parse(newREQQuery.cids)
             const result = await this.crudService.findAll(challenge_response, {
                 attributes: [
-                    "challenge_response_id", "theme", "title", "status", "evaluation_status"
+                    "challenge_response_id", "theme", "title", "status", "evaluation_status", "verified_status"
                 ],
 
                 where: {
@@ -1780,6 +1780,9 @@ export default class ChallengeResponsesController extends BaseController {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
         }
         try {
+            let newDate = new Date();
+            let newFormat = (newDate.getFullYear()) + "-" + (1 + newDate.getMonth()) + "-" + newDate.getUTCDate() + ' ' + newDate.getHours() + ':' + newDate.getMinutes() + ':' + newDate.getSeconds();
+            req.body.evaluated_at = newFormat;
             const payload = this.autoFillTrackingColumns(req, res, challenge_response);
             const result = await this.crudService.update(challenge_response,
                 payload,
@@ -1787,11 +1790,13 @@ export default class ChallengeResponsesController extends BaseController {
                     where: {
                         challenge_response_id: {
                             [Op.in]: req.body.cids
+                        },
+                        verified_status: {
+                            [Op.eq]: 'ACCEPTED'
                         }
                     }
                 }
             );
-    
             if (!result) {
                 throw badRequest()
             }
