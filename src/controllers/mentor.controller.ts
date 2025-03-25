@@ -243,7 +243,8 @@ export default class MentorController extends BaseController {
                 var pass = req.body.username.trim();
                 var myArray = pass.split("@");
                 const cryptoEncryptedString = await this.authService.generateCryptEncryption(myArray[0]);
-                req.body.password = await bcrypt.hashSync(cryptoEncryptedString, process.env.SALT || baseConfig.SALT)
+                req.body.password = await bcrypt.hashSync(cryptoEncryptedString, process.env.SALT || baseConfig.SALT);
+                req.body.email = req.body.username;
             }
             const payload = this.autoFillTrackingColumns(req, res, modelLoaded)
             const findMentorDetail = await this.crudService.findOne(modelLoaded, { where: where });
@@ -288,6 +289,7 @@ export default class MentorController extends BaseController {
             const uporg = await this.crudService.update(organization, playload, { where: where })
         }
         const payloadData = this.autoFillTrackingColumns(req, res, mentor);
+        payloadData['email'] = req.body.username;
         const result: any = await this.authService.mentorRegister(payloadData);
         if (result && result.output && result.output.payload && result.output.payload.message == 'Email') {
             return res.status(406).send(dispatcher(res, result.data, 'error', speeches.MENTOR_EXISTS, 406));
