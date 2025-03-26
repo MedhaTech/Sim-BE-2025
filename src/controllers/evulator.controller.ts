@@ -238,16 +238,28 @@ export default class EvaluatorController extends BaseController {
                 payload['username'] = evaldata.email;
                 payload['password'] = await this.authService.generateCryptEncryption(JSON.stringify(evaldata.mobile));
 
-                const result = await this.authService.register(payload);
-                if (result.user_res)
-                    finalresult[evaldata.full_name] = speeches.EVALUATOR_EXISTS;
-                else if (result.profile)
-                    finalresult[evaldata.full_name] = result.profile;
-                else
-                    finalresult[evaldata.full_name] = result.error;
-                countvariable += 1
-                if (req.body.length === countvariable) {
-                    return res.status(201).send(dispatcher(res, finalresult, 'success', speeches.USER_REGISTERED_SUCCESSFULLY, 201));
+                const emailv = await this.authService.validateEmail(evaldata.email);
+                const mobilev = await this.authService.validateMobile(evaldata.mobile);
+                const namev = await this.authService.validateName(evaldata.full_name);
+
+                if (emailv === 'Valid' && mobilev === 'Valid' && namev === 'Valid') {
+                    const result = await this.authService.register(payload);
+                    if (result.user_res)
+                        finalresult[evaldata.full_name] = speeches.EVALUATOR_EXISTS;
+                    else if (result.profile)
+                        finalresult[evaldata.full_name] = result.profile;
+                    else
+                        finalresult[evaldata.full_name] = result.error;
+                    countvariable += 1
+                    if (req.body.length === countvariable) {
+                        return res.status(201).send(dispatcher(res, finalresult, 'success', speeches.USER_REGISTERED_SUCCESSFULLY, 201));
+                    }
+                } else {
+                    countvariable += 1
+                    finalresult[evaldata.full_name] = 'Invaild';
+                    if (req.body.length === countvariable) {
+                        return res.status(201).send(dispatcher(res, finalresult, 'success', speeches.USER_REGISTERED_SUCCESSFULLY, 201));
+                    }
                 }
             })
         } catch (error) {
