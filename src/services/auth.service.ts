@@ -23,6 +23,7 @@ import { user_topic_progress } from '../models/user_topic_progress.model';
 import { evaluator } from '../models/evaluator.model';
 import { team } from '../models/team.model';
 import { badge } from '../models/badge.model';
+import Joi from 'joi';
 export default class authService {
     crudService: CRUDService = new CRUDService;
     private otp = '112233';
@@ -974,8 +975,8 @@ export default class authService {
                 }
             },
             Source: "sim-no-reply@inqui-lab.org", /* required */
-            ReplyToAddresses: [], 
-            ConfigurationSetName:'Stats-of-Email'
+            ReplyToAddresses: [],
+            ConfigurationSetName: 'Stats-of-Email'
         };
         try {
             // Create the promise and SES service object
@@ -1386,5 +1387,32 @@ export default class authService {
         catch (err) {
             return err
         }
+    }
+    async validateEmail(email: any) {
+        const schema = Joi.string().email();
+
+        const { error } = schema.validate(email);
+        if (error) {
+            return `Invalid email: ${error.details[0].message}`;
+        }
+        return 'Valid';
+    }
+    async validateMobile(mobile: any) {
+        const schema = Joi.string().regex(constents.ONLY_DIGIT_PATTERN).max(10);
+
+        const { error } = schema.validate(mobile.toString());
+        if (error) {
+            return `Invalid mobile: ${error.details[0].message}`;
+        }
+        return 'Valid';
+    }
+    async validateName(name: any) {
+        const schema = Joi.string().regex(constents.ALPHA_NUMERIC_PATTERN);
+
+        const { error } = schema.validate(name);
+        if (error) {
+            return `Invalid name: ${error.details[0].message}`;
+        }
+        return 'Valid';
     }
 }
