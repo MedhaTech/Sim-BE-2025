@@ -230,9 +230,12 @@ export default class EvaluatorController extends BaseController {
             req.body.map(async (evaldata: any, index: any) => {
                 const payload: any = {};
                 payload['role'] = 'EVALUATOR';
-                payload['state'] = "Andaman and Nicobar Islands,Andhra Pradesh,Arunachal Pradesh,Assam,Bihar,Chandigarh,Chhattisgarh,Dadra and Nagar Haveli and Daman and Diu,Delhi,Goa,Gujarat,Haryana,Himachal Pradesh,Jammu and Kashmir,Jharkhand,Karnataka,Kerala,Ladakh,Lakshadweep,Madhya Pradesh,Maharashtra,Manipur,Meghalaya,Mizoram,Nagaland,Odisha,Puducherry,Punjab,Rajasthan,Sikkim,Tamil Nadu,Telangana,Tripura,Uttar Pradesh,Uttarakhand,West Bengal";
-                payload['language'] = "English,Hindi-हिन्दी,Kannada-ಕೆನಡಾ,Malayalam-മലയാളം,Other Language,Tamil-தமிழ்,Telugu-తెలుగు";
-                payload['theme'] = "Sustainable Development and Environment,Digital Transformation,Health and Well-being,Quality Education,Economic Empowerment,Smart and Resilient Communities,Agriculture and Rural Development,Others";
+                payload['state'] = evaldata.state;
+                payload['language'] = evaldata.language;
+                payload['theme'] = evaldata.theme;
+                // payload['state'] = "Andaman and Nicobar Islands,Andhra Pradesh,Arunachal Pradesh,Assam,Bihar,Chandigarh,Chhattisgarh,Dadra and Nagar Haveli and Daman and Diu,Delhi,Goa,Gujarat,Haryana,Himachal Pradesh,Jammu and Kashmir,Jharkhand,Karnataka,Kerala,Ladakh,Lakshadweep,Madhya Pradesh,Maharashtra,Manipur,Meghalaya,Mizoram,Nagaland,Odisha,Puducherry,Punjab,Rajasthan,Sikkim,Tamil Nadu,Telangana,Tripura,Uttar Pradesh,Uttarakhand,West Bengal";
+                // payload['language'] = "English,Hindi-हिन्दी,Kannada-ಕೆನಡಾ,Malayalam-മലയാളം,Other Language,Tamil-தமிழ்,Telugu-తెలుగు";
+                // payload['theme'] = "Sustainable Development and Environment,Digital Transformation,Health and Well-being,Quality Education,Economic Empowerment,Smart and Resilient Communities,Agriculture and Rural Development,Others";
                 payload['full_name'] = evaldata.full_name;
                 payload['mobile'] = evaldata.mobile;
                 payload['username'] = evaldata.email;
