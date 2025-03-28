@@ -1915,7 +1915,8 @@ GROUP BY challenge_response_id;`, { type: QueryTypes.SELECT });
                 mentor_rejected_reason,
                 evaluation_status,
                 rejected_reason,
-                rejected_reasonSecond
+                rejected_reasonSecond,
+                (select full_name from evaluators as e where e.user_id = cr.evaluated_by) as evaluatorName
             FROM
                 challenge_responses as cr join teams as t on cr.team_id = t.team_id join mentors as m on t.mentor_id = m.mentor_id join organizations as org on m.organization_code = org.organization_code
             WHERE
@@ -1977,7 +1978,6 @@ GROUP BY challenge_response_id;`, { type: QueryTypes.SELECT });
             }
             res.status(200).send(dispatcher(res, data, "success"))
         } catch (err) {
-            console.log(err)
             next(err)
         }
     }
@@ -2093,9 +2093,10 @@ challenge_response_id,
     COUNT(challenge_response_id) AS eval_count,
     (AVG(param_1) + AVG(param_2)) / 2 AS quality_score,
     (AVG(param_3) + AVG(param_4) + AVG(param_5)) / 3 AS feasibility_score,
-    JSON_ARRAYAGG(comments)
+    JSON_ARRAYAGG(comments) as comments,
+    json_arrayagg((select full_name from evaluators as e where e.user_id = er.evaluator_id)) as 'evaluatorName'
 FROM
-    evaluator_ratings
+    evaluator_ratings as er
 GROUP BY challenge_response_id`, { type: QueryTypes.SELECT });
             data['summary'] = summary;
             data['teamData'] = teamData;
