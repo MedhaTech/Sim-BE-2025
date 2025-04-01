@@ -1380,7 +1380,7 @@ export default class authService {
         try {
             let arrayofemail: any = [];
             data.map((value: any) => {
-                arrayofemail.push(value.username);
+                arrayofemail.push(value.emails);
             })
             return arrayofemail
         }

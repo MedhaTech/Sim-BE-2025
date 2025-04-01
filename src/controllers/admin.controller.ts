@@ -206,24 +206,12 @@ export default class AdminController extends BaseController {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
         }
         try {
-            const { msg, subject, state } = req.body;
+            const { msg, subject, emails } = req.body;
             const payload = this.autoFillTrackingColumns(req, res, email);
             await this.crudService.create(email, payload);
-            let data: any = {}
-            let stateFilter: any = `'%%'`
-            if (state !== 'All States' && state !== undefined) {
-                stateFilter = `'${state}'`
-            }
-            const summary = await db.query(`SELECT DISTINCT
-        u.username
-    FROM
-        mentors AS m
-    JOIN users AS u ON m.user_id = u.user_id
-    JOIN organizations AS o ON m.organization_code = o.organization_code
-    WHERE
-        state LIKE ${stateFilter}`, { type: QueryTypes.SELECT });
-            const arrayOfUsernames = await this.authService.ConverListemail(summary);
-            let resultdata = [];
+            let resultdata:any = [];
+            const arrayOfUsernames = await this.authService.ConverListemail(emails);
+            
             if (arrayOfUsernames.length > 49) {
                 function splitArray(arr: any, chunkSize: any) {
                     let result = [];
@@ -237,7 +225,7 @@ export default class AdminController extends BaseController {
                     resultdata = await this.authService.triggerBulkEmail(smallarrayofusername, msg, subject);
                 })
             } else {
-                resultdata.push(await this.authService.triggerBulkEmail(arrayOfUsernames, msg, subject))
+                resultdata.push(await this.authService.triggerBulkEmail(arrayOfUsernames, msg, subject));
             }
 
             return res.status(200).send(dispatcher(res, resultdata, 'Email sent'));
