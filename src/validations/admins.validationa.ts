@@ -43,7 +43,7 @@ export const adminUpdateSchema = Joi.object().keys({
     full_name: Joi.string().trim().min(1).regex(constents.ALPHA_NUMERIC_PATTERN).required().messages({
         'string.empty': speeches.USER_FULLNAME_REQUIRED
     }),
-    permission: Joi.string().trim().regex(constents.ALPHA_NUMERIC_PLUS_PATTERN).required()
+    permission: Joi.string().trim().regex(constents.ALPHA_NUMERIC_PLUS_PATTERN)
 });
 export const adminbulkemail = Joi.object().keys({
     emails: Joi.array().required(),
