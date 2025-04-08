@@ -14,6 +14,9 @@ export class organization extends Model<InferAttributes<organization>, InferCrea
     declare state: string;
     declare unique_code: string;
     declare country: string;
+    declare school_type: string;
+    declare mandal: string;
+    declare board: string;
     declare pin_code: string;
     declare principal_name: string;
     declare address: string;
@@ -60,6 +63,15 @@ organization.init({
         type: DataTypes.STRING
     },
     country: {
+        type: DataTypes.STRING
+    },
+    mandal: {
+        type: DataTypes.STRING
+    },
+    school_type: {
+        type: DataTypes.STRING
+    },
+    board: {
         type: DataTypes.STRING
     },
     address: {
