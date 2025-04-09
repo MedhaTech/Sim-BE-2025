@@ -48,7 +48,9 @@ export const mentorUpdateSchema = Joi.object().keys({
     }),
     title: Joi.string().regex(constents.ALPHA_NUMERIC_PATTERN),
     gender: Joi.string().regex(constents.ALPHA_NUMERIC_PATTERN),
-    whatapp_mobile: Joi.string().max(10).regex(constents.ONLY_DIGIT_PATTERN)
+    whatapp_mobile: Joi.string().max(10).regex(constents.ONLY_DIGIT_PATTERN),
+    organization_code: Joi.string()
+
 });
 export const mentorRegSchema = Joi.object().keys({
     status: Joi.string().valid(...Object.values(constents.common_status_flags.list)),
