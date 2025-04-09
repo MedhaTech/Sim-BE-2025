@@ -31,6 +31,7 @@ export default class OrganizationController extends BaseController {
     protected initializeRoutes(): void {
         this.router.post(`${this.path}/checkOrg`, validationMiddleware(organizationCheckSchema), this.checkOrgDetails.bind(this));
         this.router.post(`${this.path}/createOrg`, validationMiddleware(organizationRawSchema), this.createOrg.bind(this));
+        this.router.get(`${this.path}/allcodes`, this.GetAllCodes.bind(this));
         // this.router.post(`${this.path}/login`, this.login.bind(this));
         // this.router.get(`${this.path}/logout`, this.logout.bind(this));
         // this.router.put(`${this.path}/changePassword`, this.changePassword.bind(this));
@@ -191,5 +192,43 @@ export default class OrganizationController extends BaseController {
             return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
         }
         return this.createData(req, res, next);
+    }
+    protected async GetAllCodes(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if (res.locals.role !== 'ADMIN') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
+        }
+        try {
+            const { model } = req.params;
+            if (model) {
+                this.model = model;
+            };
+            const modelClass = await this.loadModel(model).catch(error => {
+                next(error)
+            });
+            const where: any = {};
+            where['status'] = 'ACTIVE'
+            const data = await this.crudService.findAll(modelClass, {
+                attributes: [
+                    'organization_code'
+                ],
+                where: {
+                    [Op.and]: [
+                        where
+                    ]
+                }
+            })
+
+            if (!data || data instanceof Error) {
+                if (data != null) {
+                    throw notFound(data.message)
+                } else {
+                    throw notFound()
+                }
+            }
+            return res.status(200).send(dispatcher(res, data, 'success'));
+        } catch (error) {
+            console.log(error)
+            next(error);
+        }
     }
 }
