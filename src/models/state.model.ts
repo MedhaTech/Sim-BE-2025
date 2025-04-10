@@ -9,6 +9,7 @@ export class state extends Model<InferAttributes<state>, InferCreationAttributes
     declare state_id: CreationOptional<number>;
     declare user_id: string;
     declare full_name: string;
+    declare state_name: string;
     declare status: Enumerator;
     declare created_by: number;
     declare created_at: Date;
@@ -28,6 +29,10 @@ state.init(
             allowNull: false
         },
         full_name: {
+            type: DataTypes.STRING,
+            allowNull: false,
+        },
+        state_name: {
             type: DataTypes.STRING,
             allowNull: false,
         },

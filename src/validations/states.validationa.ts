@@ -12,14 +12,18 @@ export const stateSchema = Joi.object().keys({
     role: Joi.string().required().messages({
         'string.empty': speeches.USER_ROLE_REQUIRED
     }),
-    password: Joi.string()
+    password: Joi.string(),
+    state_name: Joi.string().regex(constents.ALPHA_NUMERIC_PLUS_PATTERN).required().messages({
+        'string.empty': speeches.STATE_REQ
+    }),
 });
 
 export const stateUpdateSchema = Joi.object().keys({
     status: Joi.string().valid(...Object.values(constents.common_status_flags.list)),
     username: Joi.string().trim().min(1).email(),
     full_name: Joi.string().trim().min(1).regex(constents.ALPHA_NUMERIC_PATTERN),
-    password: Joi.string()
+    password: Joi.string(),
+    state_name: Joi.string().regex(constents.ALPHA_NUMERIC_PLUS_PATTERN)
 });
 
 export const stateLoginSchema = Joi.object().keys({
