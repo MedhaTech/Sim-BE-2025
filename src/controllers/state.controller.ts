@@ -131,6 +131,14 @@ export default class StateController extends BaseController {
         try {
             let data: any = {}
             const where: any = {};
+            let newREQQuery: any = {}
+            if (req.query.Data) {
+                let newQuery: any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery = JSON.parse(newQuery);
+            } else if (Object.keys(req.query).length !== 0) {
+                return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
+            }
+            const { state } = newREQQuery
             const { id } = req.params;
             if (id) {
                 const newParamId = await this.authService.decryptGlobal(req.params.id);
@@ -138,7 +146,12 @@ export default class StateController extends BaseController {
                 data = await this.crudService.findOne(state_specific, {
                     where: [where]
                 })
-            } else {
+            } else if (state) {
+                data = await this.crudService.findOne(state_specific, {
+                    where: { ['state_name']: state }
+                })
+            }
+            else {
                 data = await this.crudService.findAll(state_specific)
             }
             return res.status(200).send(dispatcher(res, data, 'success'));
