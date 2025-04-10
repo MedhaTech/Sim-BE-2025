@@ -9,6 +9,7 @@ import { state } from "../models/state.model";
 import { state_specificUpdateSchema, stateChangePasswordSchema, stateLoginSchema, stateSchema, stateUpdateSchema } from "../validations/states.validationa";
 import validationMiddleware from "../middlewares/validation.middleware";
 import { state_specific } from "../models/state_specific.model";
+import { user } from "../models/user.model";
 
 export default class StateController extends BaseController {
 
@@ -40,6 +41,7 @@ export default class StateController extends BaseController {
 
     private async login(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try {
+            req.body['role'] = 'STATE';
             const result = await this.authService.login(req.body);
             if (!result) {
                 return res.status(404).send(dispatcher(res, result, 'error', speeches.USER_NOT_FOUND));
@@ -48,6 +50,10 @@ export default class StateController extends BaseController {
                 return res.status(401).send(dispatcher(res, result.error, 'error', speeches.USER_RISTRICTED, 401));;
             }
             else {
+                const stateData = await this.authService.crudService.findOne(state, {
+                    where: { user_id: result.data.user_id }
+                });
+                result.data['state_name'] = stateData.dataValues.state_name;
                 return res.status(200).send(dispatcher(res, result.data, 'success', speeches.USER_LOGIN_SUCCESS));
             }
         } catch (error) {
@@ -61,6 +67,43 @@ export default class StateController extends BaseController {
             next(result.error);
         } else {
             return res.status(200).send(dispatcher(res, speeches.LOGOUT_SUCCESS, 'success'));
+        }
+    }
+
+    protected async updateData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STATE') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
+        }
+        try {
+            const { model } = req.params;
+            if (model) {
+                this.model = model;
+            };
+            const where: any = {};
+            const newParamId = await this.authService.decryptGlobal(req.params.id);
+            where[`${this.model}_id`] = newParamId;
+            const modelLoaded = await this.loadModel(model);
+            const payload = this.autoFillTrackingColumns(req, res, modelLoaded)
+            const findAdminDetail = await this.crudService.findOne(modelLoaded, { where: where });
+            if (!findAdminDetail || findAdminDetail instanceof Error) {
+                throw notFound();
+            } else {
+                const SSData = await this.crudService.update(modelLoaded, payload, { where: where });
+                const userData = await this.crudService.update(user, payload, { where: { user_id: findAdminDetail.dataValues.user_id } });
+                if (!SSData || !userData) {
+                    throw badRequest()
+                }
+                if (SSData instanceof Error) {
+                    throw SSData;
+                }
+                if (userData instanceof Error) {
+                    throw userData;
+                }
+                const data = { userData, SSData };
+                return res.status(200).send(dispatcher(res, data, 'updated'));
+            }
+        } catch (error) {
+            next(error);
         }
     }
 
@@ -93,10 +136,30 @@ export default class StateController extends BaseController {
                 const newParamId = await this.authService.decryptGlobal(req.params.id);
                 where[`state_id`] = newParamId;
                 data = await this.crudService.findOne(state, {
-                    where: [where]
-                })
+                    where: [where],
+                    include: {
+                        model: user,
+                        attributes: [
+                            "user_id",
+                            "username",
+                            "full_name",
+                            "role"
+                        ]
+                    }
+                }
+                )
             } else {
-                data = await this.crudService.findAll(state)
+                data = await this.crudService.findAll(state, {
+                    include: {
+                        model: user,
+                        attributes: [
+                            "user_id",
+                            "username",
+                            "full_name",
+                            "role"
+                        ]
+                    }
+                })
             }
             return res.status(200).send(dispatcher(res, data, 'success'));
         } catch (error) {
@@ -125,7 +188,7 @@ export default class StateController extends BaseController {
     }
 
     private async getStateSpecific(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STATE') {
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STATE' && res.locals.role !== 'TEAM') {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
         }
         try {
