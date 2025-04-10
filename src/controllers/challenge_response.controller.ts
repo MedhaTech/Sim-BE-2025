@@ -50,7 +50,7 @@ export default class ChallengeResponsesController extends BaseController {
         if (res.locals.role !== 'ADMIN' && res.locals.role !== 'EADMIN' && res.locals.role !== 'STATE') {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
         }
-        let user_id = res.locals.user_id || res.locals.state_coordinators_id;
+        let user_id = res.locals.user_id;
         let newREQQuery: any = {}
         if (req.query.Data) {
             let newQuery: any = await this.authService.decryptGlobal(req.query.Data);

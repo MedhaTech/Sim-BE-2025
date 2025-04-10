@@ -24,9 +24,8 @@ export const wildcardRoutes = [
     "/api/v1/dashboard/mapStats",
     "/api/v1/dashboard/stateMapStats",
     "/api/v1/dashboard/tnMapStats",
-    "/api/v1/state_coordinators/login",
-    "/api/v1/state_coordinators/resetPassword",
     "/api/v1/evaluators/register",
     "/api/v1/evaluators/login",
-    "/api/v1/dashboard/whatappLink"
+    "/api/v1/dashboard/whatappLink",
+    "/api/v1/states/login",
 ];

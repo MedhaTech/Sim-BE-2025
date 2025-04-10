@@ -30,6 +30,7 @@ export const speeches = {
     MOBILE_EXISTS: "Mobile Number already exists",
     STUDENT_EXISTS: "Student already exists",
     ADMIN_EXISTS: "Admin already exists",
+    STATE_EXISTS: "State user already exists",
     EVALUATOR_EXISTS: "Evaluator already exists",
     USER_NOT_FOUND: "User not found",
     USER_REG_STATUS: "User blocked",

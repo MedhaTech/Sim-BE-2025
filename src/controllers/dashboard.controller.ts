@@ -648,7 +648,7 @@ WHERE
             }
             const { state_name } = newREQQuery
             if (state_name) {
-                result = await db.query(`SELECT whatapp_link,mentor_note,student_note FROM state_coordinators where state_name like "${state_name}";`, { type: QueryTypes.SELECT });
+                result = await db.query(`SELECT whatapp_link,mentor_note,student_note FROM state_specific where state_name like "${state_name}";`, { type: QueryTypes.SELECT });
             }
             res.status(200).send(dispatcher(res, result, 'done'))
         }
