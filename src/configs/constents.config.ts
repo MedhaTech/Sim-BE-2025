@@ -106,7 +106,8 @@ export const constents = {
       'MENTOR': 'MENTOR',
       'STUDENT': 'STUDENT',
       "EADMIN": "EADMIN",
-      "TEAM": "TEAM"
+      "TEAM": "TEAM",
+      "STATE":"STATE"
     },
     default: 'ADMIN'
   },

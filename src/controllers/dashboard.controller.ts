@@ -637,9 +637,6 @@ WHERE
         }
     }
     protected async getWhatappLink(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STUDENT' && res.locals.role !== 'TEAM') {
-            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
-        }
         try {
             let result: any = {};
             let newREQQuery: any = {}
@@ -651,7 +648,7 @@ WHERE
             }
             const { state_name } = newREQQuery
             if (state_name) {
-                result = await db.query(`SELECT whatapp_link,mentor_note,student_note FROM state_coordinators where state_name like "${state_name}";`, { type: QueryTypes.SELECT });
+                result = await db.query(`SELECT whatapp_link,mentor_note,student_note FROM state_specific where state_name like "${state_name}";`, { type: QueryTypes.SELECT });
             }
             res.status(200).send(dispatcher(res, result, 'done'))
         }
