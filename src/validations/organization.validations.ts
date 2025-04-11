@@ -72,15 +72,9 @@ export const organizationUpdateSchema = Joi.object().keys({
     category: Joi.string().regex(constents.ALPHA_NUMERIC_PLUS_PATTERN).messages({
         'string.empty': speeches.CATEGORY_REQ
     }),
-    mandal: Joi.string().required().regex(constents.ALPHA_NUMERIC_PLUS_PATTERN).messages({
-        'string.empty': speeches.MANDAL_REQ
-    }),
-    school_type: Joi.string().required().regex(constents.ALPHA_NUMERIC_PLUS_PATTERN).messages({
-        'string.empty': speeches.SCHOOL_TYPE_REQ
-    }),
-    board: Joi.string().required().regex(constents.ALPHA_NUMERIC_PLUS_PATTERN).messages({
-        'string.empty': speeches.BOARD_REQ
-    }),
+    mandal: Joi.string().regex(constents.ALPHA_NUMERIC_PLUS_PATTERN),
+    school_type: Joi.string().regex(constents.ALPHA_NUMERIC_PLUS_PATTERN),
+    board: Joi.string().regex(constents.ALPHA_NUMERIC_PLUS_PATTERN),
     principal_name: Joi.any(),
     principal_mobile: Joi.any(),
     principal_email: Joi.any(),
