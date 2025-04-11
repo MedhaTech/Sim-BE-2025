@@ -4,6 +4,7 @@ name: Deployment to DEV via jenkins
 on:
   push:
     branches: development 
+
 jobs:
   
   Build:
@@ -20,7 +21,9 @@ jobs:
         run: npm run build
 
   Deploy:
+
     needs : Build
+
     runs-on: ubuntu-latest
 
     steps:
@@ -36,6 +39,10 @@ jobs:
             sudo git pull origin development &&
             sudo npm run build && pm2 stop all && pm2 delete all && npm run start:prod && pm2 save -f'
       
+
+
+            
+
 
             
 
