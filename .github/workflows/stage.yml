@@ -28,12 +28,12 @@ jobs:
       - name: Deploy to stage
         if: github.ref == 'refs/heads/stage'
         env:
-          PRIVATE_KEY: ${{ secrets.ATL2_stage_PRIVATE_KEY }}
-          HOSTNAME: ${{ secrets.ATL2_stage_HOSTNAME }}
+          PRIVATE_KEY: ${{ secrets.sim_2025_stage_PRIVATE_KEY }}
+          HOSTNAME: ${{ secrets.sim_2025_stage_HOSTNAME }}
         run: |
           echo "$PRIVATE_KEY" > private_key && chmod 400 private_key
+          ssh -o StrictHostKeyChecking=no -i private_key ubuntu@${{secrets.sim_2025_stage_HOSTNAME}} '
+            cd /home/ubuntu/sim-2025-be &&
 
-          ssh -o StrictHostKeyChecking=no -i private_key ubuntu@${{secrets.ATL2_stage_HOSTNAME}} '
-            cd /home/ubuntu/aim_be-stage  &&
             sudo git pull origin stage &&
             sudo npm run build && pm2 stop all && pm2 delete all && npm run start:prod && pm2 save -f'

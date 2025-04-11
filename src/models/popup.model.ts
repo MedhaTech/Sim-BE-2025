@@ -7,10 +7,12 @@ export class popup extends Model<InferAttributes<popup>, InferCreationAttributes
     declare popup_id: CreationOptional<number>;
     declare on_off: Enumerator;
     declare url: string;
+    declare file: string;
+    declare youtube: string;
+    declare image: string;
     declare state: string;
     declare role: string;
     declare navigate: string;
-    declare type: string;
     declare status: Enumerator;
     declare created_by: number;
     declare created_at: Date;
@@ -33,16 +35,24 @@ export class popup extends Model<InferAttributes<popup>, InferCreationAttributes
             type: DataTypes.TEXT('long'),
             allowNull: true
         },
-        role: {
+        file: {
             type: DataTypes.STRING,
             allowNull: true
+        },
+        image: {
+            type: DataTypes.STRING,
+            allowNull: true
+        },
+        youtube: {
+            type: DataTypes.STRING,
+            allowNull: true
+        },
+        role: {
+            type: DataTypes.STRING
         },
         navigate: {
             type: DataTypes.STRING,
             allowNull: true
-        },
-        type: {
-            type: DataTypes.STRING
         },
         state: {
             type: DataTypes.STRING,

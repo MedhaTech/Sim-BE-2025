@@ -2,27 +2,31 @@ import Joi from 'joi';
 import { constents } from '../configs/constents.config';
 import { speeches } from '../configs/speeches.config';
 
-
-export const evaluatorRegSchema = Joi.object().keys({
+export const stateSchema = Joi.object().keys({
     username: Joi.string().trim().min(1).required().email().messages({
         'string.empty': speeches.USER_USERNAME_REQUIRED
     }),
-    full_name: Joi.string().trim().min(1).regex(constents.ALPHA_NUMERIC_PATTERN_HUD).required().messages({
+    full_name: Joi.string().trim().min(1).regex(constents.ALPHA_NUMERIC_PATTERN).required().messages({
         'string.empty': speeches.USER_FULLNAME_REQUIRED
     }),
-    role: Joi.string().required().regex(constents.ALPHA_NUMERIC_PATTERN).messages({
+    role: Joi.string().required().messages({
         'string.empty': speeches.USER_ROLE_REQUIRED
     }),
-    mobile : Joi.string().regex(constents.ONLY_DIGIT_PATTERN),
-    password: Joi.string().required().messages({
-        'string.empty': speeches.USER_PASSWORD_REQUIRED
+    password: Joi.string(),
+    state_name: Joi.string().regex(constents.ALPHA_NUMERIC_PLUS_PATTERN).required().messages({
+        'string.empty': speeches.STATE_REQ
     }),
-    state: Joi.string(),
-    theme: Joi.string(),
-    language: Joi.string()
 });
 
-export const evaluatorLoginSchema = Joi.object().keys({
+export const stateUpdateSchema = Joi.object().keys({
+    status: Joi.string().valid(...Object.values(constents.common_status_flags.list)),
+    username: Joi.string().trim().min(1).email(),
+    full_name: Joi.string().trim().min(1).regex(constents.ALPHA_NUMERIC_PATTERN),
+    password: Joi.string(),
+    state_name: Joi.string().regex(constents.ALPHA_NUMERIC_PLUS_PATTERN)
+});
+
+export const stateLoginSchema = Joi.object().keys({
     username: Joi.string().required().messages({
         'string.empty': speeches.USER_USERNAME_REQUIRED
     }),
@@ -30,7 +34,8 @@ export const evaluatorLoginSchema = Joi.object().keys({
         'string.empty': speeches.USER_PASSWORD_REQUIRED
     })
 });
-export const evaluatorChangePasswordSchema = Joi.object().keys({
+
+export const stateChangePasswordSchema = Joi.object().keys({
     user_id: Joi.string().required().messages({
         'string.empty': speeches.USER_USERID_REQUIRED
     }),
@@ -41,18 +46,13 @@ export const evaluatorChangePasswordSchema = Joi.object().keys({
         'string.empty': speeches.USER_NEWPASSWORD_REQUIRED
     })
 });
-export const evaluatorResetPasswordSchema = Joi.object().keys({
-    user_id: Joi.string().required().messages({
-        'string.empty': speeches.USER_USERID_REQUIRED
-    })
+
+export const state_specificUpdateSchema = Joi.object().keys({
+    status: Joi.string().valid(...Object.values(constents.common_status_flags.list)),
+    whatapp_link: Joi.string(),
+    ideaSubmission: Joi.number(),
+    certificate: Joi.number(),
+    mentor_note: Joi.string(),
+    student_note: Joi.string()
 });
 
-export const evaluatorUpdateSchema = Joi.object().keys({
-    status: Joi.string().valid(...Object.values(constents.common_status_flags.list)),
-    username: Joi.string().trim().min(1).email(),
-    mobile: Joi.string(),
-    full_name: Joi.string().trim().min(1).regex(constents.ALPHA_NUMERIC_PATTERN_HUD),
-    state: Joi.string(),
-    theme: Joi.string(),
-    language: Joi.string()
-});

@@ -7,7 +7,9 @@ export const evaluationProcessSchema = Joi.object().keys({
     state: Joi.string(),
     no_of_evaluation: Joi.number(),
     eval_schema: Joi.string().valid(...Object.values(constents.evaluation_process_status_flags.list)),
-    status: Joi.string().valid(...Object.values(constents.common_status_flags.list))
+    status: Joi.string().valid(...Object.values(constents.common_status_flags.list)),
+    theme: Joi.string(),
+    language: Joi.string()
 });
 
 export const evaluationProcessUpdateSchema = Joi.object().keys({
@@ -18,4 +20,6 @@ export const evaluationProcessUpdateSchema = Joi.object().keys({
     level_name: Joi.string(),
     state: Joi.string(),
     no_of_evaluation: Joi.number(),
+    theme: Joi.string(),
+    language: Joi.string()
 });

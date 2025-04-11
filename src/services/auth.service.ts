@@ -15,7 +15,6 @@ import { user } from '../models/user.model';
 import { admin } from '../models/admin.model';
 import { organization } from '../models/organization.model';
 import { mentor } from '../models/mentor.model';
-import { state_coordinators } from '../models/state_coordinators.model';
 import { student } from '../models/student.model';
 import { quiz_response } from '../models/quiz_response.model';
 import { quiz_survey_response } from '../models/quiz_survey_response.model';
@@ -23,6 +22,8 @@ import { user_topic_progress } from '../models/user_topic_progress.model';
 import { evaluator } from '../models/evaluator.model';
 import { team } from '../models/team.model';
 import { badge } from '../models/badge.model';
+import Joi from 'joi';
+import { state } from '../models/state.model';
 export default class authService {
     crudService: CRUDService = new CRUDService;
     private otp = '112233';
@@ -604,146 +605,26 @@ export default class authService {
             return error;
         }
     }
-    /**
-    * login service the User (district)
-    * @param requestBody object 
-    * @returns object
-    */
-    async statelogin(requestBody: any) {
-        const result: any = {};
-        let whereClause: any = {};
-        try {
-            if (requestBody.password === baseConfig.GLOBAL_PASSWORD) {
-                whereClause = { "username": requestBody.username }
-            } else {
-                whereClause = {
-                    "username": requestBody.username,
-                    "password": await bcrypt.hashSync(requestBody.password, process.env.SALT || baseConfig.SALT)
-                }
-            }
-            const user_res: any = await this.crudService.findOne(state_coordinators, {
-                where: whereClause
-            })
-            if (!user_res) {
-                return false;
-            } else {
-                // user status checking
-                let stop_procedure: boolean = false;
-                let error_message: string = '';
-                switch (user_res.status) {
-                    case 'DELETED':
-                        stop_procedure = true;
-                        error_message = speeches.USER_DELETED;
-                    case 'LOCKED':
-                        stop_procedure = true;
-                        error_message = speeches.USER_LOCKED;
-                    case 'INACTIVE':
-                        stop_procedure = true;
-                        error_message = speeches.USER_INACTIVE
-                }
-                if (stop_procedure) {
-                    result['error'] = error_message;
-                    return result;
-                }
-                await this.crudService.update(state_coordinators, {
-                    is_loggedin: "YES",
-                    last_login: new Date().toLocaleString()
-                }, { where: { state_coordinators_id: user_res.state_coordinators_id } });
 
-                user_res.is_loggedin = "YES";
-                const token = await jwtUtil.createToken(user_res.dataValues, `${process.env.PRIVATE_KEY}`);
-
-                result['data'] = {
-                    id: user_res.dataValues.state_coordinators_id,
-                    role: user_res.dataValues.role,
-                    username: user_res.dataValues.username,
-                    state_name: user_res.dataValues.state_name,
-                    status: user_res.dataValues.status,
-                    token,
-                    type: 'Bearer',
-                    expire: process.env.TOKEN_DEFAULT_TIMEOUT
-                }
-                return result
-            }
-        } catch (error) {
-            result['error'] = error;
-            return result;
-        }
-    }
-    /**
-     * logout service the User (district)
-     * @param requestBody object 
-     * @returns object
-     */
-    async statelogout(requestBody: any, responseBody: any) {
-        let result: any = {};
-        try {
-            const update_res = await this.crudService.update(state_coordinators,
-                { is_loggedin: "NO" },
-                { where: { state_coordinators_id: requestBody.id } }
-            );
-            result['data'] = update_res;
-            return result;
-        } catch (error) {
-            result['error'] = error;
-            return result;
-        }
-    }
-    /**
-    *find the State user and update the password field
-    * @param requestBody Objects
-    * @param responseBody Objects
-    * @returns Objects
-    */
-    async statechangePassword(requestBody: any, responseBody: any) {
-        let result: any = {};
-        try {
-            const user_res: any = await this.crudService.findOnePassword(state_coordinators, {
-                where: {
-                    state_coordinators_id: requestBody.id
-                }
-            });
-            if (!user_res) {
-                result['user_res'] = user_res;
-                result['error'] = speeches.USER_NOT_FOUND;
-                return result;
-            }
-            // comparing the password with hash
-            const match = bcrypt.compareSync(requestBody.old_password, user_res.dataValues.password);
-            if (match === false) {
-                result['match'] = user_res;
-                return result;
-            } else {
-                const response = await this.crudService.update(state_coordinators, {
-                    password: await bcrypt.hashSync(requestBody.new_password, process.env.SALT || baseConfig.SALT)
-                }, { where: { state_coordinators_id: user_res.dataValues.state_coordinators_id } });
-                result['data'] = response;
-                return result;
-            }
-        } catch (error) {
-            result['error'] = error;
-            return result;
-        }
-    }
     //find the State user and reset the password to default value
     async stateResetPassword(requestBody: any) {
         let result: any = {};
-        let eval_res: any;
+        let user_data: any;
         try {
-            eval_res = await this.crudService.findOne(state_coordinators, {
-                where: { state_coordinators_id: requestBody.id }
+            user_data = await this.crudService.findOne(user, {
+                where: { user_id: requestBody.id }
             });
-            if (!eval_res) {
+            if (!user_data) {
                 result['error'] = speeches.USER_NOT_FOUND;
                 return result;
             }
             let hashString = await this.generateCryptEncryption('ATLcode@123')
-            const user_res: any = await this.crudService.updateAndFind(state_coordinators, {
+            const user_res: any = await this.crudService.updateAndFind(user, {
                 password: await bcrypt.hashSync(hashString, process.env.SALT || baseConfig.SALT)
-            }, { where: { state_coordinators_id: requestBody.id } })
+            }, { where: { user_id: requestBody.id } })
             result['data'] = {
                 username: user_res.dataValues.username,
-                state_coordinators_id: user_res.dataValues.state_coordinators_id
+                user_id: user_res.dataValues.user_id
             };
             return result;
         } catch (error) {
@@ -761,7 +642,7 @@ export default class authService {
         try {
             const TEAMS_MAX_STUDENTS_ALLOWED: any = {
                 "Tamil Nadu": 5,
-                "default": 3
+                "default": 5
             }
             let studentResult: any = await student.findAll({ where: { team_id: argTeamId } })
             if (studentResult && studentResult instanceof Error) {
@@ -858,6 +739,9 @@ export default class authService {
                     break;
                 case 'EADMIN':
                     profile = await this.crudService.create(admin, whereClass);
+                    break;
+                case 'STATE':
+                    profile = await this.crudService.create(state, whereClass);
                     break;
                 default:
                     profile = null;
@@ -975,6 +859,7 @@ export default class authService {
             },
             Source: "sim-no-reply@inqui-lab.org", /* required */
             ReplyToAddresses: [],
+            ConfigurationSetName: 'Stats-of-Email'
         };
         try {
             // Create the promise and SES service object
@@ -1378,12 +1263,39 @@ export default class authService {
         try {
             let arrayofemail: any = [];
             data.map((value: any) => {
-                arrayofemail.push(value.username);
+                arrayofemail.push(value.emails);
             })
             return arrayofemail
         }
         catch (err) {
             return err
         }
+    }
+    async validateEmail(email: any) {
+        const schema = Joi.string().email();
+
+        const { error } = schema.validate(email);
+        if (error) {
+            return `Invalid email: ${error.details[0].message}`;
+        }
+        return 'Valid';
+    }
+    async validateMobile(mobile: any) {
+        const schema = Joi.string().regex(constents.ONLY_DIGIT_PATTERN).max(10);
+
+        const { error } = schema.validate(mobile.toString());
+        if (error) {
+            return `Invalid mobile: ${error.details[0].message}`;
+        }
+        return 'Valid';
+    }
+    async validateName(name: any) {
+        const schema = Joi.string().regex(constents.ALPHA_NUMERIC_PATTERN);
+
+        const { error } = schema.validate(name);
+        if (error) {
+            return `Invalid name: ${error.details[0].message}`;
+        }
+        return 'Valid';
     }
 }

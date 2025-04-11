@@ -59,7 +59,8 @@ export default class LatestNewsController extends BaseController {
                         "url",
                         "file_name",
                         "new_status",
-                        "state"
+                        "state",
+                        "updated_at"
                     ],
                     where: [where]
                 })
@@ -73,7 +74,8 @@ export default class LatestNewsController extends BaseController {
                         "url",
                         "file_name",
                         "new_status",
-                        "state"
+                        "state",
+                        "updated_at"
                     ],
                     where: [where]
                 })
@@ -87,7 +89,8 @@ export default class LatestNewsController extends BaseController {
                             "url",
                             "file_name",
                             "new_status",
-                            "state"
+                            "state",
+                            "updated_at"
                         ],
                         where: [where]
                     })

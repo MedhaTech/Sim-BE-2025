@@ -1604,22 +1604,22 @@ FROM
         try {
             let data: any = {}
             const summary = await db.query(`SELECT 
-            user_id,
-            full_name,
-            COUNT(evaluated_by) AS totalEvaluated,
-            COUNT(CASE
-                WHEN evaluation_status = 'SELECTEDROUND1' THEN 1
-            END) AS accepted,
-            COUNT(CASE
-                WHEN evaluation_status = 'REJECTEDROUND1' THEN 1
-            END) AS rejected
-        FROM
-            challenge_responses AS cal
-                JOIN
-            evaluators AS evl ON cal.evaluated_by = evl.user_id
-        WHERE
-            cal.status = 'SUBMITTED'
-        GROUP BY evaluated_by`, { type: QueryTypes.SELECT });
+    user_id,
+    full_name,
+    COUNT(CASE
+        WHEN cal.status = 'SUBMITTED' THEN 1
+    END) AS totalEvaluated,
+    COUNT(CASE
+        WHEN evaluation_status = 'SELECTEDROUND1' THEN 1
+    END) AS accepted,
+    COUNT(CASE
+        WHEN evaluation_status = 'REJECTEDROUND1' THEN 1
+    END) AS rejected
+FROM
+    evaluators AS evl
+        LEFT JOIN
+    challenge_responses AS cal ON evl.user_id = cal.evaluated_by
+GROUP BY evaluator_id`, { type: QueryTypes.SELECT });
             data = summary;
             if (!data) {
                 throw notFound(speeches.DATA_NOT_FOUND)
@@ -1724,7 +1724,7 @@ FROM
         (SELECT 
         challenge_response_id, AVG(overall) AS average_score
     FROM
-        Aim_db.evaluator_ratings
+        evaluator_ratings
     GROUP BY challenge_response_id
     HAVING COUNT(challenge_response_id) >= 2) AS subquery
     JOIN challenge_responses AS cal ON subquery.challenge_response_id = cal.challenge_response_id
@@ -1752,12 +1752,14 @@ GROUP BY org.state
         try {
             let data: any = {}
             const summary = await db.query(`SELECT 
-            user_id, full_name, COUNT(*) as totalEvaluated
-        FROM
-            evaluator_ratings
-                JOIN
-            evaluators ON evaluator_ratings.evaluator_id = evaluators.user_id
-        GROUP BY user_id;`, { type: QueryTypes.SELECT });
+    user_id,
+    full_name,
+    COUNT(evaluator_rating_id) AS totalEvaluated
+FROM
+    evaluators
+        LEFT JOIN
+    evaluator_ratings ON evaluator_ratings.evaluator_id = evaluators.user_id
+GROUP BY evaluators.evaluator_id;`, { type: QueryTypes.SELECT });
             data = summary;
             if (!data) {
                 throw notFound(speeches.DATA_NOT_FOUND)
@@ -1867,12 +1869,12 @@ GROUP BY challenge_response_id;`, { type: QueryTypes.SELECT });
             } else if (Object.keys(req.query).length !== 0) {
                 return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
             }
-            const { state, district, theme, category,evaluation_status } = newREQQuery;
+            const { state, district, theme, category, evaluation_status } = newREQQuery;
             let districtFilter: any = `'%%'`
             let categoryFilter: any = `'%%'`
             let stateFilter: any = `'%%'`
             let themesFilter: any = `'%%'`
-            let evaluationstatusFilter:any = `'%%'`
+            let evaluationstatusFilter: any = `'%%'`
             if (district !== 'All Districts' && district !== undefined) {
                 districtFilter = `'${district}'`
             }
@@ -1911,7 +1913,10 @@ GROUP BY challenge_response_id;`, { type: QueryTypes.SELECT });
                 verified_status,
                 verified_at,
                 mentor_rejected_reason,
-                evaluation_status
+                evaluation_status,
+                rejected_reason,
+                rejected_reasonSecond,
+                (select full_name from users as e where e.user_id = cr.evaluated_by) as evaluatorName
             FROM
                 challenge_responses as cr join teams as t on cr.team_id = t.team_id join mentors as m on t.mentor_id = m.mentor_id join organizations as org on m.organization_code = org.organization_code
             WHERE
@@ -1973,7 +1978,6 @@ GROUP BY challenge_response_id;`, { type: QueryTypes.SELECT });
             }
             res.status(200).send(dispatcher(res, data, "success"))
         } catch (err) {
-            console.log(err)
             next(err)
         }
     }
@@ -2088,9 +2092,11 @@ challenge_response_id,
     AVG(param_2) AS useful,
     COUNT(challenge_response_id) AS eval_count,
     (AVG(param_1) + AVG(param_2)) / 2 AS quality_score,
-    (AVG(param_3) + AVG(param_4) + AVG(param_5)) / 3 AS feasibility_score
+    (AVG(param_3) + AVG(param_4) + AVG(param_5)) / 3 AS feasibility_score,
+    JSON_ARRAYAGG(comments) as comments,
+    json_arrayagg((select full_name from users as e where e.user_id = er.evaluator_id)) as 'evaluatorName'
 FROM
-    evaluator_ratings
+    evaluator_ratings as er
 GROUP BY challenge_response_id`, { type: QueryTypes.SELECT });
             data['summary'] = summary;
             data['teamData'] = teamData;

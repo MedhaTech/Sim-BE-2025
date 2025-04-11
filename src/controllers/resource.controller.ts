@@ -37,12 +37,13 @@ export default class ResourceController extends BaseController {
             } else if (Object.keys(req.query).length !== 0) {
                 return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
             }
-            let { role, state } = newREQQuery;
+            let { role, state, type } = newREQQuery;
             let data: any = {}
             const where: any = {};
             where[`status`] = "ACTIVE";
             if (state !== 'All States' && state !== undefined) {
-                where[`state`] = state;
+                //where[`state`] = { [Op.in]: [state, 'All States'] }
+                where[`state`] = state
             }
             if (role !== 'All roles' && role !== undefined) {
                 where[`role`] = role;
@@ -52,6 +53,21 @@ export default class ResourceController extends BaseController {
                 const newParamId = await this.authService.decryptGlobal(req.params.id);
                 where[`resource_id`] = newParamId;
                 data = await this.crudService.findOne(resource, {
+                    attributes: [
+                        "resource_id",
+                        "description",
+                        "role",
+                        "type",
+                        "attachments",
+                        "state"
+                    ],
+                    where: [where],
+                    order: [['resource_id', 'DESC']]
+                })
+            }
+            else if (type === 'state') {
+                where[`state`] = state
+                data = await this.crudService.findAll(resource, {
                     attributes: [
                         "resource_id",
                         "description",
@@ -77,21 +93,21 @@ export default class ResourceController extends BaseController {
                     where: [where],
                     order: [['resource_id', 'DESC']]
                 })
-                if (data.length <= 0) {
-                    where[`state`] = "All States"
-                    data = await this.crudService.findAll(resource, {
-                        attributes: [
-                            "resource_id",
-                            "description",
-                            "role",
-                            "type",
-                            "attachments",
-                            "state"
-                        ],
-                        where: [where],
-                        order: [['resource_id', 'DESC']]
-                    })
-                }
+                // if (data.length <= 0) {
+                //     where[`state`] = "All States"
+                //     data = await this.crudService.findAll(resource, {
+                //         attributes: [
+                //             "resource_id",
+                //             "description",
+                //             "role",
+                //             "type",
+                //             "attachments",
+                //             "state"
+                //         ],
+                //         where: [where],
+                //         order: [['resource_id', 'DESC']]
+                //     })
+                // }
             }
             return res.status(200).send(dispatcher(res, data, 'success'));
         } catch (error) {
@@ -99,7 +115,7 @@ export default class ResourceController extends BaseController {
         }
     }
     protected async handleAttachment(req: Request, res: Response, next: NextFunction) {
-        if (res.locals.role !== 'ADMIN') {
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STATE') {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
         }
         try {

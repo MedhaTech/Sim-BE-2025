@@ -5,18 +5,11 @@ import db from '../utils/dbconnection.util';
 import { baseConfig } from '../configs/base.config';
 import { user } from './user.model';
 
-export class student extends Model<InferAttributes<student>, InferCreationAttributes<student>> {
-    declare student_id: CreationOptional<number>;
-    declare user_id: number;
-    declare team_id: string;
+export class state extends Model<InferAttributes<state>, InferCreationAttributes<state>> {
+    declare state_id: CreationOptional<number>;
+    declare user_id: string;
     declare full_name: string;
-    declare Age: number;
-    declare Grade: string;
-    declare Gender: string;
-    declare badges: string;
-    declare email: string;
-    declare disability: string;
-    declare certificate: number;
+    declare state_name: string;
     declare status: Enumerator;
     declare created_by: number;
     declare created_at: Date;
@@ -24,9 +17,9 @@ export class student extends Model<InferAttributes<student>, InferCreationAttrib
     declare updated_at: Date;
 }
 
-student.init(
+state.init(
     {
-        student_id: {
+        state_id: {
             type: DataTypes.INTEGER,
             autoIncrement: true,
             primaryKey: true,
@@ -35,52 +28,27 @@ student.init(
             type: DataTypes.INTEGER,
             allowNull: false
         },
-        team_id: {
-            type: DataTypes.STRING,
-        },
         full_name: {
             type: DataTypes.STRING,
             allowNull: false,
         },
-        Age: {
-            type: DataTypes.INTEGER,
-            allowNull: true
-        },
-        Grade: {
+        state_name: {
             type: DataTypes.STRING,
-            allowNull: true
-        },
-        Gender: {
-            type: DataTypes.STRING,
-            allowNull: true
-        },
-        email: {
-            type: DataTypes.STRING
-        },
-        disability: {
-            type: DataTypes.STRING
-        },
-        badges: {
-            type: DataTypes.TEXT('long')
+            allowNull: false,
         },
         status: {
             type: DataTypes.ENUM(...Object.values(constents.common_status_flags.list)),
             defaultValue: constents.common_status_flags.default
         },
-        certificate: {
-            type: DataTypes.DATE,
+        created_by: {
+            type: DataTypes.INTEGER,
             allowNull: true,
             defaultValue: null
         },
         created_at: {
             type: DataTypes.DATE,
-            allowNull: false,
-            defaultValue: DataTypes.NOW,
-        },
-        created_by: {
-            type: DataTypes.INTEGER,
             allowNull: true,
-            defaultValue: null
+            defaultValue: DataTypes.NOW,
         },
         updated_by: {
             type: DataTypes.INTEGER,
@@ -96,7 +64,7 @@ student.init(
     },
     {
         sequelize: db,
-        tableName: 'students',
+        tableName: 'states',
         timestamps: true,
         updatedAt: 'updated_at',
         createdAt: 'created_at',
@@ -115,7 +83,5 @@ student.init(
     }
 );
 
-student.belongsTo(user, { foreignKey: 'user_id' });
-user.hasMany(student, { foreignKey: 'user_id' });
-student.belongsTo(user, { foreignKey: 'user_id' });
-user.hasMany(student, { foreignKey: 'user_id' });
+state.belongsTo(user, { foreignKey: 'user_id', constraints: false });
+user.hasOne(state, { foreignKey: 'user_id', constraints: false, scope: { role: 'STATE' } });

@@ -619,8 +619,8 @@ WHERE
             }
             const { user_id } = newREQQuery
             if (user_id) {
-                const preSurvey = await db.query(`SELECT count(*) as preSurvey FROM Aim_db.quiz_survey_responses where quiz_survey_id =1 and user_id = ${user_id};`, { type: QueryTypes.SELECT });
-                const postSurvey = await db.query(`SELECT count(*) as postSurvey FROM Aim_db.quiz_survey_responses where quiz_survey_id =3 and user_id = ${user_id};`, { type: QueryTypes.SELECT });
+                const preSurvey = await db.query(`SELECT count(*) as preSurvey FROM quiz_survey_responses where quiz_survey_id =1 and user_id = ${user_id};`, { type: QueryTypes.SELECT });
+                const postSurvey = await db.query(`SELECT count(*) as postSurvey FROM quiz_survey_responses where quiz_survey_id =3 and user_id = ${user_id};`, { type: QueryTypes.SELECT });
                 if (Object.values(preSurvey[0]).toString() === '1') {
                     result['preSurvey'] = "COMPLETED"
                 } else
@@ -637,9 +637,6 @@ WHERE
         }
     }
     protected async getWhatappLink(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STUDENT' && res.locals.role !== 'TEAM') {
-            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
-        }
         try {
             let result: any = {};
             let newREQQuery: any = {}
@@ -651,7 +648,7 @@ WHERE
             }
             const { state_name } = newREQQuery
             if (state_name) {
-                result = await db.query(`SELECT whatapp_link,mentor_note,student_note FROM Aim_db.state_coordinators where state_name like "${state_name}";`, { type: QueryTypes.SELECT });
+                result = await db.query(`SELECT whatapp_link,mentor_note,student_note FROM state_specific where state_name like "${state_name}";`, { type: QueryTypes.SELECT });
             }
             res.status(200).send(dispatcher(res, result, 'done'))
         }
