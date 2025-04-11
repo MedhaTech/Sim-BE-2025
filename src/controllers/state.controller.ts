@@ -35,7 +35,7 @@ export default class StateController extends BaseController {
     protected async createData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         const payload = this.autoFillTrackingColumns(req, res, state);
         const result = await this.authService.register(payload);
-        if (result.user_res) return res.status(406).send(dispatcher(res, result.user_res.dataValues, 'error', speeches.STATE_EXISTS, 406));
+        if (result.user_res) return res.status(406).send(dispatcher(res, result.user_res.dataValues, 'error', speeches.MENTOR_EXISTS, 406));
         return res.status(201).send(dispatcher(res, result.profile.dataValues, 'success', speeches.USER_REGISTERED_SUCCESSFULLY, 201));
     }
 
