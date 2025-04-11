@@ -196,7 +196,8 @@ export default class MentorController extends BaseController {
                                 "state",
                                 "mandal",
                                 "school_type",
-                                "board"
+                                "board",
+                                "pin_code"
                             ], where: whereClauseOfState,
                             require: false
                         }, limit, offset
