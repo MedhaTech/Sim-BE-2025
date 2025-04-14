@@ -74,7 +74,8 @@ export default class popupController extends BaseController {
                 let params = {
                     Bucket: `${process.env.BUCKET}`,
                     Key: file.originalFilename,
-                    Body: readFile
+                    Body: readFile,
+                    ContentDisposition: 'inline'
                 };
                 let options: any = { partSize: 20 * 1024 * 1024, queueSize: 2 };
                 await s3.upload(params, options).promise()
