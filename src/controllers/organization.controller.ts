@@ -194,7 +194,7 @@ export default class OrganizationController extends BaseController {
         return this.createData(req, res, next);
     }
     protected async GetAllCodes(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if (res.locals.role !== 'ADMIN') {
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STATE') {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
         }
         try {
@@ -202,22 +202,44 @@ export default class OrganizationController extends BaseController {
             if (model) {
                 this.model = model;
             };
+            let newREQQuery: any = {}
+            if (req.query.Data) {
+                let newQuery: any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery = JSON.parse(newQuery);
+            } else if (Object.keys(req.query).length !== 0) {
+                return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
+            }
+            const state: any = newREQQuery.state;
             const modelClass = await this.loadModel(model).catch(error => {
                 next(error)
             });
+            let data: any
             const where: any = {};
             where['status'] = 'ACTIVE'
-            const data = await this.crudService.findAll(modelClass, {
-                attributes: [
-                    'organization_code'
-                ],
-                where: {
-                    [Op.and]: [
-                        where
-                    ]
-                }
-            })
-
+            if (state) {
+                where['state'] = state
+                data = await this.crudService.findAll(modelClass, {
+                    attributes: [
+                        'organization_code'
+                    ],
+                    where: {
+                        [Op.and]: [
+                            where
+                        ]
+                    }
+                })
+            } else {
+                data = await this.crudService.findAll(modelClass, {
+                    attributes: [
+                        'organization_code'
+                    ],
+                    where: {
+                        [Op.and]: [
+                            where
+                        ]
+                    }
+                })
+            }
             if (!data || data instanceof Error) {
                 if (data != null) {
                     throw notFound(data.message)

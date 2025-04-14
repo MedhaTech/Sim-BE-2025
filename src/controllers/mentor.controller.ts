@@ -155,7 +155,10 @@ export default class MentorController extends BaseController {
                             "category",
                             "pin_code",
                             "unique_code",
-                            "new_district"
+                            "new_district",
+                            "mandal",
+                            "school_type",
+                            "board"
                         ]
                     },
                 });
@@ -190,7 +193,11 @@ export default class MentorController extends BaseController {
                                 "organization_id",
                                 "district",
                                 "category",
-                                "state"
+                                "state",
+                                "mandal",
+                                "school_type",
+                                "board",
+                                "pin_code"
                             ], where: whereClauseOfState,
                             require: false
                         }, limit, offset
