@@ -42,7 +42,6 @@ export default class ResourceController extends BaseController {
             const where: any = {};
             where[`status`] = "ACTIVE";
             if (state !== 'All States' && state !== undefined) {
-                //where[`state`] = { [Op.in]: [state, 'All States'] }
                 where[`state`] = state
             }
             if (role !== 'All roles' && role !== undefined) {
@@ -93,21 +92,21 @@ export default class ResourceController extends BaseController {
                     where: [where],
                     order: [['resource_id', 'DESC']]
                 })
-                // if (data.length <= 0) {
-                //     where[`state`] = "All States"
-                //     data = await this.crudService.findAll(resource, {
-                //         attributes: [
-                //             "resource_id",
-                //             "description",
-                //             "role",
-                //             "type",
-                //             "attachments",
-                //             "state"
-                //         ],
-                //         where: [where],
-                //         order: [['resource_id', 'DESC']]
-                //     })
-                // }
+                if (data.length <= 0) {
+                    where[`state`] = "All States"
+                    data = await this.crudService.findAll(resource, {
+                        attributes: [
+                            "resource_id",
+                            "description",
+                            "role",
+                            "type",
+                            "attachments",
+                            "state"
+                        ],
+                        where: [where],
+                        order: [['resource_id', 'DESC']]
+                    })
+                }
             }
             return res.status(200).send(dispatcher(res, data, 'success'));
         } catch (error) {
@@ -155,7 +154,8 @@ export default class ResourceController extends BaseController {
                 let params = {
                     Bucket: `${process.env.BUCKET}`,
                     Key: file.originalFilename,
-                    Body: readFile
+                    Body: readFile,
+                    ContentDisposition: 'inline'
                 };
                 let options: any = { partSize: 20 * 1024 * 1024, queueSize: 2 };
                 await s3.upload(params, options).promise()
