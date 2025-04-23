@@ -826,10 +826,8 @@ export default class authService {
         });
         let params = {
             Destination: { /* required */
-                CcAddresses: [
-                ],
-                ToAddresses:
-                    email
+                ToAddresses: [],
+                BccAddresses: email
             },
             Message: { /* required */
                 Body: { /* required */
