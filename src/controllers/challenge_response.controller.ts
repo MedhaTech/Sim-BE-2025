@@ -43,6 +43,8 @@ export default class ChallengeResponsesController extends BaseController {
         this.router.get(this.path + '/checkyoutubeurl', this.checkyoutubeurl.bind(this));
         this.router.get(this.path + '/CIDGroupsearch', this.CIDGroupsearch.bind(this));
         this.router.put(this.path + '/CIDGroupUpdate', this.CIDGroupUpdate.bind(this));
+        this.router.put(this.path + '/draftTOsub', this.DraftToSub.bind(this));
+        this.router.put(this.path + '/nonmentorverified', this.NonMentorVerifiedTOACCEPTED.bind(this));
         super.initializeRoutes();
     }
 
@@ -1795,6 +1797,71 @@ export default class ChallengeResponsesController extends BaseController {
                         verified_status: {
                             [Op.eq]: 'ACCEPTED'
                         }
+                    }
+                }
+            );
+            if (!result) {
+                throw badRequest()
+            }
+            if (result instanceof Error) {
+                throw result;
+            }
+            return res.status(200).send(dispatcher(res, result, 'updated'));
+
+        } catch (error) {
+            next(error);
+        }
+    }
+    protected async DraftToSub(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'EADMIN') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
+        }
+        try {
+            const payload = this.autoFillTrackingColumns(req, res, challenge_response);
+            payload['status'] = 'SUBMITTED';
+            payload['manual_update'] = '1';
+            const result = await this.crudService.update(challenge_response,
+                payload,
+                {
+                    where: {
+                        status: 'DRAFT'
+                    }
+                }
+            );
+            if (!result) {
+                throw badRequest()
+            }
+            if (result instanceof Error) {
+                throw result;
+            }
+            return res.status(200).send(dispatcher(res, result, 'updated'));
+
+        } catch (error) {
+            next(error);
+        }
+    }
+    protected async NonMentorVerifiedTOACCEPTED(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'EADMIN') {
+            return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
+        }
+        try {
+            const payload = this.autoFillTrackingColumns(req, res, challenge_response);
+            payload['verified_status'] = 'ACCEPTED';
+            payload['manual_update'] = '2';
+            const result = await this.crudService.update(challenge_response,
+                payload,
+                {
+                    where: {
+                        [Op.and]: [
+                            {
+                                [Op.or]: [
+                                    { verified_status: null },
+                                    { verified_status: '' }
+                                ]
+                            },
+                            { status: 'SUBMITTED' }
+                        ]
+
                     }
                 }
             );
