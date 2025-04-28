@@ -7,6 +7,7 @@ export class report_file extends Model<InferAttributes<report_file>, InferCreati
 
     declare report_file_id: CreationOptional<number>;
     declare report_name: string;
+    declare report_type: string;
     declare filters: string;
     declare columns: string;
     declare status: Enumerator;
@@ -25,6 +26,9 @@ report_file.init(
             primaryKey: true
         },
         report_name: {
+            type: DataTypes.STRING
+        },
+        report_type: {
             type: DataTypes.STRING
         },
         filters: {
