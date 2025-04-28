@@ -3,8 +3,8 @@ import { constents } from '../configs/constents.config';
 
 export const report_fileSchema = Joi.object().keys({
     report_name: Joi.string().required().regex(constents.ALPHA_NUMERIC_PLUS_PATTERN),
-    filters: Joi.string().required().regex(constents.ALPHA_NUMERIC_PLUS_PATTERN),
-    columns: Joi.string().required().regex(constents.ALPHA_NUMERIC_PLUS_PATTERN),
+    filters: Joi.any(),
+    columns: Joi.any(),
     report_type: Joi.string().required().regex(constents.ALPHA_NUMERIC_PLUS_PATTERN)
 });
 

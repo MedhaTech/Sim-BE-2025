@@ -4,7 +4,7 @@ import { report_fileSchema, report_fileUpdateSchema } from "../validations/repor
 
 export default class ReportFilesController extends BaseController {
 
-    model = "report_file";
+    model = "report_files";
 
     protected initializePath(): void {
         this.path = '/report_files';
