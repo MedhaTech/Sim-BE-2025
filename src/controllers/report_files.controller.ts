@@ -5,11 +5,11 @@ import { Request, Response, NextFunction } from 'express';
 import dispatcher from "../utils/dispatch.util";
 import { unauthorized } from "boom";
 import { speeches } from "../configs/speeches.config";
-import { report_files } from "../models/report_files.model";
+import { report_file } from "../models/report_file.model";
 
 export default class ReportFilesController extends BaseController {
 
-    model = "report_files";
+    model = "report_file";
 
     protected initializePath(): void {
         this.path = '/report_files';
@@ -32,7 +32,7 @@ export default class ReportFilesController extends BaseController {
             return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
         }
         try {
-            const result = await this.crudService.findAll(report_files, {
+            const result = await this.crudService.findAll(report_file, {
                 where: {
                     report_type: newREQQuery.report_type
                 }

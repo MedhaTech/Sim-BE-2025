@@ -3,7 +3,7 @@ import db from '../utils/dbconnection.util';
 import { constents } from '../configs/constents.config';
 
 
-export class report_files extends Model<InferAttributes<report_files>, InferCreationAttributes<report_files>> {
+export class report_file extends Model<InferAttributes<report_file>, InferCreationAttributes<report_file>> {
 
     declare report_file_id: CreationOptional<number>;
     declare report_name: string;
@@ -18,7 +18,7 @@ export class report_files extends Model<InferAttributes<report_files>, InferCrea
 
 }
 
-report_files.init(
+report_file.init(
     {
         report_file_id: {
             type: DataTypes.INTEGER,
