@@ -32,6 +32,7 @@ import EmailController from "./controllers/email.controller";
 import EvaluatorRatingController from "./controllers/evaluator_rating.controller";
 import EvaluatorController from "./controllers/evulator.controller";
 import EvaluationProcess from "./controllers/evaluation_process.controller";
+import ReportFilesController from "./controllers/report_files.controller";
 
 
 // validating env variables
@@ -69,7 +70,8 @@ try {
         new EmailController,
         new EvaluatorController,
         new EvaluationProcess,
-        new EvaluatorRatingController
+        new EvaluatorRatingController,
+        new ReportFilesController
 
     ], Number(process.env.APP_PORT));
     // starting app

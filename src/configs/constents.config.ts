@@ -218,7 +218,7 @@ export const constents = {
   ALPHA_NUMERIC_PATTERN: /^[a-zA-Z0-9 ]*$/,
   ALPHA_NUMERIC_PATTERN_HUD: /^[a-zA-Z0-9 -_.]*$/,
   ALPHA_NUMERIC_PATTERN_PLUS_SLASH: /^[a-zA-Z0-9 /]*$/,
-  ALPHA_NUMERIC_PLUS_PATTERN : /^[a-zA-Z0-9 \-()&.,]*$/, //Don't allow semicolon
+  ALPHA_NUMERIC_PLUS_PATTERN : /^[a-zA-Z0-9 \-()&.,_]*$/, //Don't allow semicolon
   ONLY_DIGIT_PATTERN: /^\d+$/,
   certificate_flags: {
     list: {
