@@ -41,6 +41,7 @@ export class challenge_response extends Model<InferAttributes<challenge_response
     declare verified_at: Date;
     declare mentor_rejected_reason: String;
     declare language: String;
+    declare manual_update: String;
 }
 
 challenge_response.init(
@@ -129,6 +130,9 @@ challenge_response.init(
             type: DataTypes.STRING
         },
         language: {
+            type: DataTypes.STRING
+        },
+        manual_update: {
             type: DataTypes.STRING
         },
         team_id: {
