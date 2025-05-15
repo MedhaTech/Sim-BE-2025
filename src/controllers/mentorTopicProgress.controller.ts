@@ -21,6 +21,7 @@ export default class MentorTopicProgressController extends BaseController {
         super.initializeRoutes();
     }
 
+    //creating mentor course complete details
     protected async createData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if (res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR') {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
