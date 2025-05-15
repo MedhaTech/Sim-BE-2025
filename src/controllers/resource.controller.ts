@@ -1,4 +1,3 @@
-import { Op } from "sequelize";
 import { resource } from "../models/resource.model";
 import BaseController from "./base.controller";
 import { Request, Response, NextFunction } from 'express';
@@ -24,6 +23,7 @@ export default class ResourceController extends BaseController {
         this.router.post(`${this.path}/resourceFileUpload`, this.handleAttachment.bind(this));
         super.initializeRoutes();
     }
+    //fetching all resource details and single resource by resource_id
     protected async getData(req: Request, res: Response, next: NextFunction) {
         if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'MENTOR' && res.locals.role !== 'TEAM' && res.locals.role !== 'STATE') {
             throw unauthorized(speeches.ROLE_ACCES_DECLINE)
@@ -113,6 +113,7 @@ export default class ResourceController extends BaseController {
             next(error);
         }
     }
+    //storing files in the s3 bucket
     protected async handleAttachment(req: Request, res: Response, next: NextFunction) {
         if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STATE') {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));

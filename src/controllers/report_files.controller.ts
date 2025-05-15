@@ -20,6 +20,7 @@ export default class ReportFilesController extends BaseController {
     protected initializeRoutes(): void {
         super.initializeRoutes();
     }
+    //fetching saved report data
     protected async getData(req: Request, res: Response, next: NextFunction) {
         if (res.locals.role !== 'ADMIN') {
             throw unauthorized(speeches.ROLE_ACCES_DECLINE)

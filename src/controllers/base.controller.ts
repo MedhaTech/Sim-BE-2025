@@ -1,8 +1,7 @@
 import validationMiddleware from "../middlewares/validation.middleware";
 import CRUDController from "./crud.controller";
 import ValidationsHolder from "../validations/validationHolder";
-import { NextFunction, Request, Response } from "express";
-import dispatcher from "../utils/dispatch.util";
+import { Request, Response } from "express";
 import path from "path";
 import fs from 'fs';
 
@@ -65,14 +64,9 @@ export default class BaseController extends CRUDController {
             })
             if (copyResult instanceof Error) {
                 errs.push(`Error uploading file: ${file.originalFilename}`);
-                // console.log(copyResult)
-                // throw internal(`Error uploading file: ${file.originalFilename}`) 
-                // next(internal(`Error uploading file: ${file.originalFilename}`))  
             } else {
-
                 reqData[file.fieldName] = `/assets/${targetResourcePath}/${filename}`;
                 attachments = attachments + `/assets/${targetResourcePath}/${filename},`
-                // console.log(attachments)
             }
         }
         result.errors = errs;

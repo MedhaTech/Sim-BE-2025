@@ -23,6 +23,7 @@ export default class EmailController extends BaseController {
         this.router.get(`${this.path}/emailStats`, this.getEmailStats.bind(this));
         super.initializeRoutes();
     }
+    //fetching email data logs
     private async getlistEmailStats(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if (res.locals.role !== 'ADMIN') {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
@@ -42,6 +43,7 @@ export default class EmailController extends BaseController {
         }
 
     }
+    //fetching email send stats
     private async getEmailStats(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if (res.locals.role !== 'ADMIN') {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));

@@ -28,6 +28,7 @@ export default class QuizSurveyController extends BaseController {
         this.router.post(this.path + "/:id/responses/", validationMiddleware(quizSubmitResponsesSchema), this.submitResponses.bind(this));
         super.initializeRoutes();
     }
+    //fetching quiz survey status and questions for the user by user_id and quiz_survey id
     protected async getData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'TEAM' && res.locals.role !== 'MENTOR') {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
@@ -169,22 +170,13 @@ export default class QuizSurveyController extends BaseController {
                 }
 
             }
-            // if (!data) {
-            //     return res.status(404).send(dispatcher(res,data, 'error'));
-            // }
             if (!data || data instanceof Error) {
                 if (data != null) {
                     throw notFound(data.message)
                 } else {
                     throw notFound()
                 }
-                res.status(200).send(dispatcher(res, null, "error", speeches.DATA_NOT_FOUND));
-                // if(data!=null){
-                //     throw 
-                (data.message)
-                // }else{
-                //     throw notFound()
-                // }
+
             }
 
             //remove unneccesary data 
@@ -197,7 +189,7 @@ export default class QuizSurveyController extends BaseController {
                             delete quizSurvey.dataValues.quiz_survey_questions
                         }
                     }
-                    // console.log(quizSurvey.dataValues)
+
                     return quizSurvey;
                 }))
             } else if (data && data.dataValues) {
@@ -214,6 +206,7 @@ export default class QuizSurveyController extends BaseController {
             next(error);
         }
     }
+    //sub function for adding the survey response
     protected async insertSingleResponse(user_id: any, quiz_survey_id: any, quiz_survey_question_id: any, selected_option: any) {
         try {
             const questionAnswered = await this.crudService.findOne(quiz_survey_question, { where: { quiz_survey_question_id: quiz_survey_question_id } });
@@ -229,7 +222,7 @@ export default class QuizSurveyController extends BaseController {
             if (quizRes instanceof Error) {
                 throw internal(quizRes.message)
             }
-            // console.log(quizRes);
+
             let dataToUpsert: any = {}
             dataToUpsert = { quiz_survey_id: quiz_survey_id, user_id: user_id, updated_by: user_id }
 
@@ -238,15 +231,12 @@ export default class QuizSurveyController extends BaseController {
                 quiz_survey_id: quiz_survey_id,
                 selected_option: selected_option,
                 question: questionAnswered.dataValues.question,
-                // correct_answer:questionAnswered.dataValues.correct_ans,//there is no correct_ans collumn
-                // level:questionAnswered.dataValues.level,//there are no level collumn
                 question_no: questionAnswered.dataValues.question_no,
-                // is_correct:selected_option==questionAnswered.correct_ans//there is no correct_ans collumn
             }
 
             let user_response: any = {}
             if (quizRes) {
-                // console.log(quizRes.dataValues.response);
+
                 user_response = JSON.parse(quizRes.dataValues.response);
                 user_response[questionAnswered.dataValues.question_no] = responseObjToAdd;
 
@@ -258,13 +248,6 @@ export default class QuizSurveyController extends BaseController {
                 }
                 let result: any = {}
                 result = resultModel.dataValues
-                // result["is_correct"] = responseObjToAdd.is_correct;
-                // if(responseObjToAdd.is_correct){
-                //     result["msg"] = questionAnswered.dataValues.msg_ans_correct;
-                // }else{
-                //     result["msg"] = questionAnswered.dataValues.msg_ans_wrong;
-                // }
-                // result["redirect_to"] = questionAnswered.dataValues.redirect_to;
                 return result;
             } else {
 
@@ -279,13 +262,6 @@ export default class QuizSurveyController extends BaseController {
                 }
                 let result: any = {}
                 result = resultModel.dataValues
-                // result["is_correct"] = responseObjToAdd.is_correct;
-                // if(responseObjToAdd.is_correct){
-                //     result["msg"] = questionAnswered.dataValues.msg_ans_correct;
-                // }else{
-                //     result["msg"] = questionAnswered.dataValues.msg_ans_wrong;
-                // }
-                // result["redirect_to"] = questionAnswered.dataValues.redirect_to;
                 return result;
             }
 
@@ -294,6 +270,7 @@ export default class QuizSurveyController extends BaseController {
         }
 
     }
+    //creating the survey response by user_id and quiz_survey id
     protected async submitResponses(req: Request, res: Response, next: NextFunction) {
         if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'TEAM' && res.locals.role !== 'MENTOR') {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
@@ -322,7 +299,6 @@ export default class QuizSurveyController extends BaseController {
             const results: any = []
             let result: any = {}
             for (const element of responses) {
-                // console.log(element);
                 result = await this.insertSingleResponse(user_id, quiz_survey_id, element.quiz_survey_question_id, element.selected_option)
                 if (!result || result instanceof Error) {
                     throw badRequest();
