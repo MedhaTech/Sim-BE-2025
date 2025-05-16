@@ -18,6 +18,7 @@ export default class MentorCourseController extends BaseController {
         super.initializeRoutes();
 
     }
+    //fetching mentor course details
     protected async getData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if (res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR') {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
@@ -35,7 +36,6 @@ export default class MentorCourseController extends BaseController {
             orderBypart = [
                 [mentor_course_topic, 'mentor_course_topic_id', 'ASC'],
             ]
-            //include only in the get one api not in get all api ...!!
             includePart = [{
                 model: mentor_course_topic,
                 required: false,
@@ -46,7 +46,7 @@ export default class MentorCourseController extends BaseController {
                     "topic_type_id",
                     "topic_type",
                     [
-                        // Note the wrapping parentheses in the call below!
+                       
                         db.literal(`(
                             SELECT CASE WHEN EXISTS 
                                 (SELECT status 
@@ -103,7 +103,7 @@ export default class MentorCourseController extends BaseController {
             {
                 include: [
 
-                    [// Note the wrapping parentheses in the call below!
+                    [
                         db.literal(`(
                         SELECT COUNT(*)
                         FROM mentor_course_topics AS ct

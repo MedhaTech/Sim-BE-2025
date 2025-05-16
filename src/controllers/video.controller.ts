@@ -24,12 +24,11 @@ export default class VideoController extends BaseController {
     protected initializeRoutes(): void {
         super.initializeRoutes();
     }
-
+    //fetching video by videoid and all videos
     protected async getData(req: Request, res: Response, next: NextFunction) {
         if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'TEAM' && res.locals.role !== 'MENTOR') {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
         }
-        // super.getData(req,res,next)
         try {
             let data: any;
             const { model, id } = req.params;
@@ -132,7 +131,7 @@ export default class VideoController extends BaseController {
             next(error);
         }
     }
-
+    //supporting function to fetch videos
     protected async formatOneRowProperly(req: Request, res: Response, data: any) {
         let dataModified = JSON.parse(JSON.stringify(data));
         const newVideoRow = dataModified
@@ -171,9 +170,6 @@ export default class VideoController extends BaseController {
 
         newVideoRow.reflective_quiz_questions = newQuestionsFomratted
         if (newQuestionsFomratted && newQuestionsFomratted.length > 0) {
-            //TODO:
-            //db intensive operation especially for a loop 
-            //optimise it going forward 
             const nextQuestionsToChooseFrom = await this.reflectiveQuizService.fetchNextQuestion(user_id, dataModified.video_id, null)
 
             if (nextQuestionsToChooseFrom) {
@@ -188,6 +184,7 @@ export default class VideoController extends BaseController {
 
         return newVideoRow;
     }
+    //supporting function to fetch videos
     protected async formatAllRowsProperly(req: Request, res: Response, data: any) {
         let result: any = {}
         let dataModified = JSON.parse(JSON.stringify(data));

@@ -19,6 +19,7 @@ export default class FaqController extends BaseController {
         this.router.delete(`${this.path}/deletefaqandtranslation`, this.deletefaq.bind(this));
         this.router.get(`${this.path}/getbyCategoryid/:id`, this.getbyCategoryid.bind(this));
     }
+    //fetching faq's by the faq category id
     protected async getbyCategoryid(req: Request, res: Response, next: NextFunction) {
         if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'TEAM' && res.locals.role !== 'MENTOR') {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
@@ -41,6 +42,7 @@ export default class FaqController extends BaseController {
         }
     }
 
+    //creating faq and releted multi language faq'a also
     protected async addfaq(req: Request, res: Response, next: NextFunction) {
         if (res.locals.role !== 'ADMIN') {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
@@ -135,6 +137,8 @@ export default class FaqController extends BaseController {
             next(err)
         }
     }
+
+    //updating faq and releted multi language faq'a also
     protected async editfaq(req: Request, res: Response, next: NextFunction) {
         if (res.locals.role !== 'ADMIN') {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
@@ -218,6 +222,8 @@ export default class FaqController extends BaseController {
             next(err)
         }
     }
+
+    //deleting faq and releted multi language faq'a also
     protected async deletefaq(req: Request, res: Response, next: NextFunction) {
         if (res.locals.role !== 'ADMIN') {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
@@ -295,6 +301,7 @@ export default class FaqController extends BaseController {
         }
     }
 
+    //fetching all faq questions
     protected getData(req: Request, res: Response, next: NextFunction) {
         if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'TEAM' && res.locals.role !== 'MENTOR') {
             throw unauthorized(speeches.ROLE_ACCES_DECLINE)

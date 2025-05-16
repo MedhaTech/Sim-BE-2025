@@ -1,9 +1,5 @@
-import { badRequest, internal, notFound } from "boom";
-import * as csv from "fast-csv";
+import { notFound } from "boom";
 import { NextFunction, Request, Response } from "express";
-import fs, { stat } from 'fs';
-import { any, date } from "joi";
-import path from 'path';
 import { speeches } from "../configs/speeches.config";
 import dispatcher from "../utils/dispatch.util";
 import ValidationsHolder from "../validations/validationHolder";
@@ -11,11 +7,8 @@ import BaseController from "./base.controller";
 import { organizationCheckSchema, organizationRawSchema, organizationSchema, organizationUpdateSchema, uniqueCodeCheckSchema } from "../validations/organization.validations";
 import authService from "../services/auth.service";
 import validationMiddleware from "../middlewares/validation.middleware";
-import { Op, QueryTypes } from "sequelize";
-import { constant } from "lodash";
+import { Op } from "sequelize";
 import { constents } from "../configs/constents.config";
-import db from "../utils/dbconnection.util";
-import { organization } from "../models/organization.model";
 
 export default class OrganizationController extends BaseController {
 
@@ -32,52 +25,12 @@ export default class OrganizationController extends BaseController {
         this.router.post(`${this.path}/checkOrg`, validationMiddleware(organizationCheckSchema), this.checkOrgDetails.bind(this));
         this.router.post(`${this.path}/createOrg`, validationMiddleware(organizationRawSchema), this.createOrg.bind(this));
         this.router.get(`${this.path}/allcodes`, this.GetAllCodes.bind(this));
-        // this.router.post(`${this.path}/login`, this.login.bind(this));
-        // this.router.get(`${this.path}/logout`, this.logout.bind(this));
-        // this.router.put(`${this.path}/changePassword`, this.changePassword.bind(this));
         super.initializeRoutes();
     };
 
-    // private async login(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-    //     try {
-    //         const result = await this.authService.orglogin(req.body);
-    //         if (!result) {
-    //             return res.status(404).send(dispatcher(res, result, 'error', speeches.USER_NOT_FOUND));
-    //         }
-    //         else if (result.error) {
-    //             return res.status(403).send(dispatcher(res, result, 'error'));
-    //         }
-    //         else {
-    //             return res.status(200).send(dispatcher(res, result.data, 'success', speeches.USER_LOGIN_SUCCESS));
-    //         }
-    //     } catch (error) {
-    //         return res.status(401).send(dispatcher(res, error, 'error', speeches.USER_RISTRICTED, 401));
-    //     }
-    // }
-
-    // private async logout(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-    //     const result = await this.authService.orglogout(req.body, res);
-    //     if (result.error) {
-    //         next(result.error);
-    //     } else {
-    //         return res.status(200).send(dispatcher(res, speeches.LOGOUT_SUCCESS, 'success'));
-    //     }
-    // }
-
-    // private async changePassword(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-    //     const result = await this.authService.orgchangePassword(req.body, res);
-    //     if (!result) {
-    //         return res.status(404).send(dispatcher(res, null, 'error', speeches.USER_NOT_FOUND));
-    //     } else if (result.error) {
-    //         return res.status(404).send(dispatcher(res, result.error, 'error', result.error));
-    //     }
-    //     else if (result.match) {
-    //         return res.status(404).send(dispatcher(res, null, 'error', speeches.USER_PASSWORD));
-    //     } else {
-    //         return res.status(202).send(dispatcher(res, result.data, 'accepted', speeches.USER_PASSWORD_CHANGE, 202));
-    //     }
-    // } 
-
+    //fetching organization data
+    //single organization data by organization id
+    //multi organizations data
     protected async getData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if (res.locals.role !== 'ADMIN') {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
@@ -97,8 +50,7 @@ export default class OrganizationController extends BaseController {
                 this.model = model;
             };
             // pagination
-            const { page, size, status } = newREQQuery;
-            // let condition = status ? { status: { [Op.like]: `%${status}%` } } : null;
+            const { page, size } = newREQQuery;
             const { limit, offset } = this.getPagination(page, size);
             const modelClass = await this.loadModel(model).catch(error => {
                 next(error)
@@ -147,27 +99,16 @@ export default class OrganizationController extends BaseController {
                     const result = this.getPagingData(responseOfFindAndCountAll, page, limit);
                     data = result;
                 } catch (error: any) {
-                    console.log(error)
-                    //  res.status(500).send(dispatcher(res,data, 'error'))
                     next(error)
                 }
             }
-            // if (!data) {
-            //     return res.status(404).send(dispatcher(res,data, 'error'));
-            // }
+
             if (!data || data instanceof Error) {
                 if (data != null) {
                     throw notFound(data.message)
                 } else {
                     throw notFound()
                 }
-                res.status(200).send(dispatcher(res, null, "error", speeches.DATA_NOT_FOUND));
-                // if(data!=null){
-                //     throw 
-                (data.message)
-                // }else{
-                //     throw notFound()
-                // }
             }
             return res.status(200).send(dispatcher(res, data, 'success'));
         } catch (error) {
@@ -175,6 +116,8 @@ export default class OrganizationController extends BaseController {
             next(error);
         }
     }
+
+    //checking organization is avaiable or not
     private async checkOrgDetails(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         const org = await this.authService.checkOrgDetails(req.body.organization_code);
         if (!org) {
@@ -183,6 +126,7 @@ export default class OrganizationController extends BaseController {
             res.status(200).send(dispatcher(res, org, 'success', speeches.FETCH_FILE));
         }
     }
+    //creating new organization details
     private async createOrg(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         let newREQQuery: any = {}
         if (req.query.Data) {
@@ -193,6 +137,7 @@ export default class OrganizationController extends BaseController {
         }
         return this.createData(req, res, next);
     }
+    //fetching all the organizations codes 
     protected async GetAllCodes(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STATE') {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
