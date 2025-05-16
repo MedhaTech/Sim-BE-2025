@@ -8,6 +8,7 @@ import { latest_newsSchema, latest_newsUpdateSchema } from '../validations/lates
 import { S3 } from "aws-sdk";
 import fs from 'fs';
 import { speeches } from "../configs/speeches.config";
+import { HttpsProxyAgent } from "https-proxy-agent";
 
 export default class LatestNewsController extends BaseController {
 
@@ -118,12 +119,24 @@ export default class LatestNewsController extends BaseController {
             const errs: any = [];
             let attachments: any = [];
             let result: any = {};
-            let s3 = new S3({
-                apiVersion: '2006-03-01',
-                region: process.env.AWS_REGION,
-                accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-                secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
-            });
+            let proxyAgent = new HttpsProxyAgent('http://10.236.241.101:9191');
+            let s3
+            if (process.env.ISAWSSERVER === 'YES') {
+                s3 = new S3({
+                    apiVersion: '2006-03-01',
+                    region: process.env.AWS_REGION,
+                    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+                    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+                });
+            } else {
+                s3 = new S3({
+                    apiVersion: '2006-03-01',
+                    region: process.env.AWS_REGION,
+                    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+                    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+                    httpOptions: { agent: proxyAgent }
+                });
+            }
             if (!req.files) {
                 return result;
             }
