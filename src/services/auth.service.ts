@@ -24,6 +24,7 @@ import { team } from '../models/team.model';
 import { badge } from '../models/badge.model';
 import Joi from 'joi';
 import { state } from '../models/state.model';
+import { HttpsProxyAgent } from 'https-proxy-agent';
 export default class authService {
     crudService: CRUDService = new CRUDService;
     private otp = '112233';
@@ -366,11 +367,22 @@ export default class authService {
         const forgotPassSubjec = `Temporary Password to Login into School Innovation Marathon (SIM 24-25)`
         const fullSubjec = `Welcome! Your School Innovation Marathon (SIM 24-25) registration was successful. Check out your login details.`
         const teamsCredentials = `SIM 2024 - Teams Credentials`
-        AWS.config.update({
-            region: 'ap-south-1',
-            accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-            secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
-        });
+        let proxyAgent = new HttpsProxyAgent('http://10.236.241.101:9191');
+        if (process.env.ISAWSSERVER === 'YES') {
+            AWS.config.update({
+                region: 'ap-south-1',
+                accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+                secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+            });
+        } else {
+            AWS.config.update({
+                region: 'ap-south-1',
+                accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+                secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+                httpOptions: { agent: proxyAgent }
+            });
+        }
+
         let params = {
             Destination: { /* required */
                 CcAddresses: [
@@ -819,11 +831,21 @@ export default class authService {
     //bulk email process
     async triggerBulkEmail(email: any, textBody: any, subText: any) {
         const result: any = {}
-        AWS.config.update({
-            region: 'ap-south-1',
-            accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-            secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
-        });
+        let proxyAgent = new HttpsProxyAgent('http://10.236.241.101:9191');
+       if (process.env.ISAWSSERVER === 'YES') {
+            AWS.config.update({
+                region: 'ap-south-1',
+                accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+                secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+            });
+        } else {
+            AWS.config.update({
+                region: 'ap-south-1',
+                accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+                secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+                httpOptions: { agent: proxyAgent }
+            });
+        }
         let params = {
             Destination: { /* required */
                 ToAddresses: [],

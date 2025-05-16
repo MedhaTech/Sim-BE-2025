@@ -8,6 +8,7 @@ import dispatcher from "../utils/dispatch.util";
 import { speeches } from "../configs/speeches.config";
 import { unauthorized } from "boom";
 import { popup } from "../models/popup.model";
+import { HttpsProxyAgent } from "https-proxy-agent";
 
 export default class popupController extends BaseController {
 
@@ -48,12 +49,24 @@ export default class popupController extends BaseController {
             const errs: any = [];
             let attachments: any = [];
             let result: any = {};
-            let s3 = new S3({
-                apiVersion: '2006-03-01',
-                region: process.env.AWS_REGION,
-                accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-                secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
-            });
+            let proxyAgent = new HttpsProxyAgent('http://10.236.241.101:9191');
+            let s3
+            if (process.env.ISAWSSERVER === 'YES') {
+                s3 = new S3({
+                    apiVersion: '2006-03-01',
+                    region: process.env.AWS_REGION,
+                    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+                    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+                });
+            } else {
+                s3 = new S3({
+                    apiVersion: '2006-03-01',
+                    region: process.env.AWS_REGION,
+                    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+                    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+                    httpOptions: { agent: proxyAgent }
+                });
+            }
             if (!req.files) {
                 return result;
             }
