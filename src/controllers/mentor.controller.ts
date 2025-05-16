@@ -1,10 +1,6 @@
 import bcrypt from 'bcrypt';
-import axios from 'axios';
-import fs from 'fs';
-import * as csv from "fast-csv";
 import { Op, QueryTypes } from 'sequelize';
 import { Request, Response, NextFunction } from 'express';
-import { customAlphabet } from 'nanoid';
 import { speeches } from '../configs/speeches.config';
 import { baseConfig } from '../configs/base.config';
 import { user } from '../models/user.model';
@@ -14,9 +10,8 @@ import dispatcher from '../utils/dispatch.util';
 import authService from '../services/auth.service';
 import BaseController from './base.controller';
 import ValidationsHolder from '../validations/validationHolder';
-import { badRequest, forbidden, internal, notFound } from 'boom';
+import { badRequest, internal, notFound } from 'boom';
 import { mentor } from '../models/mentor.model';
-import { where } from 'sequelize/types';
 import { team } from '../models/team.model';
 import { student } from '../models/student.model';
 import { constents } from '../configs/constents.config';
@@ -27,8 +22,7 @@ import { badge } from '../models/badge.model';
 export default class MentorController extends BaseController {
     model = "mentor";
     authService: authService = new authService;
-    private password = process.env.GLOBAL_PASSWORD;
-    private nanoid = customAlphabet('0123456789', 6);
+
     protected initializePath(): void {
         this.path = '/mentors';
     }
@@ -36,8 +30,6 @@ export default class MentorController extends BaseController {
         this.validations = new ValidationsHolder(mentorSchema, mentorUpdateSchema);
     }
     protected initializeRoutes(): void {
-        //example route to add
-        //this.router.get(`${this.path}/`, this.getData);
         this.router.post(`${this.path}/register`, validationMiddleware(mentorRegSchema), this.register.bind(this));
         this.router.post(`${this.path}/login`, this.login.bind(this));
         this.router.get(`${this.path}/logout`, this.logout.bind(this));
@@ -53,21 +45,10 @@ export default class MentorController extends BaseController {
 
         super.initializeRoutes();
     }
-    protected async autoFillUserDataForBulkUpload(req: Request, res: Response, modelLoaded: any, reqData: any = null) {
-        let payload = reqData;
-        if (modelLoaded.rawAttributes.user_id !== undefined) {
-            const userData = await this.crudService.create(user, { username: reqData.username, ...reqData });
-            payload['user_id'] = userData.dataValues.user_id;
-        }
-        if (modelLoaded.rawAttributes.created_by !== undefined) {
-            payload['created_by'] = res.locals.user_id;
-        }
-        if (modelLoaded.rawAttributes.updated_by !== undefined) {
-            payload['updated_by'] = res.locals.user_id;
-        }
-        return payload;
-    }
-    //TODO: Override the getDate function for mentor and join org details and user details
+
+    //fetching mentor all details 
+    //Single mentor details by mentor id
+    //all mentor list
     protected async getData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if (res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STATE') {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
@@ -86,10 +67,8 @@ export default class MentorController extends BaseController {
             if (model) {
                 this.model = model;
             };
-            // const current_user = res.locals.user_id; 
             // pagination
-            const { page, size, status } = newREQQuery;
-            // let condition = status ? { status: { [Op.like]: `%${status}%` } } : null;
+            const { page, size } = newREQQuery;
             const { limit, offset } = this.getPagination(page, size);
             const modelClass = await this.loadModel(model).catch(error => {
                 next(error)
@@ -109,15 +88,6 @@ export default class MentorController extends BaseController {
                 whereClauseStatusPart = { "status": "ACTIVE" };
                 boolStatusWhereClauseRequired = true;
             };
-            // const getUserIdFromMentorId = await mentor.findOne({
-            //     attributes: ["user_id", "created_by"], where: { mentor_id: req.body.mentor_id }
-            // });
-            // console.log(getUserIdFromMentorId);
-            // if (!getUserIdFromMentorId) throw badRequest(speeches.MENTOR_NOT_EXISTS);
-            // if (getUserIdFromMentorId instanceof Error) throw getUserIdFromMentorId;
-            // if (current_user !== getUserIdFromMentorId.getDataValue("user_id")) {
-            //     throw forbidden();
-            // };
             let state: any = newREQQuery.state;
             let whereClauseOfState: any = state && state !== 'All States' ?
                 { state: { [Op.like]: newREQQuery.state } } :
@@ -182,7 +152,6 @@ export default class MentorController extends BaseController {
                         where: {
                             [Op.and]: [
                                 whereClauseStatusPart,
-                                // condition
                             ]
                         },
                         include: {
@@ -209,38 +178,29 @@ export default class MentorController extends BaseController {
                 }
 
             }
-            // if (!data) {
-            //     return res.status(404).send(dispatcher(res,data, 'error'));
-            // }
+
             if (!data || data instanceof Error) {
                 if (data != null) {
                     throw notFound(data.message)
                 } else {
                     throw notFound()
                 }
-                res.status(200).send(dispatcher(res, null, "error", speeches.DATA_NOT_FOUND));
-                // if(data!=null){
-                //     throw 
-                (data.message)
-                // }else{
-                //     throw notFound()
-                // }
             }
             return res.status(200).send(dispatcher(res, data, 'success'));
         } catch (error) {
             next(error);
         }
     }
+    //updating the mentor data by mentor id
     protected async updateData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if (res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STATE') {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
         }
         try {
-            const { model, id } = req.params;
+            const { model } = req.params;
             if (model) {
                 this.model = model;
             };
-            const user_id = res.locals.user_id
             const where: any = {};
             const newParamId = await this.authService.decryptGlobal(req.params.id);
             where[`${this.model}_id`] = newParamId;
@@ -276,6 +236,7 @@ export default class MentorController extends BaseController {
             next(error);
         }
     }
+    //creating the mentor users
     private async register(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if (!req.body.organization_code || req.body.organization_code === "") return res.status(406).send(dispatcher(res, speeches.ORG_CODE_REQUIRED, 'error', speeches.NOT_ACCEPTABLE, 406));
         const org = await this.authService.checkOrgDetails(req.body.organization_code);
@@ -304,20 +265,12 @@ export default class MentorController extends BaseController {
         if (result && result.output && result.output.payload && result.output.payload.message == 'Mobile') {
             return res.status(406).send(dispatcher(res, result.data, 'error', speeches.MOBILE_EXISTS, 406));
         }
-        // // const otp = await this.authService.generateOtp();
-        // let otp = await this.authService.triggerOtpMsg(req.body.mobile); //async function but no need to await ...since we yet do not care about the outcome of the sms trigger ....!!this may need to change later on ...!!
-        // otp = String(otp)
-        // let hashString = await this.authService.generateCryptEncryption(otp);
-        // const updatePassword = await this.authService.crudService.update(user,
-        //     { password: await bcrypt.hashSync(hashString, process.env.SALT || baseConfig.SALT) },
-        //     { where: { user_id: result.dataValues.user_id } });
-        // const findMentorDetailsAndUpdateOTP: any = await this.crudService.updateAndFind(mentor,
-        //     { otp: otp },
-        //     { where: { user_id: result.dataValues.user_id } }
-        // );
         const data = result.dataValues;
         return res.status(201).send(dispatcher(res, data, 'success', speeches.USER_REGISTERED_SUCCESSFULLY, 201));
     }
+
+    //login api for the mentor users 
+    //Input username and password
     private async login(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         req.body['role'] = 'MENTOR'
         try {
@@ -325,12 +278,7 @@ export default class MentorController extends BaseController {
             if (!result) {
                 return res.status(404).send(dispatcher(res, result, 'error', speeches.USER_NOT_FOUND));
             }
-            // else if (result.error) {
-            //     return res.status(401).send(dispatcher(res, result.error, 'error', speeches.USER_RISTRICTED, 401));
-            // }
             else {
-                // mentorDetails = await this.authService.getServiceDetails('mentor', { user_id: result.data.user_id });
-                // result.data['mentor_id'] = mentorDetails.dataValues.mentor_id
                 const mentorData = await this.authService.crudService.findOne(mentor, {
                     where: { user_id: result.data.user_id },
                     include: {
@@ -357,6 +305,8 @@ export default class MentorController extends BaseController {
             return res.status(401).send(dispatcher(res, error, 'error', speeches.USER_RISTRICTED, 401));
         }
     }
+
+    //logout api for the mentor users
     private async logout(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         const result = await this.authService.logout(req.body, res);
         if (result.error) {
@@ -365,6 +315,8 @@ export default class MentorController extends BaseController {
             return res.status(200).send(dispatcher(res, speeches.LOGOUT_SUCCESS, 'success'));
         }
     }
+
+    //change password for mentor
     private async changePassword(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if (res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR') {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
@@ -381,13 +333,15 @@ export default class MentorController extends BaseController {
             return res.status(202).send(dispatcher(res, result.data, 'accepted', speeches.USER_PASSWORD_CHANGE, 202));
         }
     }
+
+    //Deleting all details of mentor and mentor under teams,students also
     private async deleteAllData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if (res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR') {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
         }
         try {
             const mentor_user_id: any = await this.authService.decryptGlobal(req.params.mentor_user_id);
-            // const { mobile } = req.body;
+
             if (!mentor_user_id) {
                 throw badRequest(speeches.USER_USERID_REQUIRED);
             }
@@ -449,10 +403,7 @@ export default class MentorController extends BaseController {
                         }
                     };
                     const resultBulkDeleteStudents = await this.authService.bulkDeleteUserWithStudentDetails(arrayOfStudentuserIds)
-                    // console.log("resultBulkDeleteStudents",resultBulkDeleteStudents)
-                    // if(!resultBulkDeleteStudents){
-                    //     throw internal("error while deleteing students")
-                    // }
+
                     if (resultBulkDeleteStudents instanceof Error) {
                         throw resultBulkDeleteStudents
                     }
@@ -461,9 +412,7 @@ export default class MentorController extends BaseController {
                 const resultTeamDelete = await this.crudService.delete(team, { where: { team_id: arrayOfteams } })
                 const resultTeamuserDelete = await this.crudService.delete(user, { where: { user_id: arrayOfuserIdteams } })
 
-                // if(!resultTeamDelete){
-                //     throw internal("error while deleting team")
-                // }
+
                 if (resultTeamDelete instanceof Error) {
                     throw resultTeamDelete
                 }
@@ -473,16 +422,12 @@ export default class MentorController extends BaseController {
             }
             let resultmentorDelete: any = {};
             resultmentorDelete = await this.authService.bulkDeleteUserWithMentorDetails([mentor_user_id])
-            // if(!resultmentorDelete){
-            //     throw internal("error while deleting mentor")
-            //}
+
             if (resultmentorDelete instanceof Error) {
                 throw resultmentorDelete
             }
 
-            // if (!resultmentorDelete) {
-            //     return res.status(404).send(dispatcher(res, null, 'error', speeches.USER_NOT_FOUND));
-            // } else 
+
             if (resultmentorDelete.error) {
                 return res.status(404).send(dispatcher(res, resultmentorDelete.error, 'error', resultmentorDelete.error));
             } else {
@@ -492,6 +437,8 @@ export default class MentorController extends BaseController {
             next(error)
         }
     }
+
+    //sending otp to user at the time of registration
     private async emailOtp(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try {
             const { username } = req.body;
@@ -515,6 +462,8 @@ export default class MentorController extends BaseController {
             next(error)
         }
     }
+
+    //reseting mentor password to default 
     private async resetPassword(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try {
             const { email, username, otp } = req.body;
@@ -540,6 +489,7 @@ export default class MentorController extends BaseController {
             next(error)
         }
     }
+    //fetching mentor details for the pdf genetating 
     protected async mentorpdfdata(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if (res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STATE') {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
@@ -630,6 +580,7 @@ export default class MentorController extends BaseController {
             next(error);
         }
     }
+    //after successfully mentor registation welcome is send to user
     protected async triggerWelcomeEmail(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try {
             const result = await this.authService.triggerWelcome(req.body);
@@ -638,12 +589,12 @@ export default class MentorController extends BaseController {
             next(error);
         }
     }
+    //Adding badges for the mentor on business conditions
     private async addBadgeToMentor(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if (res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR') {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
         }
         try {
-            //todo: test this api : haven't manually tested this api yet 
             const mentor_user_id: any = await this.authService.decryptGlobal(req.params.mentor_user_id);
             const badges_ids: any = req.body.badge_ids;
             const badges_slugs: any = req.body.badge_slugs;
@@ -726,6 +677,7 @@ export default class MentorController extends BaseController {
             next(err)
         }
     }
+    //Fetching mentor badges
     private async getMentorBadges(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if (res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR') {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
@@ -835,6 +787,8 @@ WHERE
             next(err)
         }
     }
+
+    //fetching team details of the mentor
     protected async getteamCredentials(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if (res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STATE') {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));

@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { Op, QueryTypes } from "sequelize";
 import { constents } from "../configs/constents.config";
-import { teamSchema, teamUpdateSchema, teamChangePasswordSchema, teamLoginSchema } from "../validations/team.validationa";
+import { teamSchema, teamUpdateSchema, teamLoginSchema } from "../validations/team.validationa";
 import ValidationsHolder from "../validations/validationHolder";
 import BaseController from "./base.controller";
 import authService from '../services/auth.service';
@@ -36,6 +36,8 @@ export default class TeamController extends BaseController {
         this.router.post(`${this.path}/login`, validationMiddleware(teamLoginSchema), this.login.bind(this));
         super.initializeRoutes();
     }
+    //login api for the team users 
+    //Input username and password
     private async login(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         let teamDetails: any;
         let result;
@@ -76,6 +78,9 @@ export default class TeamController extends BaseController {
             return res.status(200).send(dispatcher(res, result.data, 'success', speeches.USER_LOGIN_SUCCESS));
         }
     }
+    //fetching team all details 
+    //Single team details by team id
+    //all team list
     protected async getData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'TEAM' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STATE') {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
@@ -101,7 +106,6 @@ export default class TeamController extends BaseController {
             let mentor_id: any = null
             const { page, size, } = newREQQuery;
             mentor_id = newREQQuery.mentor_id
-            // let condition = title ? { title: { [Op.like]: `%${title}%` } } : null;
             let condition = null;
             if (mentor_id) {
                 const getUserIdFromMentorId = await mentor.findOne({
@@ -117,9 +121,7 @@ export default class TeamController extends BaseController {
                     mentor_id: mentor_id,
                     created_by: providedMentorsUserId
                 }
-                // if (current_user !== getUserIdFromMentorId.getDataValue("user_id")) {
-                //     throw forbidden();
-                // };
+
             }
 
             const { limit, offset } = this.getPagination(page, size);
@@ -320,22 +322,14 @@ export default class TeamController extends BaseController {
                 }
 
             }
-            // if (!data) {
-            //     return res.status(404).send(dispatcher(res,data, 'error'));
-            // }
+
             if (!data || data instanceof Error) {
                 if (data != null) {
                     throw notFound(data.message)
                 } else {
                     throw notFound()
                 }
-                res.status(200).send(dispatcher(res, null, "error", speeches.DATA_NOT_FOUND));
-                // if(data!=null){
-                //     throw 
-                (data.message)
-                // }else{
-                //     throw notFound()
-                // }
+
             }
 
             return res.status(200).send(dispatcher(res, data, 'success'));
@@ -343,6 +337,7 @@ export default class TeamController extends BaseController {
             next(error);
         }
     };
+    //fetching all the student in the team with team id
     protected async getTeamMembers(req: Request, res: Response, next: NextFunction) {
         if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'TEAM' && res.locals.role !== 'MENTOR') {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
@@ -471,6 +466,7 @@ export default class TeamController extends BaseController {
             next(error);
         }
     }
+    //deleting team details and student also
     protected async deleteData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if (res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR') {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
@@ -502,7 +498,7 @@ export default class TeamController extends BaseController {
                 for (let student of getStudentDetails) {
                     const deleteUserStudentAndRemoveAllResponses = await this.authService.deleteStudentAndStudentResponse(student.dataValues.user_id);
                     deleteTeam++;
-                    // deletingTeamDetails = await this.crudService.delete(await this.loadModel(model), { where: where });
+
                 }
             };
             if (deleteTeam >= 1) {
@@ -511,24 +507,12 @@ export default class TeamController extends BaseController {
                 deletingTeamuserDetails = await this.crudService.delete(user, { where: { user_id: getTeamDetails.dataValues.user_id } })
             }
             return res.status(200).send(dispatcher(res, deletingTeamDetails, 'deleted'));
-            //         if (exist(team_id))
-            //             if (check students)
-            // 		bulk delete
-            // Delete teams
-            // 	else
-            // 		Delete teams
-            // else
-            //    No action
-            // if (!data) {
-            //     throw badRequest()
-            // }
-            // if (data instanceof Error) {
-            //     throw data
-            // }
+
         } catch (error) {
             next(error);
         }
     }
+    //fetching teams and student all deatails list by mentor_id
     protected async getTeamsByMenter(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'TEAM' && res.locals.role !== 'MENTOR') {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
@@ -569,6 +553,7 @@ ORDER BY team_id DESC`, { type: QueryTypes.SELECT });
             next(error);
         }
     }
+    //fetching only teams name and team id list by mentor_id
     protected async getNameByMenter(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'TEAM' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STATE') {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
@@ -588,6 +573,7 @@ ORDER BY team_id DESC`, { type: QueryTypes.SELECT });
             next(error);
         }
     }
+    //fetching teams name ,team id and idea status list by mentor_id
     protected async getteamslistwithideastatus(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'TEAM' && res.locals.role !== 'MENTOR') {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));

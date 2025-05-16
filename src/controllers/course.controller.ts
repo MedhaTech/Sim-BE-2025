@@ -19,6 +19,7 @@ export default class CourseController extends BaseController {
         super.initializeRoutes();
 
     }
+    //fetching all the course information 
     protected async getData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'TEAM') {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
@@ -111,7 +112,7 @@ export default class CourseController extends BaseController {
             next(error);
         }
     }
-
+    //sub function to fetch all module wise course data
     async getDetailsData(req: Request, res: Response, modelClass: any) {
         if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'TEAM') {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));

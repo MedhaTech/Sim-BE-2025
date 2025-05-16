@@ -31,14 +31,15 @@ export default class StateController extends BaseController {
         this.router.put(`${this.path}/specific/:id`, validationMiddleware(state_specificUpdateSchema), this.updateSpecific.bind(this));
         super.initializeRoutes();
     };
-
+    //creating the state users
     protected async createData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         const payload = this.autoFillTrackingColumns(req, res, state);
         const result = await this.authService.register(payload);
         if (result.user_res) return res.status(406).send(dispatcher(res, result.user_res.dataValues, 'error', speeches.MENTOR_EXISTS, 406));
         return res.status(201).send(dispatcher(res, result.profile.dataValues, 'success', speeches.USER_REGISTERED_SUCCESSFULLY, 201));
     }
-
+    //login api for the state users 
+    //Input username and password
     private async login(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try {
             req.body['role'] = 'STATE';
@@ -60,7 +61,7 @@ export default class StateController extends BaseController {
             return res.status(401).send(dispatcher(res, error, 'error', speeches.USER_RISTRICTED, 401));
         }
     }
-
+    //logout api for the state users
     private async logout(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         const result = await this.authService.logout(req.body, res);
         if (result.error) {
@@ -69,7 +70,7 @@ export default class StateController extends BaseController {
             return res.status(200).send(dispatcher(res, speeches.LOGOUT_SUCCESS, 'success'));
         }
     }
-
+    //updating the state data by state id
     protected async updateData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STATE') {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
@@ -106,7 +107,7 @@ export default class StateController extends BaseController {
             next(error);
         }
     }
-
+    //change password for state
     private async changePassword(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STATE') {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
@@ -123,7 +124,9 @@ export default class StateController extends BaseController {
             return res.status(202).send(dispatcher(res, result.data, 'accepted', speeches.USER_PASSWORD_CHANGE, 202));
         }
     }
-
+    //fetching state all details 
+    //Single state details by state id
+    //all state list
     protected async getData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STATE') {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
@@ -166,7 +169,7 @@ export default class StateController extends BaseController {
             next(error);
         }
     }
-
+    //reseting state password to default 
     private async resetPassword(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STATE') {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
@@ -186,7 +189,7 @@ export default class StateController extends BaseController {
             next(error)
         }
     }
-
+    //fetching state specific details from state specific table by state name
     private async getStateSpecific(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STATE' && res.locals.role !== 'TEAM') {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
@@ -222,7 +225,7 @@ export default class StateController extends BaseController {
             next(error);
         }
     }
-
+    //updating state specific details in state specific table by state specific id
     private async updateSpecific(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if (res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STATE') {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));

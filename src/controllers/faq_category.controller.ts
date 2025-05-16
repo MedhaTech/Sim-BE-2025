@@ -20,7 +20,7 @@ export default class FaqCategoryController extends BaseController {
     protected initializeRoutes(): void {
         super.initializeRoutes();
     }
-
+    //fetching all the faq details
     protected getData(req: Request, res: Response, next: NextFunction) {
         if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'TEAM') {
             throw unauthorized(speeches.ROLE_ACCES_DECLINE)

@@ -1,9 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
-import { customAlphabet } from 'nanoid';
 import { speeches } from '../configs/speeches.config';
 import dispatcher from '../utils/dispatch.util';
 import { studentSchema, studentUpdateSchema } from '../validations/student.validationa';
-import bcrypt from 'bcrypt';
 import authService from '../services/auth.service';
 import BaseController from './base.controller';
 import ValidationsHolder from '../validations/validationHolder';
@@ -24,8 +22,6 @@ import db from "../utils/dbconnection.util"
 export default class StudentController extends BaseController {
     model = "student";
     authService: authService = new authService;
-    private password = process.env.GLOBAL_PASSWORD;
-    private nanoid = customAlphabet('0123456789', 6);
 
     protected initializePath(): void {
         this.path = '/students';
@@ -45,6 +41,9 @@ export default class StudentController extends BaseController {
         this.router.get(`${this.path}/certificateDates/:userId`, this.getCertificateDates.bind(this));
         super.initializeRoutes();
     }
+    //Fetching student all details 
+    //Single student details by student id
+    //All student list
     protected async getData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'TEAM' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STATE') {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
@@ -209,22 +208,14 @@ export default class StudentController extends BaseController {
                 }
 
             }
-            // if (!data) {
-            //     return res.status(404).send(dispatcher(res,data, 'error'));
-            // }
+
             if (!data || data instanceof Error) {
                 if (data != null) {
                     throw notFound(data.message)
                 } else {
                     throw notFound()
                 }
-                res.status(200).send(dispatcher(res, null, "error", speeches.DATA_NOT_FOUND));
-                // if(data!=null){
-                //     throw 
-                (data.message)
-                // }else{
-                //     throw notFound()
-                // }
+
             }
 
             return res.status(200).send(dispatcher(res, data, 'success'));
@@ -232,6 +223,7 @@ export default class StudentController extends BaseController {
             next(error);
         }
     }
+    //Updating the student data by student id
     protected async updateData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if (res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STATE') {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
@@ -261,26 +253,7 @@ export default class StudentController extends BaseController {
             where[`${this.model}_id`] = JSON.parse(newParamId);
             const modelLoaded = await this.loadModel(model);
             const payload = this.autoFillTrackingColumns(req, res, modelLoaded);
-            // if (req.body.username) {
-            //     const cryptoEncryptedString = await this.authService.generateCryptEncryption('STUDENT@123');
-            //     const username = req.body.username;
-            //     const studentDetails = await this.crudService.findOne(user, { where: { username: username } });
-            //     if (studentDetails) {
-            //         if (studentDetails.dataValues.username == username) throw badRequest(speeches.USER_EMAIL_EXISTED);
-            //         if (studentDetails instanceof Error) throw studentDetails;
-            //     };
-            //     const user_data = await this.crudService.update(user, {
-            //         full_name: payload.full_name,
-            //         username: username,
-            //         password: await bcrypt.hashSync(cryptoEncryptedString, process.env.SALT || baseConfig.SALT),
-            //     }, { where: { user_id: studentTableDetails.getDataValue("user_id") } });
-            //     if (!user_data) {
-            //         throw internal()
-            //     }
-            //     if (user_data instanceof Error) {
-            //         throw user_data;
-            //     }
-            // }
+
             if (req.body.full_name) {
                 const username = `${req.body.team_id}_${req.body.full_name.trim()}`
                 const studentDetails = await this.crudService.findOne(user, { where: { username: username } });
@@ -312,6 +285,7 @@ export default class StudentController extends BaseController {
             next(error);
         }
     }
+    //Deleting student data
     protected async deleteData(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if (res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR') {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
@@ -333,9 +307,10 @@ export default class StudentController extends BaseController {
             next(error);
         }
     }
+    //Creating student users
     private async register(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try {
-            // const randomGeneratedSixDigitID = this.nanoid();
+
             const { team_id, state } = req.body;
             const cryptoEncryptedString = await this.authService.generateCryptEncryption('STUDENT@123');
             req.body.username = `${req.body.team_id}_${req.body.full_name.trim()}`
@@ -363,6 +338,7 @@ export default class StudentController extends BaseController {
             next(err)
         }
     }
+    //Creating multi student users at once
     private async bulkCreateStudent(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try {
             for (let student in req.body) {
@@ -400,12 +376,13 @@ export default class StudentController extends BaseController {
             next(error);
         }
     }
+    //Adding badges for the student on business condition
     private async addBadgeToStudent(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'TEAM' && res.locals.role !== 'MENTOR') {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
         }
         try {
-            //todo: test this api : haven't manually tested this api yet 
+
             const student_user_id: any = await this.authService.decryptGlobal(req.params.student_user_id);
             const badges_ids: any = req.body.badge_ids;
             const badges_slugs: any = req.body.badge_slugs;
@@ -420,7 +397,7 @@ export default class StudentController extends BaseController {
 
             const serviceStudent = new StudentService()
             let studentBadgesObj: any = await serviceStudent.getStudentBadges(student_user_id);
-            ///do not do empty or null check since badges obj can be null if no badges earned yet hence this is not an error condition 
+
             if (studentBadgesObj instanceof Error) {
                 throw studentBadgesObj
             }
@@ -461,7 +438,7 @@ export default class StudentController extends BaseController {
                 if (!studentHasBadgeObjForId || !studentHasBadgeObjForId.completed_date) {
                     studentBadgesObj[badgeResultForId.dataValues.slug] = {
                         completed_date: (new Date())
-                        // completed_date: ("" + date.getFullYear() + "-" + "" + (date.getMonth() + 1) + "-" + "" + date.getDay())
+
                     }
                 }
             }
@@ -492,16 +469,17 @@ export default class StudentController extends BaseController {
             next(err)
         }
     }
+    //Fetching student badges
     private async getStudentBadges(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'TEAM' && res.locals.role !== 'MENTOR') {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
         }
-        //todo: implement this api ...!!
+
         try {
             const student_user_id: any = await this.authService.decryptGlobal(req.params.student_user_id);
             const serviceStudent = new StudentService()
             let studentBadgesObj: any = await serviceStudent.getStudentBadges(student_user_id);
-            ///do not do empty or null check since badges obj can be null if no badges earned yet hence this is not an error condition 
+
             if (studentBadgesObj instanceof Error) {
                 throw studentBadgesObj
             }
@@ -558,6 +536,7 @@ export default class StudentController extends BaseController {
             next(err)
         }
     }
+    //Enabling student certificate on business condition
     private async studentCertificate(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'TEAM' && res.locals.role !== 'MENTOR') {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
@@ -580,6 +559,7 @@ export default class StudentController extends BaseController {
             next(error);
         }
     }
+    //sending email to student after submitting the idea
     private async stuIdeaSubmissionEmail(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'TEAM') {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
@@ -635,6 +615,7 @@ export default class StudentController extends BaseController {
             next(error);
         }
     }
+    //Fetching list of student in a team by team id
     protected async getStudentsList(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'TEAM' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STATE' && res.locals.role !== 'TEAM') {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
@@ -660,40 +641,7 @@ export default class StudentController extends BaseController {
                             where
                         ],
                     },
-                    // include: {
-                    //     model: team,
-                    //     attributes: [
-                    //         'team_id',
-                    //         'team_name',
-                    //     ],
-                    //     include: {
-                    //         model: mentor,
-                    //         attributes: [
-                    //             'organization_code',
-                    //             'full_name',
-                    //             'gender',
-                    //             'mobile',
-                    //         ],
-                    //         include: {
-                    //             model: organization,
-                    //             attributes: [
-                    //                 "organization_name",
-                    //                 'organization_code',
-                    //                 "unique_code",
-                    //                 "pin_code",
-                    //                 "category",
-                    //                 "principal_name",
-                    //                 "principal_mobile",
-                    //                 "city",
-                    //                 "district",
-                    //                 "state",
-                    //                 "country",
-                    //                 'address'
-                    //             ],
-                    //         },
 
-                    //     },
-                    // },
                 });
             }
             if (!data || data instanceof Error) {
@@ -708,6 +656,7 @@ export default class StudentController extends BaseController {
             next(error);
         }
     }
+    //Fetching stduent certificate
     protected async getCertificate(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if (res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STATE' && res.locals.role !== 'STUDENT' && res.locals.role !== 'TEAM') {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
@@ -738,6 +687,7 @@ WHERE
             next(err)
         }
     }
+    //Fetching student certificate earn date
     protected async getCertificateDates(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if (res.locals.role !== 'ADMIN' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STATE' && res.locals.role !== 'STUDENT' && res.locals.role !== 'TEAM') {
             return res.status(401).send(dispatcher(res, '', 'error', speeches.ROLE_ACCES_DECLINE, 401));
