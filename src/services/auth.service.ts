@@ -4,7 +4,6 @@ import { badRequest, internal, notFound } from 'boom';
 import axios from 'axios';
 import CryptoJS from 'crypto-js';
 import { invalid } from 'joi';
-
 import jwtUtil from '../utils/jwt.util';
 import CRUDService from "./crud.service";
 import { baseConfig } from '../configs/base.config';
