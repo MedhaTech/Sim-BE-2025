@@ -245,10 +245,11 @@ export default class SupportTicketController extends BaseController {
                 if (readFile instanceof Error) {
                     errs.push(`Error uploading file: ${file.originalFilename} err: ${readFile}`)
                 }
-                file.originalFilename = `${file_name_prefix}/${file.originalFilename}`;
+                let newDate = new Date();
+                let newFormat = (newDate.getFullYear()) + "-" + (1 + newDate.getMonth()) + "-" + newDate.getUTCDate() + '_' + newDate.getHours() + '-' + newDate.getMinutes() + '-' + newDate.getSeconds();
                 let params = {
                     Bucket: `${process.env.BUCKET}`,
-                    Key: file.originalFilename,
+                    Key: `${file_name_prefix}/ST${newFormat}`,
                     Body: readFile,
                     ContentDisposition: 'inline'
                 };
