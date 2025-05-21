@@ -11,6 +11,7 @@ import { adminbulkemail, adminSchema, adminUpdateSchema } from '../validations/a
 import { badRequest, notFound, unauthorized } from 'boom';
 import validationMiddleware from '../middlewares/validation.middleware';
 import { email } from '../models/email.model';
+import { getSignedUrl } from "@aws-sdk/cloudfront-signer";
 
 export default class AdminController extends BaseController {
     model = "admin";
@@ -31,6 +32,7 @@ export default class AdminController extends BaseController {
         this.router.post(`${this.path}/createqueryparm`, this.getcreatequeryparm.bind(this));
         this.router.post(`${this.path}/encryptedPassword`, this.encryptedPassword.bind(this));
         this.router.post(`${this.path}/bulkEmail`, validationMiddleware(adminbulkemail), this.bulkEmail.bind(this));
+        this.router.get(`${this.path}/newurl`, this.getnewurl.bind(this));
         super.initializeRoutes();
     }
     //Creating Admin & Eadmin users
@@ -255,6 +257,45 @@ export default class AdminController extends BaseController {
                 );
             }
             return res.status(200).send(dispatcher(res, result, 'success'));
+        } catch (error) {
+            next(error);
+        }
+
+    }
+    private async getnewurl(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        if (res.locals.role !== 'ADMIN') {
+            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+        }
+        try {
+            let newREQQuery: any = {}
+            if (req.query.Data) {
+                let newQuery: any = await this.authService.decryptGlobal(req.query.Data);
+                newREQQuery = JSON.parse(newQuery);
+            } else if (Object.keys(req.query).length !== 0) {
+                return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
+            }
+            const generateSignedUrl = (filePath: any) => {
+                const policy = JSON.stringify({
+                    Statement: [
+                        {
+                            Resource: `${process.env.CLOUDFRONT_BASE}${filePath}`,
+                            Condition: {
+                                DateLessThan: {
+                                    "AWS:EpochTime": Math.floor(Date.now() / 1000) + 60 * 10,
+                                },
+                            },
+                        },
+                    ],
+                });
+                return getSignedUrl({
+                    url: `${process.env.CLOUDFRONT_BASE}${filePath}`,
+                    keyPairId: `${process.env.KEY_PAIR_ID}`,
+                    privateKey: `${process.env.PRIVATE_KEY}`,
+                    policy
+                });
+            };
+            const signedUrl = generateSignedUrl(newREQQuery.filePath);
+            return res.status(200).send(dispatcher(res, signedUrl, 'success'));
         } catch (error) {
             next(error);
         }
