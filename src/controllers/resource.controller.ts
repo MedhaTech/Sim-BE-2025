@@ -131,14 +131,14 @@ export default class ResourceController extends BaseController {
             let result: any = {};
             let proxyAgent = new HttpsProxyAgent('http://10.236.241.101:9191');
             let s3
-            if(process.env.ISAWSSERVER === 'YES'){
+            if (process.env.ISAWSSERVER === 'YES') {
                 s3 = new S3({
                     apiVersion: '2006-03-01',
                     region: process.env.AWS_REGION,
                     accessKeyId: process.env.AWS_ACCESS_KEY_ID,
                     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
                 });
-            }else{
+            } else {
                 s3 = new S3({
                     apiVersion: '2006-03-01',
                     region: process.env.AWS_REGION,
@@ -164,10 +164,11 @@ export default class ResourceController extends BaseController {
                 if (readFile instanceof Error) {
                     errs.push(`Error uploading file: ${file.originalFilename} err: ${readFile}`)
                 }
-                file.originalFilename = `${file_name_prefix}/${file.originalFilename}`;
+                let newDate = new Date();
+                let newFormat = (newDate.getFullYear()) + "-" + (1 + newDate.getMonth()) + "-" + newDate.getUTCDate() + '_' + newDate.getHours() + '-' + newDate.getMinutes() + '-' + newDate.getSeconds();
                 let params = {
                     Bucket: `${process.env.BUCKET}`,
-                    Key: file.originalFilename,
+                    Key: `${file_name_prefix}/R${newFormat}`,
                     Body: readFile,
                     ContentDisposition: 'inline'
                 };
