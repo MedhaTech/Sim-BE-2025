@@ -49,6 +49,7 @@ export default async function routeProtectionMiddleware(
     }
 
     if (hasAccess) {
+        res.setHeader("Cache-Control", "no-store, must-revalidate");
         res.locals = {
             user_id: process.env.DEFAULT_AUDIT_USER || '',
         };
@@ -88,6 +89,7 @@ export default async function routeProtectionMiddleware(
                     // throw new HttpException(errData.status, errData.message, errData);
                     // throw unauthorized(errData.message);
                 } else {
+                    res.setHeader("Cache-Control", "no-store, must-revalidate");
                     res.locals = data;
                     next();
                 }
