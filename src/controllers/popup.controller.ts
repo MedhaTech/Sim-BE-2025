@@ -9,6 +9,7 @@ import { speeches } from "../configs/speeches.config";
 import { unauthorized } from "boom";
 import { popup } from "../models/popup.model";
 import { HttpsProxyAgent } from "https-proxy-agent";
+import path from "path";
 
 export default class popupController extends BaseController {
 
@@ -89,7 +90,7 @@ export default class popupController extends BaseController {
                 let newFormat = (newDate.getFullYear()) + "-" + (1 + newDate.getMonth()) + "-" + newDate.getUTCDate() + '_' + newDate.getHours() + '-' + newDate.getMinutes() + '-' + newDate.getSeconds();
                 let params = {
                     Bucket: `${process.env.BUCKET}`,
-                    Key: `${file_name_prefix}/P${newFormat}`,
+                    Key: `${file_name_prefix}/P${newFormat}${path.extname(file.name).toLowerCase()}`,
                     Body: readFile,
                     ContentDisposition: 'inline'
                 };
