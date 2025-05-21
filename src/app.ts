@@ -7,7 +7,7 @@ import path from "path";
 import formData from "express-form-data";
 import http from "http";
 import os from "os";
-
+import rateLimit from 'express-rate-limit';
 import logIt from "./utils/logit.util";
 import database from "./utils/dbconnection.util";
 import IController from "./interfaces/controller.interface";
@@ -196,8 +196,13 @@ export default class App {
                 res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
                 next();
             });
-
+            const latestNewsLimiter = rateLimit({
+                windowMs: 15 * 60 * 1000, // 15 minutes
+                max: 5, // Limit each IP to 10 requests per windowMs
+                message: 'Too many requests from this IP, please try again later.',
+            });
             this.app.use(`${prefix}/${version}`, controller.router);
+            this.app.use('/api/v1/latest_news/latestnewsFileUpload', latestNewsLimiter);
         });
     }
 
