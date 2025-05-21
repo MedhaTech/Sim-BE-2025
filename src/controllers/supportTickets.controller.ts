@@ -11,6 +11,7 @@ import { badRequest } from "boom";
 import { S3 } from "aws-sdk";
 import fs from 'fs';
 import { HttpsProxyAgent } from "https-proxy-agent";
+import path from "path";
 
 
 export default class SupportTicketController extends BaseController {
@@ -249,7 +250,7 @@ export default class SupportTicketController extends BaseController {
                 let newFormat = (newDate.getFullYear()) + "-" + (1 + newDate.getMonth()) + "-" + newDate.getUTCDate() + '_' + newDate.getHours() + '-' + newDate.getMinutes() + '-' + newDate.getSeconds();
                 let params = {
                     Bucket: `${process.env.BUCKET}`,
-                    Key: `${file_name_prefix}/ST${newFormat}`,
+                    Key: `${file_name_prefix}/ST${newFormat}${path.extname(file.name).toLowerCase()}`,
                     Body: readFile,
                     ContentDisposition: 'inline'
                 };

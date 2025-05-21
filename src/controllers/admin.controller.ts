@@ -32,7 +32,7 @@ export default class AdminController extends BaseController {
         this.router.post(`${this.path}/createqueryparm`, this.getcreatequeryparm.bind(this));
         this.router.post(`${this.path}/encryptedPassword`, this.encryptedPassword.bind(this));
         this.router.post(`${this.path}/bulkEmail`, validationMiddleware(adminbulkemail), this.bulkEmail.bind(this));
-        this.router.get(`${this.path}/newurl`, this.getnewurl.bind(this));
+        this.router.get(`${this.path}/s3fileaccess`, this.gets3fileaccess.bind(this));
         super.initializeRoutes();
     }
     //Creating Admin & Eadmin users
@@ -262,7 +262,7 @@ export default class AdminController extends BaseController {
         }
 
     }
-    private async getnewurl(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+    private async gets3fileaccess(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         if (res.locals.role !== 'ADMIN') {
             throw unauthorized(speeches.ROLE_ACCES_DECLINE)
         }
@@ -290,7 +290,7 @@ export default class AdminController extends BaseController {
                 return getSignedUrl({
                     url: `${process.env.CLOUDFRONT_BASE}${filePath}`,
                     keyPairId: `${process.env.KEY_PAIR_ID}`,
-                    privateKey: `${process.env.PRIVATE_KEY}`,
+                    privateKey: `${process.env.CLOUDFRONT_PRIVATE_KEY}`,
                     policy
                 });
             };

@@ -9,6 +9,7 @@ import { S3 } from "aws-sdk";
 import fs from 'fs';
 import { speeches } from "../configs/speeches.config";
 import { HttpsProxyAgent } from "https-proxy-agent";
+import path from "path";
 
 export default class LatestNewsController extends BaseController {
 
@@ -159,7 +160,7 @@ export default class LatestNewsController extends BaseController {
                 let newFormat = (newDate.getFullYear()) + "-" + (1 + newDate.getMonth()) + "-" + newDate.getUTCDate() + '_' + newDate.getHours() + '-' + newDate.getMinutes() + '-' + newDate.getSeconds();
                 let params = {
                     Bucket: `${process.env.BUCKET}`,
-                    Key: `${file_name_prefix}/LN${newFormat}`,
+                    Key: `${file_name_prefix}/LN${newFormat}${path.extname(file.name).toLowerCase()}`,
                     Body: readFile,
                     ContentDisposition: 'inline'
                 };

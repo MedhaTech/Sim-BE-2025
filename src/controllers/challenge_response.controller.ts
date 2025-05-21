@@ -18,6 +18,7 @@ import { baseConfig } from "../configs/base.config";
 import { evaluator } from "../models/evaluator.model";
 import isodate from 'iso8601-duration';
 import { HttpsProxyAgent } from "https-proxy-agent";
+import path from "path";
 
 export default class ChallengeResponsesController extends BaseController {
 
@@ -848,7 +849,7 @@ export default class ChallengeResponsesController extends BaseController {
                 let newFormat = (newDate.getFullYear()) + "-" + (1 + newDate.getMonth()) + "-" + newDate.getUTCDate() + '_' + newDate.getHours() + '-' + newDate.getMinutes() + '-' + newDate.getSeconds();
                 let params = {
                     Bucket: `${process.env.BUCKET}`,
-                    Key: `${file_name_prefix}/CR${newFormat}`,
+                    Key: `${file_name_prefix}/CR${newFormat}${path.extname(file.name).toLowerCase()}`,
                     Body: readFile,
                     ContentDisposition: 'inline'
                 };
