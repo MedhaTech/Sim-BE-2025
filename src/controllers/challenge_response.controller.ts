@@ -849,7 +849,7 @@ export default class ChallengeResponsesController extends BaseController {
                 let newFormat = (newDate.getFullYear()) + "-" + (1 + newDate.getMonth()) + "-" + newDate.getUTCDate() + '_' + newDate.getHours() + '-' + newDate.getMinutes() + '-' + newDate.getSeconds();
                 let params = {
                     Bucket: `${process.env.BUCKET}`,
-                    Key: `${file_name_prefix}/CR${newFormat}${path.extname(file.name).toLowerCase()}`,
+                    Key: `${file_name_prefix}/CR${newFormat}_${file_name}${path.extname(file.name).toLowerCase()}`,
                     Body: readFile,
                     ContentDisposition: 'inline'
                 };
