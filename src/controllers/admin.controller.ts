@@ -263,7 +263,7 @@ export default class AdminController extends BaseController {
 
     }
     private async gets3fileaccess(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if (res.locals.role !== 'ADMIN') {
+        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'TEAM' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STATE' && res.locals.role !== 'EADMIN') {
             throw unauthorized(speeches.ROLE_ACCES_DECLINE)
         }
         try {
