@@ -9,6 +9,7 @@ import { speeches } from "../configs/speeches.config";
 import { unauthorized } from "boom";
 import { popup } from "../models/popup.model";
 import { HttpsProxyAgent } from "https-proxy-agent";
+import path from "path";
 
 export default class popupController extends BaseController {
 
@@ -85,10 +86,11 @@ export default class popupController extends BaseController {
                 if (readFile instanceof Error) {
                     errs.push(`Error uploading file: ${file.originalFilename} err: ${readFile}`)
                 }
-                file.originalFilename = `${file_name_prefix}/${file.originalFilename}`;
+                let newDate = new Date();
+                let newFormat = (newDate.getFullYear()) + "-" + (1 + newDate.getMonth()) + "-" + newDate.getUTCDate() + '_' + newDate.getHours() + '-' + newDate.getMinutes() + '-' + newDate.getSeconds();
                 let params = {
                     Bucket: `${process.env.BUCKET}`,
-                    Key: file.originalFilename,
+                    Key: `${file_name_prefix}/P${newFormat}${path.extname(file.name).toLowerCase()}`,
                     Body: readFile,
                     ContentDisposition: 'inline'
                 };
