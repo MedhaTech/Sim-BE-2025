@@ -263,10 +263,10 @@ export default class AdminController extends BaseController {
 
     }
     private async gets3fileaccess(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'TEAM' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STATE' && res.locals.role !== 'EADMIN') {
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
-        }
         try {
+            if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'TEAM' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STATE' && res.locals.role !== 'EADMIN' && res.locals.role !== 'EVALUATOR') {
+                throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            }
             let newREQQuery: any = {}
             if (req.query.Data) {
                 let newQuery: any = await this.authService.decryptGlobal(req.query.Data);
