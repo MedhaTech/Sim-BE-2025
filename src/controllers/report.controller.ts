@@ -1344,13 +1344,13 @@ FROM
                 summary = await db.query(`SELECT 
                     org.district,
                     COALESCE(totalSubmited, 0) AS totalSubmited,
-                    COALESCE(SustainableDevelopmentandEnvironment, 0) AS SustainableDevelopmentandEnvironment,
-                    COALESCE(DigitalTransformation, 0) AS DigitalTransformation,
-                    COALESCE(HealthandWellbeing, 0) AS HealthandWellbeing,
-                    COALESCE(QualityEducation, 0) AS QualityEducation,
-                    COALESCE(EconomicEmpowerment, 0) AS EconomicEmpowerment,
-                    COALESCE(SmartandResilientCommunities, 0) AS SmartandResilientCommunities,
-                    COALESCE(AgricultureandRuralDevelopment, 0) AS AgricultureandRuralDevelopment,
+                    COALESCE(BuildingaSustainableFuture, 0) AS BuildingaSustainableFuture,
+                    COALESCE(TechnologyforLearningandGrowth, 0) AS TechnologyforLearningandGrowth,
+                    COALESCE(HealthNutritionWellbeing, 0) AS HealthNutritionWellbeing,
+                    COALESCE(SkillsforLifeLivelihood, 0) AS SkillsforLifeLivelihood,
+                    COALESCE(SmarterCommunitiesSaferFutures, 0) AS SmarterCommunitiesSaferFutures,
+                    COALESCE(AgricultureRuralTransformation, 0) AS AgricultureRuralTransformation,
+                    COALESCE(OpenCategoryThinkBeyond, 0) AS OpenCategoryThinkBeyond,
                     COALESCE(OTHERS, 0) AS OTHERS
                 FROM
                     organizations AS org
@@ -1358,26 +1358,26 @@ FROM
                     (SELECT 
                         COUNT(*) AS totalSubmited,
                             COUNT(CASE
-                                WHEN cal.theme = 'Sustainable Development and Environment' THEN 1
-                            END) AS SustainableDevelopmentandEnvironment,
+                                WHEN cal.theme = 'Building a Sustainable Future' THEN 1
+                            END) AS BuildingaSustainableFuture,
                             COUNT(CASE
-                                WHEN cal.theme = 'Digital Transformation' THEN 1
-                            END) AS DigitalTransformation,
+                                WHEN cal.theme = 'Technology for Learning and Growth' THEN 1
+                            END) AS TechnologyforLearningandGrowth,
                             COUNT(CASE
-                                WHEN cal.theme = 'Health and Well-being' THEN 1
-                            END) AS HealthandWellbeing,
+                                WHEN cal.theme = 'Health, Nutrition & Well-being' THEN 1
+                            END) AS HealthNutritionWellbeing,
                             COUNT(CASE
-                                WHEN cal.theme = 'Quality Education' THEN 1
-                            END) AS QualityEducation,
+                                WHEN cal.theme = 'Skills for Life & Livelihood' THEN 1
+                            END) AS SkillsforLifeLivelihood,
                             COUNT(CASE
-                                WHEN cal.theme = 'Economic Empowerment' THEN 1
-                            END) AS EconomicEmpowerment,
+                                WHEN cal.theme = 'Smarter Communities, Safer Futures' THEN 1
+                            END) AS SmarterCommunitiesSaferFutures,
                             COUNT(CASE
-                                WHEN cal.theme = 'Smart and Resilient Communities' THEN 1
-                            END) AS SmartandResilientCommunities,
+                                WHEN cal.theme = 'Agriculture & Rural Transformation' THEN 1
+                            END) AS AgricultureRuralTransformation,
                             COUNT(CASE
-                                WHEN cal.theme = 'Agriculture and Rural Development' THEN 1
-                            END) AS AgricultureandRuralDevelopment,
+                                WHEN cal.theme = 'Open Category - Think Beyond!' THEN 1
+                            END) AS OpenCategoryThinkBeyond,
                             COUNT(CASE
                                 WHEN cal.theme = 'Others' THEN 1
                             END) AS OTHERS,
@@ -1396,13 +1396,13 @@ FROM
                 summary = await db.query(`SELECT 
                     org.state,
                     COALESCE(totalSubmited, 0) AS totalSubmited,
-                    COALESCE(SustainableDevelopmentandEnvironment, 0) AS SustainableDevelopmentandEnvironment,
-                    COALESCE(DigitalTransformation, 0) AS DigitalTransformation,
-                    COALESCE(HealthandWellbeing, 0) AS HealthandWellbeing,
-                    COALESCE(QualityEducation, 0) AS QualityEducation,
-                    COALESCE(EconomicEmpowerment, 0) AS EconomicEmpowerment,
-                    COALESCE(SmartandResilientCommunities, 0) AS SmartandResilientCommunities,
-                    COALESCE(AgricultureandRuralDevelopment, 0) AS AgricultureandRuralDevelopment,
+                    COALESCE(BuildingaSustainableFuture, 0) AS BuildingaSustainableFuture,
+                    COALESCE(TechnologyforLearningandGrowth, 0) AS TechnologyforLearningandGrowth,
+                    COALESCE(HealthNutritionWellbeing, 0) AS HealthNutritionWellbeing,
+                    COALESCE(SkillsforLifeLivelihood, 0) AS SkillsforLifeLivelihood,
+                    COALESCE(SmarterCommunitiesSaferFutures, 0) AS SmarterCommunitiesSaferFutures,
+                    COALESCE(AgricultureRuralTransformation, 0) AS AgricultureRuralTransformation,
+                    COALESCE(OpenCategoryThinkBeyond, 0) AS OpenCategoryThinkBeyond,
                     COALESCE(OTHERS, 0) AS OTHERS
                 FROM
                     organizations AS org
@@ -1410,26 +1410,26 @@ FROM
                     (SELECT 
                         COUNT(*) AS totalSubmited,
                             COUNT(CASE
-                                WHEN cal.theme = 'Sustainable Development and Environment' THEN 1
-                            END) AS SustainableDevelopmentandEnvironment,
+                                WHEN cal.theme = 'Building a Sustainable Future' THEN 1
+                            END) AS BuildingaSustainableFuture,
                             COUNT(CASE
-                                WHEN cal.theme = 'Digital Transformation' THEN 1
-                            END) AS DigitalTransformation,
+                                WHEN cal.theme = 'Technology for Learning and Growth' THEN 1
+                            END) AS TechnologyforLearningandGrowth,
                             COUNT(CASE
-                                WHEN cal.theme = 'Health and Well-being' THEN 1
-                            END) AS HealthandWellbeing,
+                                WHEN cal.theme = 'Health, Nutrition & Well-being' THEN 1
+                            END) AS HealthNutritionWellbeing,
                             COUNT(CASE
-                                WHEN cal.theme = 'Quality Education' THEN 1
-                            END) AS QualityEducation,
+                                WHEN cal.theme = 'Skills for Life & Livelihood' THEN 1
+                            END) AS SkillsforLifeLivelihood,
                             COUNT(CASE
-                                WHEN cal.theme = 'Economic Empowerment' THEN 1
-                            END) AS EconomicEmpowerment,
+                                WHEN cal.theme = 'Smarter Communities, Safer Futures' THEN 1
+                            END) AS SmarterCommunitiesSaferFutures,
                             COUNT(CASE
-                                WHEN cal.theme = 'Smart and Resilient Communities' THEN 1
-                            END) AS SmartandResilientCommunities,
+                                WHEN cal.theme = 'Agriculture & Rural Transformation' THEN 1
+                            END) AS AgricultureRuralTransformation,
                             COUNT(CASE
-                                WHEN cal.theme = 'Agriculture and Rural Development' THEN 1
-                            END) AS AgricultureandRuralDevelopment,
+                                WHEN cal.theme = 'Open Category - Think Beyond!' THEN 1
+                            END) AS OpenCategoryThinkBeyond,
                             COUNT(CASE
                                 WHEN cal.theme = 'Others' THEN 1
                             END) AS OTHERS,
