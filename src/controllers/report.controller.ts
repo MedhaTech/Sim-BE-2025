@@ -1364,13 +1364,13 @@ FROM
                                 WHEN cal.theme = 'Technology for Learning and Growth' THEN 1
                             END) AS TechnologyforLearningandGrowth,
                             COUNT(CASE
-                                WHEN cal.theme = 'Health, Nutrition & Well-being' THEN 1
+                                WHEN cal.theme = 'Health & Nutrition & Well-being' THEN 1
                             END) AS HealthNutritionWellbeing,
                             COUNT(CASE
                                 WHEN cal.theme = 'Skills for Life & Livelihood' THEN 1
                             END) AS SkillsforLifeLivelihood,
                             COUNT(CASE
-                                WHEN cal.theme = 'Smarter Communities, Safer Futures' THEN 1
+                                WHEN cal.theme = 'Smarter Communities & Safer Futures' THEN 1
                             END) AS SmarterCommunitiesSaferFutures,
                             COUNT(CASE
                                 WHEN cal.theme = 'Agriculture & Rural Transformation' THEN 1
@@ -1416,13 +1416,13 @@ FROM
                                 WHEN cal.theme = 'Technology for Learning and Growth' THEN 1
                             END) AS TechnologyforLearningandGrowth,
                             COUNT(CASE
-                                WHEN cal.theme = 'Health, Nutrition & Well-being' THEN 1
+                                WHEN cal.theme = 'Health & Nutrition & Well-being' THEN 1
                             END) AS HealthNutritionWellbeing,
                             COUNT(CASE
                                 WHEN cal.theme = 'Skills for Life & Livelihood' THEN 1
                             END) AS SkillsforLifeLivelihood,
                             COUNT(CASE
-                                WHEN cal.theme = 'Smarter Communities, Safer Futures' THEN 1
+                                WHEN cal.theme = 'Smarter Communities & Safer Futures' THEN 1
                             END) AS SmarterCommunitiesSaferFutures,
                             COUNT(CASE
                                 WHEN cal.theme = 'Agriculture & Rural Transformation' THEN 1
