@@ -263,10 +263,10 @@ export default class AdminController extends BaseController {
 
     }
     private async gets3fileaccess(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-        if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'TEAM' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STATE' && res.locals.role !== 'EADMIN') {
-            throw unauthorized(speeches.ROLE_ACCES_DECLINE)
-        }
         try {
+            if (res.locals.role !== 'ADMIN' && res.locals.role !== 'STUDENT' && res.locals.role !== 'TEAM' && res.locals.role !== 'MENTOR' && res.locals.role !== 'STATE' && res.locals.role !== 'EADMIN' && res.locals.role !== 'EVALUATOR') {
+                throw unauthorized(speeches.ROLE_ACCES_DECLINE)
+            }
             let newREQQuery: any = {}
             if (req.query.Data) {
                 let newQuery: any = await this.authService.decryptGlobal(req.query.Data);
@@ -274,11 +274,43 @@ export default class AdminController extends BaseController {
             } else if (Object.keys(req.query).length !== 0) {
                 return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
             }
+            function getContentType(filePath: any) {
+                const mimeTypes: any = {
+                    '.jpg': 'image/jpeg',
+                    '.jpeg': 'image/jpeg',
+                    '.png': 'image/png',
+                    '.gif': 'image/gif',
+                    '.webp': 'image/webp',
+                    '.pdf': 'application/pdf',
+                    '.doc': 'application/msword',
+                    '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                    '.xls': 'application/vnd.ms-excel',
+                    '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                    '.ppt': 'application/vnd.ms-powerpoint',
+                    '.pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+                    '.txt': 'text/plain',
+                    '.html': 'text/html',
+                    '.json': 'application/json',
+                    '.zip': 'application/zip',
+                    '.csv': 'text/csv',
+                    '.mp4': 'video/mp4',
+                    '.mp3': 'audio/mpeg'
+                };
+
+                // Extract the extension
+                const ext = filePath.substring(filePath.lastIndexOf('.')).toLowerCase();
+                return mimeTypes[ext] || 'application/octet-stream'; // default fallback
+            }
             const generateSignedUrl = (filePath: any) => {
+
+                const disposition = 'inline';
+                const contentType = getContentType(filePath);
+                const queryParams = `response-content-disposition=${encodeURIComponent(disposition)}&response-content-type=${encodeURIComponent(contentType)}`;
+
                 const policy = JSON.stringify({
                     Statement: [
                         {
-                            Resource: `${process.env.CLOUDFRONT_BASE}${filePath}`,
+                            Resource: `${process.env.CLOUDFRONT_BASE}${filePath}?${queryParams}`,
                             Condition: {
                                 DateLessThan: {
                                     "AWS:EpochTime": Math.floor(Date.now() / 1000) + 60 * 10,
@@ -288,7 +320,7 @@ export default class AdminController extends BaseController {
                     ],
                 });
                 return getSignedUrl({
-                    url: `${process.env.CLOUDFRONT_BASE}${filePath}`,
+                    url: `${process.env.CLOUDFRONT_BASE}${filePath}?${queryParams}`,
                     keyPairId: `${process.env.KEY_PAIR_ID}`,
                     privateKey: `${process.env.CLOUDFRONT_PRIVATE_KEY}`,
                     policy
