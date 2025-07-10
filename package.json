@@ -24,6 +24,7 @@
   },
   "dependencies": {
     "@aws-sdk/cloudfront-signer": "^3.813.0",
+    "@azure/storage-blob": "^12.27.0",
     "@supercharge/request-ip": "^1.2.0",
     "@types/cron": "^2.0.0",
     "amqplib": "^0.10.0",
