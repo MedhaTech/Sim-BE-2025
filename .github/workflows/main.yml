@@ -1,5 +1,5 @@
 
-name: Deployment to DEV via jenkins
+name: Deployment to D EV via jenkins
 
 on:
   push:
