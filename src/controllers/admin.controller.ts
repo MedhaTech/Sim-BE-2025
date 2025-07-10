@@ -415,7 +415,7 @@ export default class AdminController extends BaseController {
                 port: 587,
                 secure: false,
                 auth: {
-                    user: "",
+                    user: "apikey",
                     pass: ""
                 },
                 tls: {
