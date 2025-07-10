@@ -12,6 +12,7 @@ import { badRequest, notFound, unauthorized } from 'boom';
 import validationMiddleware from '../middlewares/validation.middleware';
 import { email } from '../models/email.model';
 import { getSignedUrl } from "@aws-sdk/cloudfront-signer";
+import { BlobServiceClient } from "@azure/storage-blob";
 
 export default class AdminController extends BaseController {
     model = "admin";
@@ -33,6 +34,7 @@ export default class AdminController extends BaseController {
         this.router.post(`${this.path}/encryptedPassword`, this.encryptedPassword.bind(this));
         this.router.post(`${this.path}/bulkEmail`, validationMiddleware(adminbulkemail), this.bulkEmail.bind(this));
         this.router.get(`${this.path}/s3fileaccess`, this.gets3fileaccess.bind(this));
+        this.router.post(`${this.path}/newfileuplad`, this.newfileuplad.bind(this));
         super.initializeRoutes();
     }
     //Creating Admin & Eadmin users
@@ -332,5 +334,69 @@ export default class AdminController extends BaseController {
             next(error);
         }
 
+    }
+
+    private async newfileuplad(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+        try {
+            const rawfiles: any = req.files;
+            const files: any = Object.values(rawfiles);
+            const result: any = {}
+            // // Replace these with your actual values
+            // const AZURE_STORAGE_CONNECTION_STRING = "<your_connection_string>";
+            // const containerName = "<your_container_name>";
+            // const localFilePath = files[0].path; // Local file to upload
+
+            // try {
+            //     // Create the BlobServiceClient object
+            //     const blobServiceClient = BlobServiceClient.fromConnectionString(AZURE_STORAGE_CONNECTION_STRING);
+
+            //     // Get a container client
+            //     const containerClient = blobServiceClient.getContainerClient(containerName);
+
+            //     // Create container if it doesn't exist
+            //     await containerClient.createIfNotExists();
+
+            //     const blobName = files[0].originalFilename;
+            //     const blockBlobClient = containerClient.getBlockBlobClient(blobName);
+
+            //     console.log(`Uploading to Azure storage as blob:\n\t${blobName}`);
+
+            //     const uploadBlobResponse = await blockBlobClient.uploadFile(localFilePath);
+            //     console.log("Upload complete. Request ID:", uploadBlobResponse.requestId);
+            // } catch (err: any) {
+            //     console.error("Error uploading file to Azure:", err.message);
+            // }
+
+            const accountName = "aictemicsim";
+            const containerName = "datamicsim";
+            const sasToken = "?sv=2024-11-04&ss=b&srt=sco&sp=rwdlaciytfx&se=2026-07-30T20:34:32Z&st=2025-07-09T12:34:32Z&spr=https&sig=kCvU3WLqnU6AsghfSCcq1NOJrL0VGL4i1ioHDqZx%2B2s%3D";
+            const localFilePath = files[0].path;
+            const blobName = `dev/test/${files[0].originalFilename}` || files[0].name;
+            try {
+                const blobServiceClient = new BlobServiceClient(
+                    `https://${accountName}.blob.core.windows.net${sasToken}`
+                );
+
+                const containerClient = blobServiceClient.getContainerClient(containerName);
+                const blockBlobClient = containerClient.getBlockBlobClient(blobName);
+
+                console.log(`Uploading file "${blobName}" to Azure using SAS token...`);
+
+                const uploadBlobResponse = await blockBlobClient.uploadFile(localFilePath);
+                console.log("Upload successful. Request ID:", uploadBlobResponse.requestId);
+                console.log("Blob URL:", blockBlobClient.url); // This is the public or private URL
+                result['data'] = {
+                    "Request ID": uploadBlobResponse.requestId,
+                    "Blob URL:": blockBlobClient.url
+                }
+            } catch (err: any) {
+                console.error("Azure upload error:", err.message || err);
+            }
+
+            return res.status(200).send(dispatcher(res, result, 'success'));
+        }
+        catch (error) {
+            console.log(error)
+        }
     }
 };
