@@ -24,6 +24,9 @@ import { badge } from '../models/badge.model';
 import Joi from 'joi';
 import { state } from '../models/state.model';
 import { HttpsProxyAgent } from 'https-proxy-agent';
+import { BlobServiceClient } from "@azure/storage-blob";
+import path from "path";
+
 export default class authService {
     crudService: CRUDService = new CRUDService;
     private otp = '112233';
@@ -831,7 +834,7 @@ export default class authService {
     async triggerBulkEmail(email: any, textBody: any, subText: any) {
         const result: any = {}
         let proxyAgent = new HttpsProxyAgent('http://10.236.241.101:9191');
-       if (process.env.ISAWSSERVER === 'YES') {
+        if (process.env.ISAWSSERVER === 'YES') {
             AWS.config.update({
                 region: 'ap-south-1',
                 accessKeyId: process.env.AWS_ACCESS_KEY_ID,
@@ -1316,5 +1319,62 @@ export default class authService {
             return `Invalid name: ${error.details[0].message}`;
         }
         return 'Valid';
+    }
+    async getContentType(filePath: any) {
+        const mimeTypes: any = {
+            '.jpg': 'image/jpeg',
+            '.jpeg': 'image/jpeg',
+            '.png': 'image/png',
+            '.gif': 'image/gif',
+            '.webp': 'image/webp',
+            '.pdf': 'application/pdf',
+            '.doc': 'application/msword',
+            '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            '.xls': 'application/vnd.ms-excel',
+            '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            '.ppt': 'application/vnd.ms-powerpoint',
+            '.pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+            '.txt': 'text/plain',
+            '.html': 'text/html',
+            '.json': 'application/json',
+            '.zip': 'application/zip',
+            '.csv': 'text/csv',
+            '.mp4': 'video/mp4',
+            '.mp3': 'audio/mpeg'
+        };
+
+        // Extract the extension
+        const ext = filePath.substring(filePath.lastIndexOf('.')).toLowerCase();
+        return mimeTypes[ext] || 'application/octet-stream'; // default fallback
+    }
+    async AzureFileupload(files: any, file_name_prefix: any) {
+        const result: any = {}
+        let newDate = new Date();
+        let newFormat = (newDate.getFullYear()) + "-" + (1 + newDate.getMonth()) + "-" + newDate.getUTCDate() + '_' + newDate.getHours() + '-' + newDate.getMinutes() + '-' + newDate.getSeconds();
+        const accountName = process.env.ACCOUNT_NAME;
+        const containerName = process.env.CONTAINER_NAME || '';
+        const sasToken = process.env.SAS_TOKEN;
+        const localFilePath = files[0].path;
+        const blobName = `${file_name_prefix}${newFormat}${path.extname(files[0].name).toLowerCase()}`;
+        try {
+            const blobServiceClient = new BlobServiceClient(
+                `https://${accountName}.blob.core.windows.net${sasToken}`
+            );
+            const containerClient = blobServiceClient.getContainerClient(containerName);
+            const blockBlobClient = containerClient.getBlockBlobClient(blobName);
+            const uploadBlobResponse = await blockBlobClient.uploadFile(localFilePath, {
+                blobHTTPHeaders: {
+                    blobContentDisposition: 'inline',
+                    blobContentType: await this.getContentType(localFilePath)
+                }
+            });
+            result['data'] = {
+                "Request ID": uploadBlobResponse.requestId,
+                "attachments": blockBlobClient.url
+            }
+            return result
+        } catch (err: any) {
+            return result['error'] = "Azure upload error:", err.message || err
+        }
     }
 }
