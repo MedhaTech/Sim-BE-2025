@@ -1348,6 +1348,10 @@ export default class authService {
         return mimeTypes[ext] || 'application/octet-stream'; // default fallback
     }
     async AzureFileupload(files: any, file_name_prefix: any, allowedTypes: any) {
+        let newFiles: any = files.file
+        if (!Array.isArray(files.file)) {
+            newFiles = [files.file]
+        }
         const result: any = {}
         let errs: any = [];
         let attachments: any = [];
@@ -1363,7 +1367,7 @@ export default class authService {
             );
             const containerClient = blobServiceClient.getContainerClient(containerName);
             let count = 0;
-            for (const file_name of files.file) {
+            for (const file_name of newFiles) {
                 try {
                     if (!allowedTypes.includes(file_name.type)) {
                         errs.push(`This file type not allowed file-${count + 1}`);
