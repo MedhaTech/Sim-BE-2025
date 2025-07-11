@@ -1347,34 +1347,51 @@ export default class authService {
         const ext = filePath.substring(filePath.lastIndexOf('.')).toLowerCase();
         return mimeTypes[ext] || 'application/octet-stream'; // default fallback
     }
-    async AzureFileupload(files: any, file_name_prefix: any) {
+    async AzureFileupload(files: any, file_name_prefix: any, allowedTypes: any) {
         const result: any = {}
+        let errs: any = [];
+        let attachments: any = [];
+        let reqIds: any = [];
         let newDate = new Date();
         let newFormat = (newDate.getFullYear()) + "-" + (1 + newDate.getMonth()) + "-" + newDate.getUTCDate() + '_' + newDate.getHours() + '-' + newDate.getMinutes() + '-' + newDate.getSeconds();
         const accountName = process.env.ACCOUNT_NAME;
         const containerName = process.env.CONTAINER_NAME || '';
         const sasToken = process.env.SAS_TOKEN;
-        const localFilePath = files[0].path;
-        const blobName = `${file_name_prefix}${newFormat}${path.extname(files[0].name).toLowerCase()}`;
         try {
             const blobServiceClient = new BlobServiceClient(
                 `https://${accountName}.blob.core.windows.net${sasToken}`
             );
             const containerClient = blobServiceClient.getContainerClient(containerName);
-            const blockBlobClient = containerClient.getBlockBlobClient(blobName);
-            const uploadBlobResponse = await blockBlobClient.uploadFile(localFilePath, {
-                blobHTTPHeaders: {
-                    blobContentDisposition: 'inline',
-                    blobContentType: await this.getContentType(localFilePath)
+            let count = 0;
+            for (const file_name of files.file) {
+                try {
+                    if (!allowedTypes.includes(file_name.type)) {
+                        errs.push(`This file type not allowed file-${count + 1}`);
+                        count++
+                    } else {
+                        const blockBlobClient = containerClient.getBlockBlobClient(`${file_name_prefix}${newFormat}_${count}${path.extname(file_name.name).toLowerCase()}`);
+                        const uploadBlobResponse = await blockBlobClient.uploadFile(file_name.path, {
+                            blobHTTPHeaders: {
+                                blobContentDisposition: 'inline',
+                                blobContentType: await this.getContentType(file_name.path)
+                            }
+                        });
+                        attachments.push(blockBlobClient.url)
+                        reqIds.push(uploadBlobResponse.requestId)
+                        count++
+                    }
                 }
-            });
-            result['data'] = {
-                "Request ID": uploadBlobResponse.requestId,
-                "attachments": blockBlobClient.url
+                catch (e: any) {
+                    errs.push("Azure upload error:", e.message || e)
+                    count++
+                }
             }
+            result['attachments'] = attachments;
+            result['reqIds'] = reqIds;
+            result['errors'] = errs;
             return result
         } catch (err: any) {
-            return result['error'] = "Azure upload error:", err.message || err
+            return result['errors'] = "Azure upload error:", err.message || err
         }
     }
 }
