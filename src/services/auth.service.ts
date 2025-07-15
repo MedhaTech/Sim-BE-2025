@@ -437,7 +437,7 @@ export default class authService {
                 });
 
                 const info = await transporter.sendMail({
-                    from: "noreply@aicte-india.org",
+                    from: "aicte.admin@aicte-india.org",
                     to: recipients,
                     subject: id === 1 ? verifyOtpSubject : id === 3 ? forgotPassSubjec : id === 4 ? teamsCredentials : fullSubjec,
                     text: id === 1 ? verifyOtpdata : id === 3 ? forgotPassData : fulldata
