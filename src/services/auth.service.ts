@@ -26,6 +26,7 @@ import { state } from '../models/state.model';
 import { HttpsProxyAgent } from 'https-proxy-agent';
 import { BlobServiceClient } from "@azure/storage-blob";
 import path from "path";
+import nodemailer from "nodemailer";
 
 export default class authService {
     crudService: CRUDService = new CRUDService;
@@ -335,7 +336,7 @@ export default class authService {
      * @param responseBody Object
      * @returns Object
      */
-    async triggerEmail(email: any, id: any, fulldata: any) {
+    async triggerEmail(email: any, id: any, fulldata: string) {
         const result: any = {}
         const otp: any = Math.random().toFixed(6).substr(-6);
         const verifyOtpdata = `<body style="border: solid;margin-right: 15%;margin-left: 15%; ">
@@ -348,7 +349,7 @@ export default class authService {
         <p>We appreciate for your interest in inspiring students to solve problems with simplified design thinking process as a method to innovate through this program.</p>
         <p>
         <strong>
-        Regards,<br> SIM Team
+        Regards,<br> SIM Team
         </strong>
         </div></body>`
         const forgotPassData = `
@@ -356,77 +357,100 @@ export default class authService {
         <img src="https://aim-email-images.s3.ap-south-1.amazonaws.com/Email1SIM_2024.png.jpg" alt="header" style="width: 100%;" />
         <div style="padding: 1% 5%;">
         <h3>Dear Guide Teacher,</h3>
-        <p>Your temporary password to login to School Innovation Marathon platform is <b>${otp}.</b></p>
+        <p>Your temporary password to login to School Innovation Marathon platform is <b>${otp}.</b></p>
         <p>Change your password as per your preference after you login with temporary password.</p>
         <p><strong>Link: https://schoolinnovationmarathon.org/login</strong></p>
         <p>
         <strong>
-        Regards,<br> SIM Team
+        Regards,<br> SIM Team
         </strong>
         </p>
         </div></body>`
         const verifyOtpSubject = `OTP to register for School Innovation Marathon (SIM 24-25)`
-        const forgotPassSubjec = `Temporary Password to Login into School Innovation Marathon (SIM 24-25)`
+        const forgotPassSubjec = `Temporary Password to Login into School Innovation Marathon (SIM 24-25)`
         const fullSubjec = `Welcome! Your School Innovation Marathon (SIM 24-25) registration was successful. Check out your login details.`
-        const teamsCredentials = `SIM 2024 - Teams Credentials`
-        let proxyAgent = new HttpsProxyAgent('http://10.236.241.101:9191');
+        const teamsCredentials = `SIM 2025 - Teams Credentials`
+
         if (process.env.ISAWSSERVER === 'YES') {
             AWS.config.update({
                 region: 'ap-south-1',
                 accessKeyId: process.env.AWS_ACCESS_KEY_ID,
                 secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
             });
-        } else {
-            AWS.config.update({
-                region: 'ap-south-1',
-                accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-                secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-                httpOptions: { agent: proxyAgent }
-            });
-        }
 
-        let params = {
-            Destination: { /* required */
-                CcAddresses: [
-                ],
-                ToAddresses: [
-                    email
-                ]
-            },
-            Message: { /* required */
-                Body: { /* required */
-                    Html: {
-                        Charset: "UTF-8",
-                        Data: id === 1 ? verifyOtpdata : id === 3 ? forgotPassData : fulldata
+            let params = {
+                Destination: { /* required */
+                    CcAddresses: [
+                    ],
+                    ToAddresses: [
+                        email
+                    ]
+                },
+                Message: { /* required */
+                    Body: { /* required */
+                        Html: {
+                            Charset: "UTF-8",
+                            Data: id === 1 ? verifyOtpdata : id === 3 ? forgotPassData : fulldata
+                        },
+                        Text: {
+                            Charset: "UTF-8",
+                            Data: "TEXT_FOR MAT_BODY"
+                        }
                     },
-                    Text: {
-                        Charset: "UTF-8",
-                        Data: "TEXT_FOR MAT_BODY"
+                    Subject: {
+                        Charset: 'UTF-8',
+                        Data: id === 1 ? verifyOtpSubject : id === 3 ? forgotPassSubjec : id === 4 ? teamsCredentials : fullSubjec
                     }
                 },
-                Subject: {
-                    Charset: 'UTF-8',
-                    Data: id === 1 ? verifyOtpSubject : id === 3 ? forgotPassSubjec : id === 4 ? teamsCredentials : fullSubjec
-                }
-            },
-            Source: "sim-no-reply@inqui-lab.org", /* required */
-            ReplyToAddresses: [],
-        };
-        try {
-            // Create the promise and SES service object
-            let sendPromise = new AWS.SES({ apiVersion: '2010-12-01' }).sendEmail(params).promise();
-            // Handle promise's fulfilled/rejected states
-            await sendPromise.then((data: any) => {
-                result['messageId'] = data.MessageId;
+                Source: "sim-no-reply@inqui-lab.org", /* required */
+                ReplyToAddresses: [],
+            };
+            try {
+                // Create the promise and SES service object
+                let sendPromise = new AWS.SES({ apiVersion: '2010-12-01' }).sendEmail(params).promise();
+                // Handle promise's fulfilled/rejected states
+                await sendPromise.then((data: any) => {
+                    result['messageId'] = data.MessageId;
+                    result['otp'] = otp;
+                }).catch((err: any) => {
+                    throw err;
+                });
+                //result['otp'] = 112233;
+                return result;
+            } catch (error) {
+                return error;
+            }
+        } else {
+            try {
+                const recipients: string[] = [email];
+                let transporter = nodemailer.createTransport({
+                    host: process.env.HOST,
+                    port: process.env.PORT ? Number(process.env.PORT) : 587,
+                    secure: false,
+                    auth: {
+                        user: process.env.USER,
+                        pass: process.env.PASS
+                    },
+                    tls: {
+                        rejectUnauthorized: false, // Set to true in production
+                    },
+                });
+
+                const info = await transporter.sendMail({
+                    from: "noreply@aicte-india.org",
+                    to: recipients,
+                    subject: id === 1 ? verifyOtpSubject : id === 3 ? forgotPassSubjec : id === 4 ? teamsCredentials : fullSubjec,
+                    text: id === 1 ? verifyOtpdata : id === 3 ? forgotPassData : fulldata
+                });
+                result['messageId'] = info.messageId;
                 result['otp'] = otp;
-            }).catch((err: any) => {
-                throw err;
-            });
-            //result['otp'] = 112233;
-            return result;
-        } catch (error) {
-            return error;
+            }
+            catch (error) {
+                return error;
+            }
         }
+
+
     }
     /**
      * Get the mentor details with the mobile number, trigger OTP and update the password
