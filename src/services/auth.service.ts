@@ -336,7 +336,7 @@ export default class authService {
      * @param responseBody Object
      * @returns Object
      */
-    async triggerEmail(email: any, id: any, fulldata: string) {
+    async triggerEmail(email: any, id: any, fulldata: any) {
         const result: any = {}
         const otp: any = Math.random().toFixed(6).substr(-6);
         const verifyOtpdata = `<body style="border: solid;margin-right: 15%;margin-left: 15%; ">
