@@ -366,9 +366,9 @@ export default class authService {
         </strong>
         </p>
         </div></body>`
-        const verifyOtpSubject = `OTP to register for School Innovation Marathon (SIM 24-25)`
-        const forgotPassSubjec = `Temporary Password to Login into School Innovation Marathon (SIM 24-25)`
-        const fullSubjec = `Welcome! Your School Innovation Marathon (SIM 24-25) registration was successful. Check out your login details.`
+        const verifyOtpSubject = `OTP to register for School Innovation Marathon (SIM 25-26)`
+        const forgotPassSubjec = `Temporary Password to Login into School Innovation Marathon (SIM 25-26)`
+        const fullSubjec = `Welcome! Your School Innovation Marathon (SIM 25-26) registration was successful. Check out your login details.`
         const teamsCredentials = `SIM 2025 - Teams Credentials`
 
         if (process.env.ISAWSSERVER === 'YES') {
@@ -425,7 +425,7 @@ export default class authService {
                 const recipients: string[] = [email];
                 let transporter = nodemailer.createTransport({
                     host: process.env.HOST,
-                    port: process.env.PORT ? Number(process.env.PORT) : 587,
+                    port: process.env.AICTE_PORT ? Number(process.env.AICTE_PORT) : 25,
                     secure: false,
                     auth: {
                         user: process.env.USER,
@@ -440,10 +440,11 @@ export default class authService {
                     from: "aicte.admin@aicte-india.org",
                     to: recipients,
                     subject: id === 1 ? verifyOtpSubject : id === 3 ? forgotPassSubjec : id === 4 ? teamsCredentials : fullSubjec,
-                    text: id === 1 ? verifyOtpdata : id === 3 ? forgotPassData : fulldata
+                    html: id === 1 ? verifyOtpdata : id === 3 ? forgotPassData : fulldata
                 });
                 result['messageId'] = info.messageId;
                 result['otp'] = otp;
+                return result;
             }
             catch (error) {
                 return error;
@@ -526,7 +527,7 @@ export default class authService {
             <img src="https://aim-email-images.s3.ap-south-1.amazonaws.com/Email1SIM_2024.png.jpg" alt="header" style="width: 100%;" />
             <div style="padding: 1% 5%;">
             <h3>Dear Guide Teacher,</h3>
-            <h4>Congratulations for successfully registering for School Innovation Marathon 24-25</h4>
+            <h4>Congratulations for successfully registering for School Innovation Marathon 25-26</h4>
             <p>Your schools has been successfully registered with the following details :
             <br> School name: <strong> ${school_name}</strong> <br> UDISE CODE:<strong> ${udise_code}</strong>
             <br> District:<strong> ${district}</strong>
@@ -541,7 +542,7 @@ export default class authService {
             Mobile no: <strong> ${mobile} </strong>
             <p>Please use your user id and password to login and proceed further.</p>
             <p><strong>Link: https://schoolinnovationmarathon.org/login</strong></p>
-            <p><strong>Regards,<br> SIM Team</strong></p>
+            <p><strong>Regards,<br> SIM Team</strong></p>
             </div></body>`
             const otp = await this.triggerEmail(email, 2, WelcomeTemp);
             if (otp instanceof Error) {
