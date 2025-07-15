@@ -411,11 +411,11 @@ export default class AdminController extends BaseController {
     private async newEmailservice(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
         try {
             let transporter = nodemailer.createTransport({
-                host: "smtp.sendgrid.net",
-                port: 587,
+                host: "192.168.1.75",
+                port: 25,
                 secure: false,
                 auth: {
-                    user: "apikey",
+                    user: "",
                     pass: ""
                 },
                 tls: {
@@ -424,7 +424,7 @@ export default class AdminController extends BaseController {
             });
 
             const info = await transporter.sendMail({
-                from: "noreply@aicte-india.org",
+                from: "aicte.admin@aicte-india.org",
                 to: "ramant@medhatech.in",
                 subject: "Test email old",
                 text: "Hello from AWS SES via SMTP!old values"
