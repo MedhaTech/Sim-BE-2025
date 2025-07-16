@@ -24,6 +24,10 @@ import { badge } from '../models/badge.model';
 import Joi from 'joi';
 import { state } from '../models/state.model';
 import { HttpsProxyAgent } from 'https-proxy-agent';
+import { BlobServiceClient } from "@azure/storage-blob";
+import path from "path";
+import nodemailer from "nodemailer";
+
 export default class authService {
     crudService: CRUDService = new CRUDService;
     private otp = '112233';
@@ -345,7 +349,7 @@ export default class authService {
         <p>We appreciate for your interest in inspiring students to solve problems with simplified design thinking process as a method to innovate through this program.</p>
         <p>
         <strong>
-        Regards,<br> SIM Team
+        Regards,<br> SIM Team
         </strong>
         </div></body>`
         const forgotPassData = `
@@ -353,77 +357,101 @@ export default class authService {
         <img src="https://aim-email-images.s3.ap-south-1.amazonaws.com/Email1SIM_2024.png.jpg" alt="header" style="width: 100%;" />
         <div style="padding: 1% 5%;">
         <h3>Dear Guide Teacher,</h3>
-        <p>Your temporary password to login to School Innovation Marathon platform is <b>${otp}.</b></p>
+        <p>Your temporary password to login to School Innovation Marathon platform is <b>${otp}.</b></p>
         <p>Change your password as per your preference after you login with temporary password.</p>
         <p><strong>Link: https://schoolinnovationmarathon.org/login</strong></p>
         <p>
         <strong>
-        Regards,<br> SIM Team
+        Regards,<br> SIM Team
         </strong>
         </p>
         </div></body>`
-        const verifyOtpSubject = `OTP to register for School Innovation Marathon (SIM 24-25)`
-        const forgotPassSubjec = `Temporary Password to Login into School Innovation Marathon (SIM 24-25)`
-        const fullSubjec = `Welcome! Your School Innovation Marathon (SIM 24-25) registration was successful. Check out your login details.`
-        const teamsCredentials = `SIM 2024 - Teams Credentials`
-        let proxyAgent = new HttpsProxyAgent('http://10.236.241.101:9191');
+        const verifyOtpSubject = `OTP to register for School Innovation Marathon (SIM 25-26)`
+        const forgotPassSubjec = `Temporary Password to Login into School Innovation Marathon (SIM 25-26)`
+        const fullSubjec = `Welcome! Your School Innovation Marathon (SIM 25-26) registration was successful. Check out your login details.`
+        const teamsCredentials = `SIM 2025 - Teams Credentials`
+
         if (process.env.ISAWSSERVER === 'YES') {
             AWS.config.update({
                 region: 'ap-south-1',
                 accessKeyId: process.env.AWS_ACCESS_KEY_ID,
                 secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
             });
-        } else {
-            AWS.config.update({
-                region: 'ap-south-1',
-                accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-                secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-                httpOptions: { agent: proxyAgent }
-            });
-        }
 
-        let params = {
-            Destination: { /* required */
-                CcAddresses: [
-                ],
-                ToAddresses: [
-                    email
-                ]
-            },
-            Message: { /* required */
-                Body: { /* required */
-                    Html: {
-                        Charset: "UTF-8",
-                        Data: id === 1 ? verifyOtpdata : id === 3 ? forgotPassData : fulldata
+            let params = {
+                Destination: { /* required */
+                    CcAddresses: [
+                    ],
+                    ToAddresses: [
+                        email
+                    ]
+                },
+                Message: { /* required */
+                    Body: { /* required */
+                        Html: {
+                            Charset: "UTF-8",
+                            Data: id === 1 ? verifyOtpdata : id === 3 ? forgotPassData : fulldata
+                        },
+                        Text: {
+                            Charset: "UTF-8",
+                            Data: "TEXT_FOR MAT_BODY"
+                        }
                     },
-                    Text: {
-                        Charset: "UTF-8",
-                        Data: "TEXT_FOR MAT_BODY"
+                    Subject: {
+                        Charset: 'UTF-8',
+                        Data: id === 1 ? verifyOtpSubject : id === 3 ? forgotPassSubjec : id === 4 ? teamsCredentials : fullSubjec
                     }
                 },
-                Subject: {
-                    Charset: 'UTF-8',
-                    Data: id === 1 ? verifyOtpSubject : id === 3 ? forgotPassSubjec : id === 4 ? teamsCredentials : fullSubjec
-                }
-            },
-            Source: "sim-no-reply@inqui-lab.org", /* required */
-            ReplyToAddresses: [],
-        };
-        try {
-            // Create the promise and SES service object
-            let sendPromise = new AWS.SES({ apiVersion: '2010-12-01' }).sendEmail(params).promise();
-            // Handle promise's fulfilled/rejected states
-            await sendPromise.then((data: any) => {
-                result['messageId'] = data.MessageId;
+                Source: "sim-no-reply@inqui-lab.org", /* required */
+                ReplyToAddresses: [],
+            };
+            try {
+                // Create the promise and SES service object
+                let sendPromise = new AWS.SES({ apiVersion: '2010-12-01' }).sendEmail(params).promise();
+                // Handle promise's fulfilled/rejected states
+                await sendPromise.then((data: any) => {
+                    result['messageId'] = data.MessageId;
+                    result['otp'] = otp;
+                }).catch((err: any) => {
+                    throw err;
+                });
+                //result['otp'] = 112233;
+                return result;
+            } catch (error) {
+                return error;
+            }
+        } else {
+            try {
+                const recipients: string[] = [email];
+                let transporter = nodemailer.createTransport({
+                    host: process.env.HOST,
+                    port: process.env.AICTE_PORT ? Number(process.env.AICTE_PORT) : 25,
+                    secure: false,
+                    auth: {
+                        user: process.env.USER,
+                        pass: process.env.PASS
+                    },
+                    tls: {
+                        rejectUnauthorized: false, // Set to true in production
+                    },
+                });
+
+                const info = await transporter.sendMail({
+                    from: "aicte.admin@aicte-india.org",
+                    to: recipients,
+                    subject: id === 1 ? verifyOtpSubject : id === 3 ? forgotPassSubjec : id === 4 ? teamsCredentials : fullSubjec,
+                    html: id === 1 ? verifyOtpdata : id === 3 ? forgotPassData : fulldata
+                });
+                result['messageId'] = info.messageId;
                 result['otp'] = otp;
-            }).catch((err: any) => {
-                throw err;
-            });
-            //result['otp'] = 112233;
-            return result;
-        } catch (error) {
-            return error;
+                return result;
+            }
+            catch (error) {
+                return error;
+            }
         }
+
+
     }
     /**
      * Get the mentor details with the mobile number, trigger OTP and update the password
@@ -499,7 +527,7 @@ export default class authService {
             <img src="https://aim-email-images.s3.ap-south-1.amazonaws.com/Email1SIM_2024.png.jpg" alt="header" style="width: 100%;" />
             <div style="padding: 1% 5%;">
             <h3>Dear Guide Teacher,</h3>
-            <h4>Congratulations for successfully registering for School Innovation Marathon 24-25</h4>
+            <h4>Congratulations for successfully registering for School Innovation Marathon 25-26</h4>
             <p>Your schools has been successfully registered with the following details :
             <br> School name: <strong> ${school_name}</strong> <br> UDISE CODE:<strong> ${udise_code}</strong>
             <br> District:<strong> ${district}</strong>
@@ -514,7 +542,7 @@ export default class authService {
             Mobile no: <strong> ${mobile} </strong>
             <p>Please use your user id and password to login and proceed further.</p>
             <p><strong>Link: https://schoolinnovationmarathon.org/login</strong></p>
-            <p><strong>Regards,<br> SIM Team</strong></p>
+            <p><strong>Regards,<br> SIM Team</strong></p>
             </div></body>`
             const otp = await this.triggerEmail(email, 2, WelcomeTemp);
             if (otp instanceof Error) {
@@ -831,7 +859,7 @@ export default class authService {
     async triggerBulkEmail(email: any, textBody: any, subText: any) {
         const result: any = {}
         let proxyAgent = new HttpsProxyAgent('http://10.236.241.101:9191');
-       if (process.env.ISAWSSERVER === 'YES') {
+        if (process.env.ISAWSSERVER === 'YES') {
             AWS.config.update({
                 region: 'ap-south-1',
                 accessKeyId: process.env.AWS_ACCESS_KEY_ID,
@@ -1316,5 +1344,83 @@ export default class authService {
             return `Invalid name: ${error.details[0].message}`;
         }
         return 'Valid';
+    }
+    async getContentType(filePath: any) {
+        const mimeTypes: any = {
+            '.jpg': 'image/jpeg',
+            '.jpeg': 'image/jpeg',
+            '.png': 'image/png',
+            '.gif': 'image/gif',
+            '.webp': 'image/webp',
+            '.pdf': 'application/pdf',
+            '.doc': 'application/msword',
+            '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            '.xls': 'application/vnd.ms-excel',
+            '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            '.ppt': 'application/vnd.ms-powerpoint',
+            '.pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+            '.txt': 'text/plain',
+            '.html': 'text/html',
+            '.json': 'application/json',
+            '.zip': 'application/zip',
+            '.csv': 'text/csv',
+            '.mp4': 'video/mp4',
+            '.mp3': 'audio/mpeg'
+        };
+
+        // Extract the extension
+        const ext = filePath.substring(filePath.lastIndexOf('.')).toLowerCase();
+        return mimeTypes[ext] || 'application/octet-stream'; // default fallback
+    }
+    async AzureFileupload(files: any, file_name_prefix: any, allowedTypes: any) {
+        let newFiles: any = files.file
+        if (!Array.isArray(files.file)) {
+            newFiles = [files.file]
+        }
+        const result: any = {}
+        let errs: any = [];
+        let attachments: any = [];
+        let reqIds: any = [];
+        let newDate = new Date();
+        let newFormat = (newDate.getFullYear()) + "-" + (1 + newDate.getMonth()) + "-" + newDate.getUTCDate() + '_' + newDate.getHours() + '-' + newDate.getMinutes() + '-' + newDate.getSeconds();
+        const accountName = process.env.ACCOUNT_NAME;
+        const containerName = process.env.CONTAINER_NAME || '';
+        const sasToken = process.env.SAS_TOKEN;
+        try {
+            const blobServiceClient = new BlobServiceClient(
+                `https://${accountName}.blob.core.windows.net${sasToken}`
+            );
+            const containerClient = blobServiceClient.getContainerClient(containerName);
+            let count = 0;
+            for (const file_name of newFiles) {
+                try {
+                    if (!allowedTypes.includes(file_name.type)) {
+                        errs.push(`This file type not allowed file-${count + 1}`);
+                        count++
+                    } else {
+                        const blockBlobClient = containerClient.getBlockBlobClient(`${file_name_prefix}${newFormat}_${count}${path.extname(file_name.name).toLowerCase()}`);
+                        const uploadBlobResponse = await blockBlobClient.uploadFile(file_name.path, {
+                            blobHTTPHeaders: {
+                                blobContentDisposition: 'inline',
+                                blobContentType: await this.getContentType(file_name.path)
+                            }
+                        });
+                        attachments.push(blockBlobClient.url)
+                        reqIds.push(uploadBlobResponse.requestId)
+                        count++
+                    }
+                }
+                catch (e: any) {
+                    errs.push("Azure upload error:", e.message || e)
+                    count++
+                }
+            }
+            result['attachments'] = attachments;
+            result['reqIds'] = reqIds;
+            result['errors'] = errs;
+            return result
+        } catch (err: any) {
+            return result['errors'] = "Azure upload error:", err.message || err
+        }
     }
 }
