@@ -794,8 +794,6 @@ export default class ChallengeResponsesController extends BaseController {
                 return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
             }
             const { team_id } = newREQQuery;
-            const rawfiles: any = req.files;
-            const files: any = Object.values(rawfiles);
             const allowedTypes = [
                 'image/jpeg',
                 'image/png',
@@ -804,64 +802,18 @@ export default class ChallengeResponsesController extends BaseController {
                 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
                 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
             ];
-            if (!allowedTypes.includes(files[0].type)) {
-                return res.status(400).send(dispatcher(res, '', 'error', 'This file type not allowed', 400));
-            }
-            const errs: any = [];
-            let attachments: any = [];
-            let result: any = {};
-            let proxyAgent = new HttpsProxyAgent('http://10.236.241.101:9191');
-            let s3
-            if (process.env.ISAWSSERVER === 'YES') {
-                s3 = new S3({
-                    apiVersion: '2006-03-01',
-                    region: process.env.AWS_REGION,
-                    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-                    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
-                });
-            } else {
-                s3 = new S3({
-                    apiVersion: '2006-03-01',
-                    region: process.env.AWS_REGION,
-                    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-                    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-                    httpOptions: { agent: proxyAgent }
-                });
-            }
-            if (!req.files) {
-                return result;
-            }
             let file_name_prefix: any;
-            if (process.env.DB_HOST?.includes("prod")) {
-                file_name_prefix = `ideas/${team_id}`
+            if (process.env.DB_HOST?.includes("stage")) {
+                file_name_prefix = `ideas/stage/${team_id}/CR`
             } else if (process.env.DB_HOST?.includes("dev")) {
-                file_name_prefix = `ideas/dev/${team_id}`
+                file_name_prefix = `ideas/dev/${team_id}/CR`
             } else {
-                file_name_prefix = `ideas/stage/${team_id}`
+                file_name_prefix = `ideas/${team_id}/CR`
             }
-            for (const file_name of Object.keys(files)) {
-                const file = files[file_name];
-                const readFile: any = await fs.readFileSync(file.path);
-                if (readFile instanceof Error) {
-                    errs.push(`Error uploading file: ${file.originalFilename} err: ${readFile}`)
-                }
-                let newDate = new Date();
-                let newFormat = (newDate.getFullYear()) + "-" + (1 + newDate.getMonth()) + "-" + newDate.getUTCDate() + '_' + newDate.getHours() + '-' + newDate.getMinutes() + '-' + newDate.getSeconds();
-                let params = {
-                    Bucket: `${process.env.BUCKET}`,
-                    Key: `${file_name_prefix}/CR${newFormat}_${file_name}${path.extname(file.name).toLowerCase()}`,
-                    Body: readFile,
-                    ContentDisposition: 'inline'
-                };
-                let options: any = { partSize: 20 * 1024 * 1024, queueSize: 2 };
-                await s3.upload(params, options).promise()
-                    .then((data: any) => { attachments.push(data.Location) })
-                    .catch((err: any) => { errs.push(`Error uploading file: ${file.originalFilename}, err: ${err.message}`) })
-                result['attachments'] = attachments;
-                result['errors'] = errs;
-            }
+            const result = await this.authService.AzureFileupload(req.files, file_name_prefix, allowedTypes);
             res.status(200).send(dispatcher(res, result));
-        } catch (err) {
+        }
+        catch (err) {
             next(err)
         }
     }
