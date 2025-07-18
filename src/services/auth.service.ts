@@ -1373,10 +1373,6 @@ export default class authService {
         return mimeTypes[ext] || 'application/octet-stream'; // default fallback
     }
     async AzureFileupload(files: any, file_name_prefix: any, allowedTypes: any) {
-        let newFiles: any = files.file
-        if (!Array.isArray(files.file)) {
-            newFiles = [files.file]
-        }
         const result: any = {}
         let errs: any = [];
         let attachments: any = [];
@@ -1392,17 +1388,17 @@ export default class authService {
             );
             const containerClient = blobServiceClient.getContainerClient(containerName);
             let count = 0;
-            for (const file_name of newFiles) {
+            for (const key in files) {
                 try {
-                    if (!allowedTypes.includes(file_name.type)) {
+                    if (!allowedTypes.includes(files[key].type)) {
                         errs.push(`This file type not allowed file-${count + 1}`);
                         count++
                     } else {
-                        const blockBlobClient = containerClient.getBlockBlobClient(`${file_name_prefix}${newFormat}_${count}${path.extname(file_name.name).toLowerCase()}`);
-                        const uploadBlobResponse = await blockBlobClient.uploadFile(file_name.path, {
+                        const blockBlobClient = containerClient.getBlockBlobClient(`${file_name_prefix}${newFormat}_${count}${path.extname(files[key].name).toLowerCase()}`);
+                        const uploadBlobResponse = await blockBlobClient.uploadFile(files[key].path, {
                             blobHTTPHeaders: {
                                 blobContentDisposition: 'inline',
-                                blobContentType: await this.getContentType(file_name.path)
+                                blobContentType: await this.getContentType(files[key].path)
                             }
                         });
                         attachments.push(blockBlobClient.url)
