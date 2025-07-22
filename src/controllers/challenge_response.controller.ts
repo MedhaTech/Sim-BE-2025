@@ -841,11 +841,11 @@ export default class ChallengeResponsesController extends BaseController {
             let newFormat = (newDate.getFullYear()) + "-" + (1 + newDate.getMonth()) + "-" + newDate.getUTCDate() + ' ' + newDate.getHours() + ':' + newDate.getMinutes() + ':' + newDate.getSeconds();
             if (status === 'SUBMITTED') {
                 req.body['submitted_at'] = newFormat.trim()
-                req.body.verified_status = ''
-                req.body.verified_at = ''
-                req.body.mentor_rejected_reason = ''
+                req.body.verified_status = null
+                req.body.verified_at = null
+                req.body.mentor_rejected_reason = null
             } else if (status === 'DRAFT') {
-                req.body['submitted_at'] = ''
+                req.body['submitted_at'] = null
             }
             if (verified_status) {
                 req.body['verified_at'] = newFormat.trim()
