@@ -344,7 +344,7 @@ export default class authService {
         <div style="padding: 1% 5%;">
         <h3>Dear Guide Teacher,</h3>
         
-        <p>Your One-Time Password (OTP) to register yourself as a guide teacher in School Innovation Marathon (SIM 24-25) is <b>${otp}</b></p>
+        <p>Your One-Time Password (OTP) to register yourself as a guide teacher in School Innovation Marathon (SIM 25-26) is <b>${otp}</b></p>
         
         <p>We appreciate for your interest in inspiring students to solve problems with simplified design thinking process as a method to innovate through this program.</p>
         <p>
@@ -957,7 +957,7 @@ export default class authService {
 <img src="https://aim-email-images.s3.ap-south-1.amazonaws.com/Email1SIM_2024.png.jpg" alt="header" style="width: 100%;" />
 <div style="padding: 1% 5%;">
     <h3>Dear Guide Teacher,</h3>
-    <p>Greetings from School Innovation Marathom 2024. Here are your <strong>SIM student teams credentials</strong> for your reference.</p>
+    <p>Greetings from School Innovation Marathom 2025. Here are your <strong>SIM student teams credentials</strong> for your reference.</p>
     <p><strong>Team login URL : https://schoolinnovationmarathon.org/login</strong></p>
     <table>
         <tr>
@@ -969,7 +969,7 @@ export default class authService {
         ${allstring}
     </table>
     <strong>
-        Regards,<br> SIM Team
+        Regards,<br> SIM Team
         </strong>
 </div>
 </body>
