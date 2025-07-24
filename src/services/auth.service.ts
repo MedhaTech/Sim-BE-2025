@@ -858,31 +858,7 @@ export default class authService {
     //bulk email process
     async triggerBulkEmail(email: any, textBody: any, subText: any) {
         const result: any = {}
-        let proxyAgent = new HttpsProxyAgent('http://10.236.241.101:9191');
-        if (process.env.ISAWSSERVER === 'YES') {
-            AWS.config.update({
-                region: 'ap-south-1',
-                accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-                secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
-            });
-        } else {
-            AWS.config.update({
-                region: 'ap-south-1',
-                accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-                secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-                httpOptions: { agent: proxyAgent }
-            });
-        }
-        let params = {
-            Destination: { /* required */
-                ToAddresses: [],
-                BccAddresses: email
-            },
-            Message: { /* required */
-                Body: { /* required */
-                    Html: {
-                        Charset: "UTF-8",
-                        Data: `<body style="border: solid;margin-right: 15%;margin-left: 15%; ">
+        const datahtml = `<body style="border: solid;margin-right: 15%;margin-left: 15%; ">
                         <img src="https://aim-email-images.s3.ap-south-1.amazonaws.com/Email1SIM_2024.png.jpg" alt="header" style="width: 100%;" />
                         <div style="padding: 1% 5%;">
                         ${textBody}
@@ -893,33 +869,79 @@ export default class authService {
                         </div>
                         <img src="https://aim-email-images.s3.ap-south-1.amazonaws.com/sim_footer.jpg" alt="footer" style="width: 100%;" />
                         </body>`
+        if (process.env.ISAWSSERVER === 'YES') {
+            AWS.config.update({
+                region: 'ap-south-1',
+                accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+                secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+            });
+
+            let params = {
+                Destination: { /* required */
+                    ToAddresses: [],
+                    BccAddresses: email
+                },
+                Message: { /* required */
+                    Body: { /* required */
+                        Html: {
+                            Charset: "UTF-8",
+                            Data: datahtml
+                        },
+                        Text: {
+                            Charset: "UTF-8",
+                            Data: "TEXT_FOR MAT_BODY"
+                        }
                     },
-                    Text: {
-                        Charset: "UTF-8",
-                        Data: "TEXT_FOR MAT_BODY"
+                    Subject: {
+                        Charset: 'UTF-8',
+                        Data: subText
                     }
                 },
-                Subject: {
-                    Charset: 'UTF-8',
-                    Data: subText
-                }
-            },
-            Source: "sim-no-reply@inqui-lab.org", /* required */
-            ReplyToAddresses: [],
-            ConfigurationSetName: 'Stats-of-Email'
-        };
-        try {
-            // Create the promise and SES service object
-            let sendPromise = new AWS.SES({ apiVersion: '2010-12-01' }).sendEmail(params).promise();
-            // Handle promise's fulfilled/rejected states
-            await sendPromise.then((data: any) => {
-                result['messageId'] = data.MessageId;
-            }).catch((err: any) => {
-                throw err;
-            });
-            return result;
-        } catch (error) {
-            return error;
+                Source: "sim-no-reply@inqui-lab.org", /* required */
+                ReplyToAddresses: [],
+                ConfigurationSetName: 'Stats-of-Email'
+            };
+            try {
+                // Create the promise and SES service object
+                let sendPromise = new AWS.SES({ apiVersion: '2010-12-01' }).sendEmail(params).promise();
+                // Handle promise's fulfilled/rejected states
+                await sendPromise.then((data: any) => {
+                    result['messageId'] = data.MessageId;
+                }).catch((err: any) => {
+                    throw err;
+                });
+                return result;
+            } catch (error) {
+                return error;
+            }
+        } else {
+            try {
+                const recipients: string[] = [email];
+                let transporter = nodemailer.createTransport({
+                    host: process.env.HOST,
+                    port: process.env.AICTE_PORT ? Number(process.env.AICTE_PORT) : 25,
+                    secure: false,
+                    auth: {
+                        user: process.env.USER,
+                        pass: process.env.PASS
+                    },
+                    tls: {
+                        rejectUnauthorized: false, // Set to true in production
+                    },
+                });
+
+                const info = await transporter.sendMail({
+                    from: "aicte.admin@aicte-india.org",
+                    to: recipients,
+                    subject: subText,
+                    html: datahtml
+                });
+                result['messageId'] = info.messageId;
+                return result;
+            }
+            catch (error) {
+                return error;
+            }
         }
     }
     async triggerteamDeatils(requestBody: any, email: any) {
