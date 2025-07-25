@@ -57,6 +57,9 @@ export default class ReportController extends BaseController {
             } else if (Object.keys(req.query).length !== 0) {
                 return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
             }
+            await db.query(`SET SESSION sql_mode = ''`, {
+                type: QueryTypes.RAW
+            });
             const state = newREQQuery.state;
             let summary
             let REG_school
@@ -1135,6 +1138,9 @@ GROUP BY user_id`, { type: QueryTypes.SELECT });
             } else if (Object.keys(req.query).length !== 0) {
                 return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
             }
+            await db.query(`SET SESSION sql_mode = ''`, {
+                type: QueryTypes.RAW
+            });
             const state = newREQQuery.state;
             let wherefilter = '';
             let summary
@@ -1537,6 +1543,9 @@ FROM
             } else if (Object.keys(req.query).length !== 0) {
                 return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
             }
+            await db.query(`SET SESSION sql_mode = ''`, {
+                type: QueryTypes.RAW
+            });
             const state = newREQQuery.state;
             if (state) {
                 const categorydata = await db.query(`SELECT DISTINCT
@@ -1584,6 +1593,9 @@ FROM
             } else if (Object.keys(req.query).length !== 0) {
                 return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
             }
+            await db.query(`SET SESSION sql_mode = ''`, {
+                type: QueryTypes.RAW
+            });
             const state = newREQQuery.state;
             let wherefilter = '';
             if (state) {
@@ -1703,6 +1715,9 @@ GROUP BY evaluator_id`, { type: QueryTypes.SELECT });
             } else if (Object.keys(req.query).length !== 0) {
                 return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
             }
+            await db.query(`SET SESSION sql_mode = ''`, {
+                type: QueryTypes.RAW
+            });
             const state = newREQQuery.state;
             let wherefilter = '';
             if (state) {
@@ -1850,6 +1865,9 @@ GROUP BY challenge_response_id;`, { type: QueryTypes.SELECT });
             } else if (Object.keys(req.query).length !== 0) {
                 return res.status(400).send(dispatcher(res, '', 'error', 'Bad Request', 400));
             }
+            await db.query(`SET SESSION sql_mode = ''`, {
+                type: QueryTypes.RAW
+            });
             const state = newREQQuery.state;
             let wherefilter = '';
             if (state) {

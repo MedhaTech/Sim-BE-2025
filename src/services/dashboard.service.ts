@@ -1,3 +1,4 @@
+import { QueryTypes } from "sequelize";
 import { challenge_response } from "../models/challenge_response.model";
 import { dashboard_map_stat } from "../models/dashboard_map_stat.model";
 import { mentor } from "../models/mentor.model";
@@ -5,6 +6,7 @@ import { organization } from "../models/organization.model";
 import { student } from "../models/student.model";
 import { team } from "../models/team.model";
 import BaseService from "./base.service";
+import db from "../utils/dbconnection.util"
 
 export default class DashboardService extends BaseService {
     /**
@@ -13,6 +15,9 @@ export default class DashboardService extends BaseService {
      */
     async resetMapStats() {
         try {
+            await db.query(`SET SESSION sql_mode = ''`, {
+                type: QueryTypes.RAW
+            });
             let uniqueDistricts: any;
             let bulkCreateArray: any = [];
             uniqueDistricts = await this.crudService.findAll(organization, { group: ["state"] });
