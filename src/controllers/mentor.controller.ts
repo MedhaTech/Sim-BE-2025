@@ -550,7 +550,8 @@ export default class MentorController extends BaseController {
                             "organization_name",
                             "state",
                             "district",
-                            "category"
+                            "category",
+                            "school_type"
                         ]
                     },
                     {
