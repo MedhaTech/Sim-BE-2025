@@ -340,7 +340,7 @@ export default class authService {
         const result: any = {}
         const otp: any = Math.random().toFixed(6).substr(-6);
         const verifyOtpdata = `<body style="border: solid;margin-right: 15%;margin-left: 15%; ">
-        <img src="https://aim-email-images.s3.ap-south-1.amazonaws.com/Email1SIM_2024.png.jpg" alt="header" style="width: 100%;" />
+        <img src="https://aictemicsim.blob.core.windows.net/datamicsim/Email-and-Quiz-Images/SIM-Email-Banner-2025.jpg?sv=2024-11-04&ss=b&srt=sco&sp=rwdlaciytfx&se=2026-07-30T20:34:32Z&st=2025-07-09T12:34:32Z&spr=https&sig=kCvU3WLqnU6AsghfSCcq1NOJrL0VGL4i1ioHDqZx%2B2s%3D" alt="header" style="width: 100%;" />
         <div style="padding: 1% 5%;">
         <h3>Dear Guide Teacher,</h3>
         
@@ -354,7 +354,7 @@ export default class authService {
         </div></body>`
         const forgotPassData = `
         <body style="border: solid;margin-right: 15%;margin-left: 15%; ">
-        <img src="https://aim-email-images.s3.ap-south-1.amazonaws.com/Email1SIM_2024.png.jpg" alt="header" style="width: 100%;" />
+        <img src="https://aictemicsim.blob.core.windows.net/datamicsim/Email-and-Quiz-Images/SIM-Email-Banner-2025.jpg?sv=2024-11-04&ss=b&srt=sco&sp=rwdlaciytfx&se=2026-07-30T20:34:32Z&st=2025-07-09T12:34:32Z&spr=https&sig=kCvU3WLqnU6AsghfSCcq1NOJrL0VGL4i1ioHDqZx%2B2s%3D" alt="header" style="width: 100%;" />
         <div style="padding: 1% 5%;">
         <h3>Dear Guide Teacher,</h3>
         <p>Your temporary password to login to School Innovation Marathon platform is <b>${otp}.</b></p>
@@ -524,7 +524,7 @@ export default class authService {
             let word = myArray[0];
             const WelcomeTemp = `
             <body style="border: solid;margin-right: 15%;margin-left: 15%; ">
-            <img src="https://aim-email-images.s3.ap-south-1.amazonaws.com/Email1SIM_2024.png.jpg" alt="header" style="width: 100%;" />
+            <img src="https://aictemicsim.blob.core.windows.net/datamicsim/Email-and-Quiz-Images/SIM-Email-Banner-2025.jpg?sv=2024-11-04&ss=b&srt=sco&sp=rwdlaciytfx&se=2026-07-30T20:34:32Z&st=2025-07-09T12:34:32Z&spr=https&sig=kCvU3WLqnU6AsghfSCcq1NOJrL0VGL4i1ioHDqZx%2B2s%3D" alt="header" style="width: 100%;" />
             <div style="padding: 1% 5%;">
             <h3>Dear Guide Teacher,</h3>
             <h4>Congratulations for successfully registering for School Innovation Marathon 25-26</h4>
@@ -859,7 +859,7 @@ export default class authService {
     async triggerBulkEmail(email: any, textBody: any, subText: any) {
         const result: any = {}
         const datahtml = `<body style="border: solid;margin-right: 15%;margin-left: 15%; ">
-                        <img src="https://aim-email-images.s3.ap-south-1.amazonaws.com/Email1SIM_2024.png.jpg" alt="header" style="width: 100%;" />
+                        <img src="https://aictemicsim.blob.core.windows.net/datamicsim/Email-and-Quiz-Images/SIM-Email-Banner-2025.jpg?sv=2024-11-04&ss=b&srt=sco&sp=rwdlaciytfx&se=2026-07-30T20:34:32Z&st=2025-07-09T12:34:32Z&spr=https&sig=kCvU3WLqnU6AsghfSCcq1NOJrL0VGL4i1ioHDqZx%2B2s%3D" alt="header" style="width: 100%;" />
                         <div style="padding: 1% 5%;">
                         ${textBody}
                         <br>
@@ -976,7 +976,7 @@ export default class authService {
     </style>
 </head>
 <body style="border: solid;margin-right: 15%;margin-left: 15%;">
-<img src="https://aim-email-images.s3.ap-south-1.amazonaws.com/Email1SIM_2024.png.jpg" alt="header" style="width: 100%;" />
+<img src="https://aictemicsim.blob.core.windows.net/datamicsim/Email-and-Quiz-Images/SIM-Email-Banner-2025.jpg?sv=2024-11-04&ss=b&srt=sco&sp=rwdlaciytfx&se=2026-07-30T20:34:32Z&st=2025-07-09T12:34:32Z&spr=https&sig=kCvU3WLqnU6AsghfSCcq1NOJrL0VGL4i1ioHDqZx%2B2s%3D" alt="header" style="width: 100%;" />
 <div style="padding: 1% 5%;">
     <h3>Dear Guide Teacher,</h3>
     <p>Greetings from School Innovation Marathom 2025. Here are your <strong>SIM student teams credentials</strong> for your reference.</p>
