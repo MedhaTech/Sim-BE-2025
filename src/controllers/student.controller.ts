@@ -569,7 +569,7 @@ export default class StudentController extends BaseController {
             let data: any = {}
             const contentText = `
             <body style="border: solid;margin-right: 15%;margin-left: 15%; ">
-        <img src="https://aim-email-images.s3.ap-south-1.amazonaws.com/Email1SIM_2024.png.jpg" alt="header" style="width: 100%;" />
+        <img src="https://aictemicsim.blob.core.windows.net/datamicsim/Email-and-Quiz-Images/SIM-Email-Banner-2025.jpg?sv=2024-11-04&ss=b&srt=sco&sp=rwdlaciytfx&se=2026-07-30T20:34:32Z&st=2025-07-09T12:34:32Z&spr=https&sig=kCvU3WLqnU6AsghfSCcq1NOJrL0VGL4i1ioHDqZx%2B2s%3D" alt="header" style="width: 100%;" />
         <div style="padding: 1% 5%;">
         <h3> Dear ${team_name} team,</h3>
 
