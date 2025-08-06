@@ -34,7 +34,7 @@ export const speeches = {
     EVALUATOR_EXISTS: "Evaluator already exists",
     USER_NOT_FOUND: "User not found",
     USER_REG_STATUS: "User blocked",
-    USER_PASSWORD: "User pasword doesn't match",
+    USER_PASSWORD: "User password doesn't match",
     USER_PASSWORD_CHANGE: "User password updated",
     USER_MOBILE_CHANGE: "User mobile number updated",
     USER_PASS_UPDATE: "User password is send to Eamil",
