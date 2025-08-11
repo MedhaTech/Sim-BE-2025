@@ -44,6 +44,9 @@ export default class AdminController extends BaseController {
         if (!req.body.username || req.body.username === "") req.body.username = req.body.full_name.replace(/\s/g, '');
         if (!req.body.password || req.body.password === "") req.body.password = await this.authService.generateCryptEncryption(req.body.username);
         if (req.body.role == 'ADMIN' || req.body.role == 'EADMIN') {
+            if (res.locals.role !== 'ADMIN') {
+                req.body.permission = "Dashboard,Overall Schools,PopUp,Resource,Latest News,State Specific,Support,Mentors,Teams,Students,Admins,States,Reports,Bulk Email"
+            }
             const payload = this.autoFillTrackingColumns(req, res, admin);
             const result = await this.authService.register(payload);
             if (result.user_res) return res.status(406).send(dispatcher(res, result.user_res.dataValues, 'error', speeches.ADMIN_EXISTS, 406));
