@@ -65,7 +65,8 @@ export const initiateIdeaSchema = Joi.object().keys({
     workbook: Joi.string(),
     language: Joi.string(),
     state:Joi.string(),
-    district: Joi.string()
+    district: Joi.string(),
+    initiated_by: Joi.number()
 });
 export const challengeResponsesSchema = Joi.object().keys({
     status: Joi.string().valid(...Object.values(constents.challenges_flags.list)).required().messages({
